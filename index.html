@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123f -->
+<!-- fetch-pup build 20261123g -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -451,6 +451,56 @@
       line-height: 1.4;
       text-align: center;
     }
+    .reset-progress {
+      display: block;
+      margin: 8px auto 0;
+      padding: 4px 8px;
+      border: 0;
+      background: none;
+      color: #8A8490;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .reset-progress:hover { color: var(--ink); }
+    .reset-progress:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; border-radius: 6px; }
+
+    .dialog-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(44, 58, 74, 0.45);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .dialog-overlay.open { display: flex; }
+    .dialog {
+      width: min(400px, 100%);
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 24px 20px 18px;
+      text-align: center;
+    }
+    .dialog h2 {
+      font-size: clamp(28px, 7vw, 36px);
+      letter-spacing: -0.03em;
+      margin: 0 0 8px;
+      color: var(--ink);
+    }
+    .dialog p {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.45;
+      margin: 0 0 18px;
+    }
+    .dialog-actions { display: flex; flex-direction: column; }
+    .dialog-actions .btn-ghost { margin-top: 10px; }
 
     /* ---- Play screen ---- */
     #screen-play {
@@ -732,8 +782,20 @@
         <p class="js-tip">Tip: if Let's Play Fetch! does not work, save this file and open it in Safari or Chrome.</p>
       </noscript>
       <p class="footnote">A single file you can share. It opens in any browser. No account and no install needed.</p>
+      <button class="reset-progress" id="resetBtn" type="button">Reset progress</button>
       </div>
     </section>
+
+    <div id="resetDialog" class="dialog-overlay" hidden>
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="resetTitle" aria-describedby="resetCopy">
+        <h2 id="resetTitle">Start over?</h2>
+        <p id="resetCopy">This sets your points to 0 and re-locks dogs and parks.</p>
+        <div class="dialog-actions">
+          <button class="btn" id="resetYes" type="button">Yes</button>
+          <button class="btn btn-ghost" id="resetCancel" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
 
     <section id="screen-play" aria-label="Game screen">
       <div class="hud">
@@ -779,7 +841,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123f";
+  var BUILD = "20261123g";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -2729,6 +2791,41 @@
     } catch (err) {}
   }
 
+  function openResetDialog() {
+    var el = $("resetDialog");
+    if (!el) return;
+    if (el.removeAttribute) el.removeAttribute("hidden");
+    el.hidden = false;
+    el.className = "dialog-overlay open";
+  }
+
+  function closeResetDialog() {
+    var el = $("resetDialog");
+    if (!el) return;
+    el.className = "dialog-overlay";
+    el.hidden = true;
+    if (el.setAttribute) el.setAttribute("hidden", "hidden");
+  }
+
+  function confirmResetProgress() {
+    try {
+      state.score = 0;
+      state.best = 0;
+      state.totalPoints = 0;
+      state.unlocked = ["sunny"];
+      state.unlockedParks = ["meadow"];
+      state.dogId = "sunny";
+      state.parkId = "meadow";
+      state.sessionUnlocks = [];
+      saveNow();
+      updateHud();
+      renderDogPicker();
+      renderParkPicker();
+      setPickerNote("");
+    } catch (err) {}
+    closeResetDialog();
+  }
+
   function goHome() {
     try {
       if (state.score > state.best) state.best = state.score;
@@ -2783,6 +2880,15 @@
     bindActivate($("homeBtn"), function () { goHome(); });
     bindActivate($("playAgainBtn"), function () { startGame(); });
     bindActivate($("changeBtn"), function () { goHome(); });
+    bindActivate($("resetBtn"), function () { openResetDialog(); });
+    bindActivate($("resetYes"), function () { confirmResetProgress(); });
+    bindActivate($("resetCancel"), function () { closeResetDialog(); });
+    var overlay = $("resetDialog");
+    if (overlay) {
+      overlay.addEventListener("click", function (e) {
+        if (e && e.target === overlay) closeResetDialog();
+      }, false);
+    }
     window.addEventListener("resize", function () {
       if (state.screen === "play") { resizeCanvas(); render(); }
     }, false);
