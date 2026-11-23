@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123j -->
+<!-- fetch-pup build 20261123k -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -81,6 +81,8 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 2px;
+      position: relative;
+      z-index: 3;
     }
 
     .mark {
@@ -135,6 +137,49 @@
       padding: 0 14px;
       border-radius: 999px;
       font-size: 14px;
+    }
+    .mute-btn {
+      position: relative;
+      z-index: 4;
+      flex-shrink: 0;
+    }
+    .mute-glyph {
+      position: relative;
+      display: block;
+      width: 22px;
+      height: 22px;
+    }
+    .mute-glyph svg {
+      display: block;
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+    .mute-slash {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 9px;
+      width: 22px;
+      height: 3px;
+      background: var(--coral);
+      border-radius: 2px;
+      box-shadow: 0 0 0 2px #fff;
+      transform: rotate(-42deg);
+      pointer-events: none;
+    }
+    .mute-btn.is-muted,
+    .mute-btn[aria-pressed="true"] {
+      background: #FFF1D6;
+      border-color: #E25535;
+    }
+    .mute-btn.is-muted .mute-slash,
+    .mute-btn[aria-pressed="true"] .mute-slash { display: block; }
+    .results-mute {
+      position: absolute;
+      top: calc(12px + env(safe-area-inset-top));
+      right: 12px;
+      z-index: 13;
     }
 
     .hero-wrap {
@@ -541,7 +586,7 @@
     .hud-cluster { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .hud-cluster:first-child { justify-self: start; }
     .hud-center { justify-self: center; }
-    .hud-cluster:last-child { justify-self: end; justify-content: flex-end; flex-wrap: nowrap; }
+    .hud-cluster:last-child { justify-self: end; justify-content: flex-end; flex-wrap: nowrap; position: relative; z-index: 6; }
     .hud-chip {
       background: rgba(255,255,255,0.92);
       border: 1px solid var(--line);
@@ -753,7 +798,7 @@
       <div class="start-top">
       <header class="brand-bar">
         <div class="mark"><span class="mark-block" aria-hidden="true"></span> Fetch, Pup!</div>
-        <button class="icon-btn" id="muteStart" type="button" aria-pressed="false" aria-label="Mute sounds" title="Mute">♪</button>
+        <button class="icon-btn mute-btn" id="muteStart" type="button" aria-pressed="false" aria-label="Turn sound off" title="Sound on" onclick="if(window.fetchPup){window.fetchPup.toggleMute();}return false;"><span class="mute-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M9.4 3.2v11.15a3.55 3.55 0 1 0 2.15 3.3V8.05l8.3-1.85v8.25a3.55 3.55 0 1 0 2.15 3.3V3.85L9.4 6.15V3.2z"/></svg><span class="mute-slash"></span></span></button>
       </header>
       <div class="hero-wrap"><canvas id="heroCanvas" width="560" height="380" aria-hidden="true"></canvas></div>
       <p class="kicker">A park adventure</p>
@@ -821,7 +866,7 @@
           <div class="hud-chip"><span class="park-name" id="parkLabel">Sunny Meadow</span></div>
         </div>
         <div class="hud-cluster">
-          <button class="icon-btn" id="mutePlay" type="button" aria-pressed="false" aria-label="Mute sounds" title="Mute">♪</button>
+          <button class="icon-btn mute-btn" id="mutePlay" type="button" aria-pressed="false" aria-label="Turn sound off" title="Sound on" onclick="if(window.fetchPup){window.fetchPup.toggleMute();}return false;"><span class="mute-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M9.4 3.2v11.15a3.55 3.55 0 1 0 2.15 3.3V8.05l8.3-1.85v8.25a3.55 3.55 0 1 0 2.15 3.3V3.85L9.4 6.15V3.2z"/></svg><span class="mute-slash"></span></span></button>
           <button class="icon-btn home-btn" id="homeBtn" type="button" aria-label="Back to start" title="Home">Home</button>
         </div>
       </div>
@@ -833,6 +878,7 @@
     </section>
 
     <section id="screen-results" aria-label="Time's up">
+      <button class="icon-btn mute-btn results-mute" id="muteResults" type="button" aria-pressed="false" aria-label="Turn sound off" title="Sound on" onclick="if(window.fetchPup){window.fetchPup.toggleMute();}return false;"><span class="mute-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M9.4 3.2v11.15a3.55 3.55 0 1 0 2.15 3.3V8.05l8.3-1.85v8.25a3.55 3.55 0 1 0 2.15 3.3V3.85L9.4 6.15V3.2z"/></svg><span class="mute-slash"></span></span></button>
       <div class="results-card">
         <p class="kicker">What a fetch!</p>
         <h1><span class="coral">Time's</span> <span class="sky">up!</span></h1>
@@ -854,7 +900,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123j";
+  var BUILD = "20261123k";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1078,25 +1124,47 @@
     } catch (err) {}
   }
 
-  function resumeAudio() {
+  function resumeAudio(thenFn) {
     try {
       ensureAudio();
       if (audio.ctx && audio.ctx.state === "suspended" && audio.ctx.resume) {
         var p = audio.ctx.resume();
+        if (p && typeof p.then === "function") {
+          p.then(function () {
+            audio.started = true;
+            if (typeof thenFn === "function") thenFn();
+          });
+          if (typeof p.catch === "function") p.catch(function () {});
+          return;
+        }
         if (p && typeof p.catch === "function") p.catch(function () {});
       }
       audio.started = true;
+      if (typeof thenFn === "function") thenFn();
     } catch (err) {}
   }
 
   function setMuted(m) {
     audio.muted = !!m;
-    state.muted = !!m;
+    if (state) state.muted = !!m;
     if (audio.master) {
       audio.master.gain.value = audio.muted ? 0 : 0.7;
     }
     updateMuteButtons();
-    saveNow();
+    if (state) saveNow();
+  }
+
+  function toggleMute() {
+    try {
+      if (!(state && state.muted)) {
+        setMuted(true);
+      } else {
+        setMuted(false);
+        resumeAudio(function () {
+          try { if (!audio.muted) sfx("button"); } catch (err) {}
+        });
+      }
+    } catch (err) {}
   }
 
   function tone(freq, dur, type, vol, slide, delay) {
@@ -1148,6 +1216,7 @@
 
   function sfx(kind) {
     try {
+    if (audio.muted || (state && state.muted)) return;
     if (kind === "throw") { noiseBurst(0.12, 0.06, 1200); tone(420, 0.18, "sine", 0.05, 180); }
     else if (kind === "bark") { tone(240, 0.1, "triangle", 0.04); tone(300, 0.12, "sine", 0.035, 210, 0.08); }
     else if (kind === "catch") { tone(523, 0.14, "sine", 0.06); tone(659, 0.18, "sine", 0.05, null, 0.08); }
@@ -2696,12 +2765,33 @@
   }
 
   /* ---------- UI ---------- */
+  function setClassFlag(el, name, on) {
+    if (!el) return;
+    if (el.classList) {
+      if (on) el.classList.add(name);
+      else el.classList.remove(name);
+      return;
+    }
+    var cls = " " + (el.className || "") + " ";
+    var has = cls.indexOf(" " + name + " ") !== -1;
+    if (on && !has) el.className = (el.className ? el.className + " " : "") + name;
+    if (!on && has) el.className = cls.replace(" " + name + " ", " ").replace(/^\s+|\s+$/g, "");
+  }
+
   function updateMuteButtons() {
-    var label = state.muted ? "Unmute sounds" : "Mute sounds";
-    var text = state.muted ? "×" : "♪";
-    var a = $("muteStart"), b = $("mutePlay");
-    if (a) { a.setAttribute("aria-pressed", state.muted ? "true" : "false"); a.setAttribute("aria-label", label); a.innerHTML = text; }
-    if (b) { b.setAttribute("aria-pressed", state.muted ? "true" : "false"); b.setAttribute("aria-label", label); b.innerHTML = text; }
+    var muted = !!(state && state.muted);
+    var label = muted ? "Turn sound on" : "Turn sound off";
+    var title = muted ? "Sound off" : "Sound on";
+    var ids = ["muteStart", "mutePlay", "muteResults"];
+    var i, el;
+    for (i = 0; i < ids.length; i++) {
+      el = $(ids[i]);
+      if (!el) continue;
+      el.setAttribute("aria-pressed", muted ? "true" : "false");
+      el.setAttribute("aria-label", label);
+      el.setAttribute("title", title);
+      setClassFlag(el, "is-muted", muted);
+    }
   }
 
   function setPickerNote(msg) {
@@ -2961,17 +3051,25 @@
 
   function bindActivate(el, fn) {
     if (!el) return;
-    var lock = false;
+    var lastTs = 0;
+    var lastType = "";
     function go(e) {
+      var typ = (e && e.type) ? e.type : "click";
+      var now = (new Date()).getTime();
+      var dt = now - lastTs;
+      if (dt < 50) return false;
+      if (dt < 350 && typ !== lastType) {
+        if (e && e.preventDefault) e.preventDefault();
+        return false;
+      }
+      lastTs = now;
+      lastType = typ;
       if (e) {
         if (e.preventDefault) e.preventDefault();
         if (e.stopPropagation) e.stopPropagation();
         if (e.stopImmediatePropagation) e.stopImmediatePropagation();
       }
-      if (lock) return false;
-      lock = true;
       try { fn(e); } catch (err) {}
-      setTimeout(function () { lock = false; }, 450);
       return false;
     }
     if (el.addEventListener) {
@@ -2984,17 +3082,9 @@
 
   function bindUi() {
     bindActivate($("startBtn"), function () { startGame(); });
-    function togMute() {
-      try {
-        setMuted(!state.muted);
-      } catch (err) {}
-      try {
-        resumeAudio();
-        sfx("button");
-      } catch (err) {}
-    }
-    bindActivate($("muteStart"), togMute);
-    bindActivate($("mutePlay"), togMute);
+    bindActivate($("muteStart"), toggleMute);
+    bindActivate($("mutePlay"), toggleMute);
+    bindActivate($("muteResults"), toggleMute);
     bindActivate($("homeBtn"), function () { goHome(); });
     bindActivate($("playAgainBtn"), function () { startGame(); });
     bindActivate($("changeBtn"), function () { goHome(); });
@@ -3074,6 +3164,7 @@
         };
       },
       setMuted: setMuted,
+      toggleMute: toggleMute,
       setSpeed: function (n) { speedMul = n > 0 ? n : 1; },
       setTimeLeft: function (n) {
         state.timeLeft = n;
