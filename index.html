@@ -1,9 +1,13 @@
 <!DOCTYPE html>
+<!-- fetch-pup build 20261123b -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#3B9AED">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="description" content="A cheerful fetch game for kids. Throw the ball, watch your pup catch it, and play in the park.">
   <title>Fetch, Pup!</title>
   <style>
@@ -350,8 +354,10 @@
       inset: 0;
       background: #7EC8F0;
       flex-direction: column;
+      pointer-events: none;
+      z-index: 1;
     }
-    #screen-play.active { display: flex; }
+    #screen-play.active { display: flex; pointer-events: auto; }
 
     .hud {
       position: absolute;
@@ -518,6 +524,7 @@
 (function () {
   "use strict";
 
+  var BUILD = "20261123b";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -718,11 +725,14 @@
   }
 
   function resumeAudio() {
-    ensureAudio();
-    if (audio.ctx && audio.ctx.state === "suspended" && audio.ctx.resume) {
-      try { audio.ctx.resume(); } catch (err) {}
-    }
-    audio.started = true;
+    try {
+      ensureAudio();
+      if (audio.ctx && audio.ctx.state === "suspended" && audio.ctx.resume) {
+        var p = audio.ctx.resume();
+        if (p && typeof p.catch === "function") p.catch(function () {});
+      }
+      audio.started = true;
+    } catch (err) {}
   }
 
   function setMuted(m) {
@@ -736,6 +746,7 @@
   }
 
   function tone(freq, dur, type, vol, slide, delay) {
+    try {
     if (!audio.ctx || audio.muted) return;
     var ctx = audio.ctx;
     var t0 = ctx.currentTime + (delay || 0);
@@ -751,9 +762,11 @@
     g.connect(audio.master);
     osc.start(t0);
     osc.stop(t0 + dur + 0.05);
+    } catch (err) {}
   }
 
   function noiseBurst(dur, vol, filterFreq) {
+    try {
     if (!audio.ctx || audio.muted) return;
     var ctx = audio.ctx;
     var n = Math.floor(ctx.sampleRate * dur);
@@ -774,9 +787,11 @@
     filt.connect(g);
     g.connect(audio.master);
     src.start();
+    } catch (err) {}
   }
 
   function sfx(kind) {
+    try {
     if (kind === "throw") { noiseBurst(0.12, 0.08, 1400); tone(420, 0.18, "sine", 0.06, 180); }
     else if (kind === "bark") { tone(220, 0.09, "square", 0.05); tone(280, 0.1, "square", 0.04, 200, 0.08); }
     else if (kind === "catch") { tone(523, 0.12, "sine", 0.07); tone(659, 0.16, "sine", 0.06, null, 0.07); }
@@ -800,6 +815,7 @@
       tone(784, 0.14, "sine", 0.06, null, 0.1);
       tone(1046, 0.28, "sine", 0.07, null, 0.22);
     }
+    } catch (err) {}
   }
 
   /* ---------- State ---------- */
@@ -1986,11 +2002,19 @@
     if (window.requestAnimationFrame) requestAnimationFrame(loopHero);
   }
 
+  var resizeTries = 0;
   function resizeCanvas() {
     if (!canvas) return;
     var wrap = canvas.parentNode;
-    var cssW = wrap.clientWidth || window.innerWidth || 800;
-    var cssH = wrap.clientHeight || window.innerHeight || 500;
+    var cssW = (wrap && wrap.clientWidth) || window.innerWidth || 800;
+    var cssH = (wrap && wrap.clientHeight) || window.innerHeight || 500;
+    if (state && state.screen === "play" && (cssW < 2 || cssH < 2) && resizeTries < 10) {
+      resizeTries += 1;
+      if (window.requestAnimationFrame) requestAnimationFrame(function () { resizeCanvas(); render(); });
+      else setTimeout(function () { resizeCanvas(); render(); }, 50);
+      return;
+    }
+    resizeTries = 0;
     var dpr = window.devicePixelRatio || 1;
     if (dpr > 2.5) dpr = 2.5;
     view.cssW = cssW;
@@ -2134,8 +2158,10 @@
 
   function bindInput() {
     function prevent(e) { if (e && e.preventDefault) e.preventDefault(); }
+    function playing() { return state && state.screen === "play"; }
 
     canvas.addEventListener("mousedown", function (e) {
+      if (!playing()) return;
       if (e.button !== 0) return;
       prevent(e);
       var p = eventPos(e);
@@ -2151,23 +2177,25 @@
     window.addEventListener("mouseup", function () { onUp(); }, false);
 
     canvas.addEventListener("touchstart", function (e) {
+      if (!playing()) return;
       prevent(e);
-      var t = e.changedTouches && e.changedTouches[0];
-      if (!t) return;
-      var p = eventPos(e, t);
+      var tch = e.changedTouches && e.changedTouches[0];
+      if (!tch) return;
+      var p = eventPos(e, tch);
       onDown(p.x, p.y);
     }, false);
 
     window.addEventListener("touchmove", function (e) {
       if (!pointer.down) return;
       prevent(e);
-      var t = e.changedTouches && e.changedTouches[0];
-      if (!t) return;
-      var p = eventPos(e, t);
+      var tch = e.changedTouches && e.changedTouches[0];
+      if (!tch) return;
+      var p = eventPos(e, tch);
       onMove(p.x, p.y);
     }, false);
 
     window.addEventListener("touchend", function (e) {
+      if (!pointer.down) return;
       prevent(e);
       onUp();
     }, false);
@@ -2230,56 +2258,81 @@
       resizeCanvas();
       startLoop();
       render();
+      setTimeout(function () { resizeCanvas(); render(); }, 50);
     }
   }
 
   function startGame() {
-    resumeAudio();
-    sfx("button");
-    hideJsTip();
-    state.score = 0;
-    state.streak = 0;
-    state.fetchesInPark = 0;
-    state.parkIndex = 0;
-    seedFlowers();
-    placeReady();
-    updateHud();
-    showScreen("play");
-    showToast("Go fetch!", "Drag or hold to throw", 1.4);
+    try {
+      hideJsTip();
+      state.score = 0;
+      state.streak = 0;
+      state.fetchesInPark = 0;
+      state.parkIndex = 0;
+      seedFlowers();
+      placeReady();
+      pointer.down = false;
+      updateHud();
+      showScreen("play");
+      showToast("Go fetch!", "Drag or hold to throw", 1.4);
+    } catch (err) {}
+    try {
+      resumeAudio();
+      sfx("button");
+    } catch (err) {}
   }
 
   function goHome() {
-    resumeAudio();
-    sfx("button");
-    if (state.score > state.best) state.best = state.score;
-    saveNow();
-    updateHud();
-    pointer.down = false;
-    showScreen("start");
-    renderDogPicker();
+    try {
+      if (state.score > state.best) state.best = state.score;
+      saveNow();
+      updateHud();
+      pointer.down = false;
+      showScreen("start");
+      renderDogPicker();
+    } catch (err) {}
+    try {
+      resumeAudio();
+      sfx("button");
+    } catch (err) {}
+  }
+
+  function bindActivate(el, fn) {
+    if (!el) return;
+    var lock = false;
+    function go(e) {
+      if (e) {
+        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+      }
+      if (lock) return false;
+      lock = true;
+      try { fn(e); } catch (err) {}
+      setTimeout(function () { lock = false; }, 450);
+      return false;
+    }
+    if (el.addEventListener) {
+      el.addEventListener("click", go, false);
+      el.addEventListener("touchend", go, false);
+      el.addEventListener("pointerup", go, false);
+    }
+    el.onclick = go;
   }
 
   function bindUi() {
-    var sb = $("startBtn");
-    if (sb) {
-      sb.onclick = function (e) {
-        if (e && e.preventDefault) e.preventDefault();
-        startGame();
-        return false;
-      };
+    bindActivate($("startBtn"), function () { startGame(); });
+    function togMute() {
+      try {
+        setMuted(!state.muted);
+      } catch (err) {}
+      try {
+        resumeAudio();
+        sfx("button");
+      } catch (err) {}
     }
-    function togMute(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      resumeAudio();
-      setMuted(!state.muted);
-      sfx("button");
-    }
-    if ($("muteStart")) $("muteStart").onclick = togMute;
-    if ($("mutePlay")) $("mutePlay").onclick = togMute;
-    if ($("homeBtn")) $("homeBtn").onclick = function (e) {
-      if (e && e.preventDefault) e.preventDefault();
-      goHome();
-    };
+    bindActivate($("muteStart"), togMute);
+    bindActivate($("mutePlay"), togMute);
+    bindActivate($("homeBtn"), function () { goHome(); });
     window.addEventListener("resize", function () {
       if (state.screen === "play") { resizeCanvas(); render(); }
     }, false);
@@ -2316,6 +2369,7 @@
     if (window.requestAnimationFrame) requestAnimationFrame(loopHero);
 
     window.fetchPup = {
+      build: BUILD,
       start: startGame,
       goHome: goHome,
       simulateThrow: simulateThrow,
