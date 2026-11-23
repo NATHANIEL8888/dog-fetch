@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123g -->
+<!-- fetch-pup build 20261123h -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -452,21 +452,33 @@
       text-align: center;
     }
     .reset-progress {
-      display: block;
-      margin: 8px auto 0;
-      padding: 4px 8px;
-      border: 0;
-      background: none;
-      color: #8A8490;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: max-content;
+      max-width: 100%;
+      margin: 0 auto 10px;
+      padding: 8px 16px;
+      min-height: 44px;
+      border: 2px solid var(--sky);
+      background: #fff;
+      color: var(--sky-deep);
+      border-radius: 999px;
       font: inherit;
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 16px;
+      font-weight: 800;
       cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 2px;
+      box-shadow: 0 3px 0 rgba(24, 97, 158, 0.18);
     }
-    .reset-progress:hover { color: var(--ink); }
-    .reset-progress:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; border-radius: 6px; }
+    .reset-progress .reset-icon {
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 700;
+    }
+    .reset-progress:hover { background: #E8F4FC; }
+    .reset-progress:active { transform: translateY(1px); box-shadow: 0 2px 0 rgba(24, 97, 158, 0.18); }
+    .reset-progress:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
 
     .dialog-overlay {
       display: none;
@@ -748,6 +760,7 @@
       <p class="lede">You have 45 seconds. Throw, catch, and unlock new pups and parks with your total points!</p>
 
       <p class="total-points">Total points: <strong id="totalNear">0</strong></p>
+      <button class="reset-progress" id="resetBtn" type="button"><span class="reset-icon" aria-hidden="true">↺</span> Reset progress</button>
       <p class="picker-note" id="pickerNote"></p>
       <div class="pickers">
         <div class="panel">
@@ -782,7 +795,6 @@
         <p class="js-tip">Tip: if Let's Play Fetch! does not work, save this file and open it in Safari or Chrome.</p>
       </noscript>
       <p class="footnote">A single file you can share. It opens in any browser. No account and no install needed.</p>
-      <button class="reset-progress" id="resetBtn" type="button">Reset progress</button>
       </div>
     </section>
 
@@ -841,7 +853,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123g";
+  var BUILD = "20261123h";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
