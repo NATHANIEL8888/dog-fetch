@@ -1,0 +1,2354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#3B9AED">
+  <meta name="description" content="A cheerful fetch game for kids. Throw the ball, watch your pup catch it, and play in the park.">
+  <title>Fetch, Pup!</title>
+  <style>
+    :root {
+      --sky: #3B9AED;
+      --sky-dark: #2178c4;
+      --sky-deep: #18619e;
+      --sun: #FFC83D;
+      --sun-deep: #E0A520;
+      --coral: #FF6B4A;
+      --coral-dark: #E25535;
+      --grass: #3CB371;
+      --cream: #FFF8EF;
+      --cloud: #ffffff;
+      --ink: #2C3A4A;
+      --muted: #5A6A7A;
+      --panel: #ffffff;
+      --panel-2: #FFF1D6;
+      --line: rgba(44, 58, 74, 0.12);
+      --text: #2C3A4A;
+      --gold: #C68A12;
+      --shadow: 0 16px 36px rgba(44, 58, 74, 0.12);
+      --radius: 22px;
+      --max: 560px;
+      --font: "Trebuchet MS", "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      height: 100%;
+      background: var(--cream);
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    body {
+      min-height: 100dvh;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(255, 200, 61, 0.45), transparent 32%),
+        radial-gradient(circle at 96% 8%, rgba(59, 154, 237, 0.28), transparent 34%),
+        radial-gradient(circle at 80% 100%, rgba(60, 179, 113, 0.16), transparent 30%),
+        #FFF6EA;
+    }
+
+    button, canvas {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: rgba(255, 107, 74, 0.25);
+    }
+
+    .app { min-height: 100%; height: 100%; }
+
+    /* ---- Start screen ---- */
+    #screen-start {
+      display: none;
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 12px 0 calc(16px + env(safe-area-inset-bottom));
+      min-height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
+      flex-direction: column;
+    }
+    #screen-start.active { display: flex; }
+
+    .brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: 0.04em;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .mark-block {
+      width: 28px;
+      height: 28px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .mark-block::before,
+    .mark-block::after { content: ""; position: absolute; background: var(--coral); }
+    .mark-block::before {
+      width: 16px; height: 13px;
+      border-radius: 50% 50% 45% 45%;
+      left: 6px; bottom: 1px;
+    }
+    .mark-block::after {
+      width: 7px; height: 7px; border-radius: 50%;
+      box-shadow: 8px 0 0 var(--coral), 2.5px -8px 0 var(--coral), 13px -8px 0 var(--coral);
+      left: 4px; bottom: 12px;
+    }
+
+    .icon-btn {
+      width: 48px; height: 48px;
+      border: 1px solid var(--line);
+      background: var(--cloud);
+      border-radius: 50%;
+      color: var(--ink);
+      font: inherit;
+      font-size: 20px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(44, 58, 74, 0.06);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-btn:hover { background: var(--panel-2); }
+    .icon-btn:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
+    .icon-btn[aria-pressed="true"] { background: #FFF1D6; }
+    .home-btn {
+      width: auto;
+      padding: 0 14px;
+      border-radius: 999px;
+      font-size: 14px;
+    }
+
+    .hero-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 0;
+    }
+    .start-top { flex: 1; overflow: auto; min-height: 0; }
+    .start-bottom { flex-shrink: 0; padding-top: 4px; }
+
+    #heroCanvas {
+      width: 220px;
+      height: 120px;
+      display: block;
+    }
+
+    h1 {
+      font-size: clamp(40px, 9vw, 64px);
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+      margin: 0 0 6px;
+      text-align: center;
+    }
+    h1 .coral { color: var(--coral); }
+    h1 .sky { color: var(--sky-deep); }
+
+    .kicker {
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .lede {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.4;
+      margin: 4px auto 10px;
+      max-width: 36ch;
+      text-align: center;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px 14px 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      font-size: 15px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .how-list {
+      list-style: none;
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.45;
+    }
+    .how-list {
+      font-size: 15px;
+    }
+    .how-list li {
+      padding: 4px 0 4px 28px;
+      position: relative;
+    }
+    .how-list li::before {
+      content: "";
+      position: absolute;
+      left: 2px; top: 10px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--sun);
+      box-shadow: 0 0 0 3px rgba(255, 200, 61, 0.35);
+    }
+
+    .dogs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .dog-card {
+      appearance: none;
+      border: 2px solid var(--line);
+      background: #fff;
+      border-radius: 16px;
+      padding: 8px 4px 8px;
+      cursor: pointer;
+      font: inherit;
+      color: var(--ink);
+      text-align: center;
+      min-height: 98px;
+      box-shadow: 0 4px 0 rgba(44, 58, 74, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow: hidden;
+    }
+    .dog-card:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+    .dog-card.selected {
+      border-color: var(--coral);
+      background: #FFF6F2;
+      box-shadow: 0 4px 0 var(--coral-dark);
+    }
+    .dog-card.locked {
+      cursor: default;
+      opacity: 0.85;
+      background: #F6F3EE;
+    }
+    .dog-card .face {
+      width: 44px; height: 36px;
+      margin: 0 auto 4px;
+      position: relative;
+    }
+    .dog-card .name {
+      display: block; font-size: 13px; font-weight: 800;
+      width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px;
+    }
+    .dog-card .meta {
+      display: block; font-size: 10px; color: var(--muted); margin-top: 2px; font-weight: 700;
+      width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px;
+    }
+
+    .face-head {
+      position: absolute; left: 8px; top: 10px;
+      width: 28px; height: 24px; border-radius: 50%;
+    }
+    .face-ear {
+      position: absolute; width: 12px; height: 16px; border-radius: 50%;
+      top: 2px;
+    }
+    .face-ear.l { left: 4px; transform: rotate(-18deg); }
+    .face-ear.r { right: 4px; transform: rotate(18deg); }
+    .face-ear.prick { height: 18px; width: 10px; border-radius: 12px 12px 4px 4px; top: 0; }
+    .face-spot {
+      position: absolute; width: 7px; height: 7px; border-radius: 50%;
+      left: 22px; top: 16px; background: #8B5A2B;
+    }
+
+    .best-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .score-chip {
+      font-size: 15px;
+      color: var(--muted);
+      background: var(--cloud);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 14px;
+      box-shadow: 0 4px 0 rgba(44, 58, 74, 0.06);
+    }
+    .score-chip strong { color: var(--ink); font-weight: 800; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      border: 0;
+      border-radius: 18px;
+      padding: 18px 20px;
+      font: inherit;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      color: #fff;
+      background: var(--coral);
+      box-shadow: 0 8px 0 var(--coral-dark);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+    .btn:hover { background: #ff7d60; }
+    .btn:active { transform: translateY(3px); box-shadow: 0 5px 0 var(--coral-dark); }
+    .btn:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
+
+    .kickoff { margin-top: 10px; }
+
+    .js-tip {
+      margin: 16px 0 0;
+      padding: 12px 14px;
+      background: #fff4cc;
+      border: 1px solid rgba(198, 138, 18, 0.35);
+      border-radius: 12px;
+      color: #2C3A4A;
+      font-size: 1rem;
+      line-height: 1.45;
+    }
+    html.js-ready #jsTip { display: none; }
+
+    .footnote {
+      margin-top: 8px;
+      padding-top: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    /* ---- Play screen ---- */
+    #screen-play {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #7EC8F0;
+      flex-direction: column;
+    }
+    #screen-play.active { display: flex; }
+
+    .hud {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: start;
+      gap: 8px;
+      padding: calc(10px + env(safe-area-inset-top)) 12px 0;
+      pointer-events: none;
+    }
+    .hud > * { pointer-events: auto; }
+    .hud-cluster { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .hud-cluster:first-child { justify-self: start; }
+    .hud > .hud-chip { justify-self: center; margin-top: 0; }
+    .hud-cluster:last-child { justify-self: end; justify-content: flex-end; flex-wrap: nowrap; }
+    .hud-chip {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink);
+      box-shadow: 0 4px 14px rgba(44,58,74,0.12);
+      white-space: nowrap;
+    }
+    .hud-chip span { color: var(--muted); font-weight: 700; margin-right: 4px; }
+    .hud-chip .park-name { color: var(--sky-deep); }
+
+    .canvas-wrap {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    #game {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 28%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+      z-index: 6;
+      text-shadow: 0 2px 0 rgba(255,255,255,0.5);
+    }
+    .toast .big {
+      font-size: clamp(28px, 6vw, 48px);
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.03em;
+      text-shadow: 0 3px 0 rgba(44,58,74,0.25), 0 8px 18px rgba(44,58,74,0.2);
+    }
+    .toast .sub {
+      margin-top: 6px;
+      font-size: 20px;
+      font-weight: 800;
+      color: #FFF6C8;
+    }
+
+    .hint {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      text-align: center;
+      pointer-events: none;
+      z-index: 5;
+      font-size: 16px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.95);
+      text-shadow: 0 2px 8px rgba(44,58,74,0.35);
+    }
+
+    @media (max-width: 520px) {
+      .dogs { gap: 6px; }
+      .dog-card { min-height: 84px; padding: 6px 2px; }
+      .dog-card .name { font-size: 12px; }
+      .hud-chip { font-size: 13px; padding: 6px 10px; }
+      .icon-btn { width: 42px; height: 42px; }
+      .home-btn { width: auto; }
+      .lede { font-size: 16px; }
+    }
+
+    @media (max-height: 700px) and (orientation: landscape) {
+      #screen-start { padding-top: 10px; }
+      #heroCanvas { width: 160px; height: 84px; }
+      h1 { font-size: 42px; }
+      .lede { margin-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section id="screen-start" class="active" aria-label="Start screen">
+      <div class="start-top">
+      <header class="brand-bar">
+        <div class="mark"><span class="mark-block" aria-hidden="true"></span> Fetch, Pup!</div>
+        <button class="icon-btn" id="muteStart" type="button" aria-pressed="false" aria-label="Mute sounds" title="Mute">♪</button>
+      </header>
+      <div class="hero-wrap"><canvas id="heroCanvas" width="560" height="380" aria-hidden="true"></canvas></div>
+      <p class="kicker">A park adventure</p>
+      <h1><span class="coral">Fetch,</span> <span class="sky">Pup!</span></h1>
+      <p class="lede">Throw the ball. Your pup will run, catch it, and bring it back. Mid-air catches score extra!</p>
+
+      <div class="panel" style="margin-bottom:10px;">
+        <h2>Pick a pup</h2>
+        <div class="dogs" id="dogPicker" role="group" aria-label="Choose a dog"></div>
+      </div>
+
+      <div class="panel">
+        <h2>How to play</h2>
+        <ul class="how-list">
+          <li>Drag or flick the ball to aim and throw.</li>
+          <li>Or press and hold to power up, then let go.</li>
+          <li>Grab bones and stars. New parks unlock as you play!</li>
+        </ul>
+      </div>
+      </div>
+      <div class="start-bottom">
+      <div class="best-row">
+        <div class="score-chip">Best <strong id="bestChip">0</strong></div>
+      </div>
+
+      <button class="btn kickoff" id="startBtn" type="button" onclick="if(window.fetchPup){window.fetchPup.start();}return false;">Let's Play Fetch!</button>
+      <p class="js-tip" id="jsTip">Tip: if Let's Play Fetch! does not work, save this file and open it in Safari or Chrome.</p>
+      <noscript>
+        <style>#jsTip { display: none !important; }</style>
+        <p class="js-tip">Tip: if Let's Play Fetch! does not work, save this file and open it in Safari or Chrome.</p>
+      </noscript>
+      <p class="footnote">A single file you can share. It opens in any browser. No account and no install needed.</p>
+      </div>
+    </section>
+
+    <section id="screen-play" aria-label="Game screen">
+      <div class="hud">
+        <div class="hud-cluster">
+          <div class="hud-chip" id="scoreChip"><span>Score</span> <strong id="liveScore">0</strong></div>
+          <div class="hud-chip" id="bestLive"><span>Best</span> <strong id="liveBest">0</strong></div>
+        </div>
+        <div class="hud-chip"><span class="park-name" id="parkLabel">Sunny Meadow</span></div>
+        <div class="hud-cluster">
+          <button class="icon-btn" id="mutePlay" type="button" aria-pressed="false" aria-label="Mute sounds" title="Mute">♪</button>
+          <button class="icon-btn home-btn" id="homeBtn" type="button" aria-label="Back to start" title="Home">Home</button>
+        </div>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="game" aria-label="Fetch game. Drag or flick to throw the ball."></canvas>
+        <div class="toast" id="toast" hidden><div class="big" id="toastBig"></div><div class="sub" id="toastSub"></div></div>
+        <div class="hint" id="hint">Drag or hold to throw</div>
+      </div>
+    </section>
+  </div>
+  <script>
+(function () {
+  "use strict";
+
+  var WORLD_W = 1200;
+  var WORLD_H = 680;
+  var GROUND_Y = 528;
+  var BALL_R = 14;
+  var GRAVITY = 1550;
+  var SAVE_KEY = "fetchPupSave";
+  var THROWS_PER_PARK = 5;
+
+  var DOGS = [
+    { id: "sunny", name: "Sunny", title: "Golden pal", unlock: 0, speed: 470, jump: 195,
+      body: "#E2A64A", bodyDark: "#C48430", belly: "#F6E0B0", ear: "#C48430",
+      eye: "#2C2418", collar: "#E25535", tag: "#FFC83D", ears: "flop", muzzle: "#F3D7A0" },
+    { id: "cocoa", name: "Cocoa", title: "Chocolate lab", unlock: 150, speed: 530, jump: 175,
+      body: "#6B3E26", bodyDark: "#4E2A18", belly: "#8A5A3C", ear: "#4E2A18",
+      eye: "#1A120C", collar: "#3B9AED", tag: "#FFC83D", ears: "flop", muzzle: "#8A5A3C" },
+    { id: "speckles", name: "Speckles", title: "Spotty pal", unlock: 400, speed: 490, jump: 230,
+      body: "#F4EFE6", bodyDark: "#DED4C4", belly: "#FFFFFF", ear: "#8B5A2B",
+      eye: "#2C2418", collar: "#3CB371", tag: "#FFC83D", ears: "flop", muzzle: "#F8F4EC", spots: true },
+    { id: "blue", name: "Blue", title: "Speedy pal", unlock: 800, speed: 560, jump: 190,
+      body: "#7A8B9C", bodyDark: "#5A6A7A", belly: "#D5DCE3", ear: "#4A5560",
+      eye: "#1A1F28", collar: "#FFC83D", tag: "#E25535", ears: "prick", muzzle: "#D5DCE3" }
+  ];
+
+  var PARKS = [
+    { id: "meadow", name: "Sunny Meadow",
+      skyTop: "#5EB7F5", skyMid: "#B9E6FF", skyBot: "#E8F7FF",
+      sun: "#FFE566", sunX: 980, sunY: 110, sunR: 54,
+      grassFar: "#7ED67E", grassMid: "#57C05D", grassNear: "#3FA84A",
+      dirt: "#C9A978", treeA: "#2F9E4F", treeB: "#247A3C",
+      flower: true, leaves: false, snow: false, beach: false, sunset: false,
+      pond: null,
+      bushes: [{ x: 740, y: GROUND_Y, s: 1 }],
+      trees: [{ x: 430, h: 180, kind: "round" }, { x: 1080, h: 210, kind: "round" }]
+    },
+    { id: "autumn", name: "Autumn Park",
+      skyTop: "#6EA4D4", skyMid: "#FFD8B0", skyBot: "#FFE9CC",
+      sun: "#FFB347", sunX: 160, sunY: 130, sunR: 48,
+      grassFar: "#D2B24A", grassMid: "#C49A32", grassNear: "#B8860B",
+      dirt: "#B0895A", treeA: "#D2691E", treeB: "#C0392B",
+      flower: false, leaves: true, snow: false, beach: false, sunset: false,
+      pond: { x: 860, y: GROUND_Y + 8, rx: 130, ry: 28 },
+      bushes: [{ x: 520, y: GROUND_Y, s: 1.1 }],
+      trees: [{ x: 300, h: 190, kind: "autumn" }, { x: 640, h: 150, kind: "autumn" }, { x: 1100, h: 200, kind: "autumn" }]
+    },
+    { id: "beach", name: "Sandy Beach",
+      skyTop: "#4CA9E0", skyMid: "#C5ECFF", skyBot: "#FFF4DC",
+      sun: "#FFE566", sunX: 1040, sunY: 90, sunR: 58,
+      grassFar: "#F3D39A", grassMid: "#EBC07A", grassNear: "#E0B266",
+      dirt: "#E8C48A", treeA: "#3CB371", treeB: "#2E8B57",
+      flower: false, leaves: false, snow: false, beach: true, sunset: false,
+      pond: { x: 1020, y: GROUND_Y + 22, rx: 220, ry: 48, ocean: true },
+      bushes: [{ x: 600, y: GROUND_Y, s: 0.85, palm: true }],
+      trees: [{ x: 260, h: 200, kind: "palm" }, { x: 420, h: 160, kind: "palm" }]
+    },
+    { id: "garden", name: "Flower Garden",
+      skyTop: "#8EC9FF", skyMid: "#FFE4F0", skyBot: "#FFF6EA",
+      sun: "#FFD36A", sunX: 200, sunY: 100, sunR: 44,
+      grassFar: "#8ED98E", grassMid: "#62C46A", grassNear: "#45B352",
+      dirt: "#D4B48A", treeA: "#3CB371", treeB: "#2E8B57",
+      flower: true, leaves: false, snow: false, beach: false, sunset: false, lotsOfFlowers: true,
+      pond: { x: 980, y: GROUND_Y + 8, rx: 90, ry: 22 },
+      bushes: [{ x: 580, y: GROUND_Y, s: 0.9 }, { x: 720, y: GROUND_Y, s: 1.05 }],
+      trees: [{ x: 380, h: 170, kind: "round" }, { x: 1120, h: 160, kind: "round" }]
+    },
+    { id: "sunset", name: "Sunset Hill",
+      skyTop: "#E85D4C", skyMid: "#F7A072", skyBot: "#FFD6A0",
+      sun: "#FFDD66", sunX: 980, sunY: 160, sunR: 72,
+      grassFar: "#4A7A45", grassMid: "#3C6B3A", grassNear: "#2F5A30",
+      dirt: "#8A6A44", treeA: "#2A3A3A", treeB: "#1A2428",
+      flower: false, leaves: false, snow: false, beach: false, sunset: true,
+      pond: { x: 700, y: GROUND_Y + 8, rx: 110, ry: 24 },
+      bushes: [{ x: 480, y: GROUND_Y, s: 1 }],
+      trees: [{ x: 260, h: 200, kind: "silhouette" }, { x: 400, h: 150, kind: "silhouette" }, { x: 1120, h: 220, kind: "silhouette" }]
+    }
+  ];
+
+  function storageGet(key) {
+    try {
+      var store = window.localStorage;
+      if (!store || typeof store.getItem !== "function") return null;
+      return store.getItem(key);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function storageSet(key, value) {
+    try {
+      var store = window.localStorage;
+      if (!store || typeof store.setItem !== "function") return;
+      store.setItem(key, value);
+    } catch (err) {}
+  }
+
+  function loadSave() {
+    var raw = storageGet(SAVE_KEY);
+    var data = { best: 0, unlocked: ["sunny"], dog: "sunny", muted: false };
+    if (!raw) return data;
+    try {
+      var parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") {
+        if (typeof parsed.best === "number" && parsed.best >= 0) data.best = Math.floor(parsed.best);
+        if (parsed.unlocked && parsed.unlocked.length) data.unlocked = parsed.unlocked;
+        if (typeof parsed.dog === "string") data.dog = parsed.dog;
+        if (typeof parsed.muted === "boolean") data.muted = parsed.muted;
+      }
+    } catch (err) {}
+    if (!isUnlockedId(data.unlocked, "sunny")) data.unlocked.push("sunny");
+    if (!isUnlockedId(data.unlocked, data.dog)) data.dog = "sunny";
+    return data;
+  }
+
+  function isUnlockedId(list, id) {
+    var i;
+    for (i = 0; i < list.length; i++) if (list[i] === id) return true;
+    return false;
+  }
+
+  function saveNow() {
+    storageSet(SAVE_KEY, JSON.stringify({
+      best: state.best,
+      unlocked: state.unlocked,
+      dog: state.dogId,
+      muted: state.muted
+    }));
+  }
+
+  function hideJsTip() {
+    try {
+      var tip = document.getElementById("jsTip");
+      if (tip) {
+        tip.style.display = "none";
+        if (tip.setAttribute) tip.setAttribute("hidden", "hidden");
+      }
+      var root = document.documentElement;
+      if (root) {
+        if (root.classList) root.classList.add("js-ready");
+        else if ((" " + (root.className || "") + " ").indexOf(" js-ready ") === -1) {
+          root.className = (root.className ? root.className + " " : "") + "js-ready";
+        }
+      }
+    } catch (err) {}
+  }
+
+  function $(id) { return document.getElementById(id); }
+
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function hypot(x, y) { return Math.sqrt(x * x + y * y); }
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function nowMs() {
+    if (window.performance && typeof performance.now === "function") return performance.now();
+    return Date.now();
+  }
+
+  function getDog(id) {
+    var i;
+    for (i = 0; i < DOGS.length; i++) if (DOGS[i].id === id) return DOGS[i];
+    return DOGS[0];
+  }
+
+  function currentPark() { return PARKS[state.parkIndex % PARKS.length]; }
+
+  function inPond(x, y, park) {
+    var p = park.pond;
+    if (!p) return false;
+    var dx = (x - p.x) / p.rx;
+    var dy = (y - (p.y - 8)) / (p.ry + 10);
+    return (dx * dx + dy * dy) <= 1 && y >= GROUND_Y - 18;
+  }
+
+  function inBush(x, y, park) {
+    var i, b, dx, dy;
+    for (i = 0; i < park.bushes.length; i++) {
+      b = park.bushes[i];
+      dx = x - b.x;
+      dy = y - (b.y - 28 * (b.s || 1));
+      if (dx * dx / (Math.pow(40 * (b.s || 1), 2)) + dy * dy / (Math.pow(30 * (b.s || 1), 2)) <= 1 && y >= GROUND_Y - 50) {
+        return b;
+      }
+    }
+    return null;
+  }
+
+  /* ---------- Audio ---------- */
+  var audio = { ctx: null, master: null, muted: false, started: false, chirpT: 0 };
+
+  function ensureAudio() {
+    if (audio.ctx) return;
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      audio.ctx = new AC();
+      audio.master = audio.ctx.createGain();
+      audio.master.gain.value = audio.muted ? 0 : 0.7;
+      audio.master.connect(audio.ctx.destination);
+    } catch (err) {}
+  }
+
+  function resumeAudio() {
+    ensureAudio();
+    if (audio.ctx && audio.ctx.state === "suspended" && audio.ctx.resume) {
+      try { audio.ctx.resume(); } catch (err) {}
+    }
+    audio.started = true;
+  }
+
+  function setMuted(m) {
+    audio.muted = !!m;
+    state.muted = !!m;
+    if (audio.master) {
+      audio.master.gain.value = audio.muted ? 0 : 0.7;
+    }
+    updateMuteButtons();
+    saveNow();
+  }
+
+  function tone(freq, dur, type, vol, slide, delay) {
+    if (!audio.ctx || audio.muted) return;
+    var ctx = audio.ctx;
+    var t0 = ctx.currentTime + (delay || 0);
+    var osc = ctx.createOscillator();
+    var g = ctx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, t0);
+    if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slide), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.08, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g);
+    g.connect(audio.master);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.05);
+  }
+
+  function noiseBurst(dur, vol, filterFreq) {
+    if (!audio.ctx || audio.muted) return;
+    var ctx = audio.ctx;
+    var n = Math.floor(ctx.sampleRate * dur);
+    var buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    var data = buf.getChannelData(0);
+    var i;
+    for (i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    var filt = ctx.createBiquadFilter();
+    filt.type = "lowpass";
+    filt.frequency.value = filterFreq || 800;
+    var g = ctx.createGain();
+    var t0 = ctx.currentTime;
+    g.gain.setValueAtTime(vol || 0.1, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(filt);
+    filt.connect(g);
+    g.connect(audio.master);
+    src.start();
+  }
+
+  function sfx(kind) {
+    if (kind === "throw") { noiseBurst(0.12, 0.08, 1400); tone(420, 0.18, "sine", 0.06, 180); }
+    else if (kind === "bark") { tone(220, 0.09, "square", 0.05); tone(280, 0.1, "square", 0.04, 200, 0.08); }
+    else if (kind === "catch") { tone(523, 0.12, "sine", 0.07); tone(659, 0.16, "sine", 0.06, null, 0.07); }
+    else if (kind === "midair") {
+      tone(523, 0.12, "sine", 0.07);
+      tone(659, 0.14, "sine", 0.07, null, 0.08);
+      tone(784, 0.16, "sine", 0.07, null, 0.16);
+      tone(1046, 0.22, "sine", 0.06, null, 0.24);
+    }
+    else if (kind === "bonus") { tone(880, 0.1, "sine", 0.06); tone(1320, 0.16, "sine", 0.05, null, 0.08); }
+    else if (kind === "splash") { noiseBurst(0.28, 0.1, 700); }
+    else if (kind === "bounce") { tone(200, 0.08, "sine", 0.04, 90); }
+    else if (kind === "button") { tone(660, 0.07, "sine", 0.04); }
+    else if (kind === "park") {
+      tone(392, 0.14, "sine", 0.06);
+      tone(523, 0.14, "sine", 0.06, null, 0.12);
+      tone(659, 0.22, "sine", 0.07, null, 0.24);
+    }
+    else if (kind === "unlock") {
+      tone(523, 0.12, "sine", 0.06);
+      tone(784, 0.14, "sine", 0.06, null, 0.1);
+      tone(1046, 0.28, "sine", 0.07, null, 0.22);
+    }
+  }
+
+  /* ---------- State ---------- */
+  var state;
+  var view = { scale: 1, ox: 0, oy: 0, cssW: 800, cssH: 500, dpr: 1 };
+  var speedMul = 1;
+  var running = false;
+  var lastTs = 0;
+  var canvas, ctx, heroCanvas, heroCtx;
+  var pointer = { down: false, id: null, sx: 0, sy: 0, x: 0, y: 0, moved: false };
+
+  function freshState(save) {
+    return {
+      screen: "start",
+      phase: "ready",
+      score: 0,
+      best: save.best || 0,
+      streak: 0,
+      fetchesInPark: 0,
+      parkIndex: 0,
+      dogId: save.dog || "sunny",
+      unlocked: save.unlocked ? save.unlocked.slice(0) : ["sunny"],
+      muted: !!save.muted,
+      time: 0,
+      flightT: 0,
+      ball: { x: 168, y: 452, vx: 0, vy: 0, spin: 0, visible: true, held: true },
+      dog: { x: 250, y: GROUND_Y, facing: 1, pose: "idle", jumpY: 0, hasBall: false, swim: false, targetX: 250, intercept: null },
+      kidArm: 0.2,
+      aim: { active: false, mode: "none", power: 0, angle: 0.85, holdT: 0, pulse: 0 },
+      bonuses: [],
+      popups: [],
+      particles: [],
+      clouds: [
+        { x: 200, y: 90, s: 1, v: 8 },
+        { x: 520, y: 70, s: 1.3, v: 5 },
+        { x: 880, y: 110, s: 0.9, v: 7 },
+        { x: 1100, y: 60, s: 1.1, v: 6 }
+      ],
+      toast: { text: "", sub: "", t: 0 },
+      celebrateT: 0,
+      parkChangeT: 0,
+      catchKind: "",
+      pendingUnlocks: [],
+      flowers: []
+    };
+  }
+
+  function placeReady() {
+    state.phase = "ready";
+    state.flightT = 0;
+    state.ball.x = 168;
+    state.ball.y = 452;
+    state.ball.vx = 0;
+    state.ball.vy = 0;
+    state.ball.held = true;
+    state.ball.visible = true;
+    state.dog.x = 250;
+    state.dog.y = GROUND_Y;
+    state.dog.facing = 1;
+    state.dog.pose = "idle";
+    state.dog.jumpY = 0;
+    state.dog.hasBall = false;
+    state.dog.swim = false;
+    state.dog.targetX = 250;
+    state.dog.intercept = null;
+    state.kidArm = 0.25;
+    state.aim.active = false;
+    state.aim.mode = "none";
+    state.aim.power = 0;
+    state.aim.holdT = 0;
+    spawnBonuses();
+    var hint = $("hint");
+    if (hint) hint.style.display = "block";
+  }
+
+  function spawnBonuses() {
+    var park = currentPark();
+    var items = [];
+    var n = 2 + (state.parkIndex % 2);
+    var i, kind, x, y, tries, ok, j;
+    for (i = 0; i < n; i++) {
+      kind = (i === 0 && Math.random() < 0.55) || Math.random() < 0.35 ? "star" : "bone";
+      ok = false;
+      for (tries = 0; tries < 12 && !ok; tries++) {
+        x = rand(420, 1040);
+        y = kind === "star" ? rand(230, 390) : rand(GROUND_Y - 70, GROUND_Y - 22);
+        if (inPond(x, GROUND_Y, park)) continue;
+        ok = true;
+        for (j = 0; j < items.length; j++) {
+          if (hypot(items[j].x - x, items[j].y - y) < 70) ok = false;
+        }
+      }
+      if (ok) items.push({ type: kind, x: x, y: y, got: false, bob: rand(0, Math.PI * 2) });
+    }
+    state.bonuses = items;
+  }
+
+  function addPopup(text, x, y, color) {
+    state.popups.push({ text: text, x: x, y: y, t: 0, color: color || "#FFFFFF" });
+  }
+
+  function addBurst(x, y, color, n) {
+    var i;
+    for (i = 0; i < (n || 10); i++) {
+      var a = rand(0, Math.PI * 2);
+      var s = rand(40, 180);
+      state.particles.push({
+        x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 40,
+        t: 0, life: rand(0.4, 0.8), color: color, r: rand(2, 5), kind: "dot"
+      });
+    }
+  }
+
+  function showToast(text, sub, dur) {
+    state.toast.text = text;
+    state.toast.sub = sub || "";
+    state.toast.t = dur || 1.4;
+    var el = $("toast");
+    var big = $("toastBig");
+    var sm = $("toastSub");
+    if (big) big.innerHTML = text;
+    if (sm) {
+      sm.innerHTML = sub || "";
+      sm.style.display = sub ? "block" : "none";
+    }
+    if (el) el.hidden = false;
+  }
+
+  function hideToast() {
+    var el = $("toast");
+    if (el) el.hidden = true;
+    state.toast.t = 0;
+  }
+
+  function updateHud() {
+    var a = $("liveScore"); if (a) a.innerHTML = String(state.score);
+    var b = $("liveBest"); if (b) b.innerHTML = String(state.best);
+    var c = $("bestChip"); if (c) c.innerHTML = String(state.best);
+    var p = $("parkLabel"); if (p) p.innerHTML = currentPark().name;
+  }
+
+  function addScore(n) {
+    state.score += n;
+    if (state.score > state.best) state.best = state.score;
+    updateHud();
+    checkUnlocks();
+    saveNow();
+  }
+
+  function checkUnlocks() {
+    var i, dog, newly;
+    for (i = 0; i < DOGS.length; i++) {
+      dog = DOGS[i];
+      if (state.score >= dog.unlock && !isUnlockedId(state.unlocked, dog.id)) {
+        state.unlocked.push(dog.id);
+        newly = dog;
+        showToast(dog.name + " unlocked!", "A new friend! Pick " + dog.name + " next game.", 2.4);
+        sfx("unlock");
+      }
+    }
+    if (newly) {
+      renderDogPicker();
+      saveNow();
+    }
+  }
+
+  /* ---------- Throw / physics ---------- */
+  function beginThrow(angle, power) {
+    power = clamp(power, 0.12, 1);
+    angle = clamp(angle, 0.12, Math.PI - 0.12);
+    var speed = lerp(300, 980, power);
+    state.ball.x = 168;
+    state.ball.y = 452;
+    state.ball.vx = Math.cos(angle) * speed;
+    state.ball.vy = -Math.sin(angle) * speed;
+    state.ball.held = false;
+    state.ball.visible = true;
+    state.ball.spin = 0;
+    state.phase = "flying";
+    state.flightT = 0;
+    state.catchKind = "";
+    state.kidArm = -0.9;
+    state.aim.active = false;
+    state.aim.mode = "none";
+    var hint = $("hint");
+    if (hint) hint.style.display = "none";
+    hideToast();
+    var dog = getDog(state.dogId);
+    var pred = predictPath(state.ball.x, state.ball.y, state.ball.vx, state.ball.vy);
+    state.dog.intercept = pickIntercept(pred, state.dog.x, dog.speed, dog.jump);
+    state.dog.facing = 1;
+    state.dog.pose = "run";
+    state.dog.hasBall = false;
+    sfx("throw");
+  }
+
+  function predictPath(x, y, vx, vy) {
+    var points = [];
+    var t = 0, dt = 0.016, i, park = currentPark(), gx = GROUND_Y - BALL_R;
+    for (i = 0; i < 360; i++) {
+      vy += GRAVITY * dt;
+      x += vx * dt;
+      y += vy * dt;
+      t += dt;
+      if (x > WORLD_W - 30) { x = WORLD_W - 30; vx *= -0.35; }
+      if (x < 40) { x = 40; vx *= -0.35; }
+      points.push({ t: t, x: x, y: y });
+      if (y >= gx) {
+        return { t: t, x: x, y: gx, points: points, water: inPond(x, GROUND_Y, park), bush: !!inBush(x, y, park) };
+      }
+    }
+    return { t: t, x: x, y: y, points: points, water: false, bush: false };
+  }
+
+  function pickIntercept(pred, dogX, dogSpeed, jumpH) {
+    var i, p, ballH, need, mid = null;
+    for (i = 0; i < pred.points.length; i++) {
+      p = pred.points[i];
+      if (p.t < 0.45 || p.x < 380 || p.x < dogX + 70) continue;
+      ballH = (GROUND_Y - BALL_R) - p.y;
+      if (ballH > 40 && ballH < jumpH + 40) {
+        need = Math.abs(p.x - dogX) / dogSpeed;
+        if (need <= p.t + 0.08) {
+          mid = { type: "midair", t: p.t, x: p.x, y: p.y };
+          break;
+        }
+      }
+    }
+    if (mid && !pred.water) return mid;
+    var runT = Math.abs(pred.x - dogX) / dogSpeed;
+    if (Math.abs(runT - pred.t) < 0.3 && !pred.water && !pred.bush) {
+      return { type: "great", t: Math.max(runT, pred.t), x: pred.x, y: GROUND_Y - BALL_R };
+    }
+    return { type: "normal", t: Math.max(runT, pred.t) + 0.12, x: pred.x, y: GROUND_Y - BALL_R, water: pred.water, bush: pred.bush };
+  }
+
+  function doCatch(kind, silent) {
+    if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return;
+    state.catchKind = kind;
+    state.dog.hasBall = true;
+    state.dog.pose = "return";
+    state.dog.swim = false;
+    state.ball.held = true;
+    state.ball.vx = 0;
+    state.ball.vy = 0;
+    state.phase = "return";
+    var pts = 10;
+    var msg = "Nice fetch!";
+    var sub = "+10";
+    if (kind === "midair") {
+      pts = 35; msg = "Mid-air catch!"; sub = "+35";
+      state.streak += 1;
+      sfx("midair"); sfx("bark");
+      addBurst(state.ball.x, state.ball.y, "#FFC83D", 16);
+      addBurst(state.ball.x, state.ball.y, "#FFFFFF", 8);
+    } else if (kind === "great") {
+      pts = 20; msg = "Great catch!"; sub = "+20";
+      state.streak += 1;
+      sfx("catch"); sfx("bark");
+      addBurst(state.ball.x, state.ball.y, "#7ED97E", 12);
+    } else if (kind === "splash") {
+      pts = 15; msg = "Splash catch!"; sub = "+15";
+      state.streak = 0;
+      sfx("splash"); sfx("catch");
+    } else if (kind === "bush") {
+      pts = 12; msg = "Found it!"; sub = "+12";
+      state.streak = 0;
+      sfx("catch"); sfx("bark");
+    } else {
+      pts = 10; msg = "Nice fetch!"; sub = "+10";
+      state.streak = 0;
+      sfx("catch");
+    }
+    if (state.streak >= 2 && (kind === "midair" || kind === "great")) {
+      var bonus = 5 * (state.streak - 1);
+      pts += bonus;
+      sub += "  Streak +" + bonus;
+    }
+    addScore(pts);
+    addPopup(sub, state.ball.x, state.ball.y - 40, "#FFF36A");
+    showToast(msg, sub, 1.15);
+    if (!silent) {}
+  }
+
+  function collectBonuses() {
+    var i, b, dy, hit, py;
+    for (i = 0; i < state.bonuses.length; i++) {
+      b = state.bonuses[i];
+      if (b.got) continue;
+      py = b.y + Math.sin(state.time * 3 + b.bob) * 5;
+      hit = false;
+      if (!state.ball.held && hypot(state.ball.x - b.x, state.ball.y - py) < 28) hit = true;
+      if (hypot(state.dog.x - b.x, (GROUND_Y - state.dog.jumpY) - 30 - py) < 36) hit = true;
+      if (hit) {
+        b.got = true;
+        if (b.type === "star") {
+          addScore(25);
+          addPopup("+25 star!", b.x, py - 20, "#FFE566");
+          addBurst(b.x, py, "#FFE566", 14);
+        } else {
+          addScore(15);
+          addPopup("+15 bone!", b.x, py - 20, "#F4D19B");
+          addBurst(b.x, py, "#E0A54B", 10);
+        }
+        sfx("bonus");
+      }
+    }
+  }
+
+  function updateDog(dt) {
+    var dogDef = getDog(state.dogId);
+    var d = state.dog;
+    var target, dist, step, inter, jumpWindow, tleft;
+
+    if (state.phase === "ready" || state.phase === "aiming" || state.phase === "celebrate" || state.phase === "parkchange") {
+      if (state.phase !== "celebrate") {
+        d.pose = state.phase === "ready" || state.phase === "aiming" ? "idle" : d.pose;
+      }
+      if (state.phase === "celebrate") d.pose = "wag";
+      d.jumpY = lerp(d.jumpY, 0, clamp(dt * 8, 0, 1));
+      return;
+    }
+
+    inter = d.intercept;
+    if (state.phase === "flying") {
+      target = inter ? inter.x : (state.ball.x + 20);
+      d.targetX = target;
+      if (inter && inter.type === "midair") {
+        jumpWindow = 0.4;
+        tleft = inter.t - state.flightT;
+        if (tleft < jumpWindow / 2 && tleft > -jumpWindow / 2) {
+          d.pose = "jump";
+          var p = 1 - clamp((tleft + jumpWindow / 2) / jumpWindow, 0, 1);
+          var height = Math.max(50, (GROUND_Y - inter.y) + 18);
+          d.jumpY = Math.sin(p * Math.PI) * height;
+        } else {
+          d.pose = "run";
+          d.jumpY = lerp(d.jumpY, 0, clamp(dt * 10, 0, 1));
+        }
+      } else {
+        d.pose = "run";
+        d.jumpY = lerp(d.jumpY, 0, clamp(dt * 10, 0, 1));
+      }
+    } else if (state.phase === "bounce" || state.phase === "retrieve") {
+      d.targetX = state.ball.x;
+      d.pose = d.swim ? "swim" : "run";
+      d.jumpY = lerp(d.jumpY, 0, clamp(dt * 10, 0, 1));
+      if (inPond(d.x, GROUND_Y, currentPark()) && (state.phase === "retrieve" || inPond(state.ball.x, GROUND_Y, currentPark()))) {
+        d.swim = true;
+        d.pose = "swim";
+      }
+    } else if (state.phase === "return") {
+      d.targetX = 250;
+      d.facing = -1;
+      d.pose = "return";
+      d.swim = inPond(d.x, GROUND_Y, currentPark());
+      if (d.swim) d.pose = "swim";
+      d.jumpY = lerp(d.jumpY, 0, clamp(dt * 8, 0, 1));
+    }
+
+    var spd = dogDef.speed;
+    if (d.swim) spd *= 0.55;
+    if (d.pose === "jump") spd *= 0.9;
+    dist = d.targetX - d.x;
+    if (Math.abs(dist) > 4) {
+      d.facing = dist > 0 ? 1 : -1;
+      step = spd * dt * (dist > 0 ? 1 : -1);
+      if (Math.abs(step) > Math.abs(dist)) d.x = d.targetX;
+      else d.x += step;
+    } else {
+      d.x = d.targetX;
+    }
+    d.x = clamp(d.x, 80, WORLD_W - 40);
+  }
+
+  function updateBall(dt) {
+    var b = state.ball;
+    var park = currentPark();
+    var gx = GROUND_Y - BALL_R;
+    if (b.held) {
+      if (state.dog.hasBall) {
+        b.x = state.dog.x + state.dog.facing * 28;
+        b.y = GROUND_Y - state.dog.jumpY - (state.dog.swim ? 18 : 36);
+      } else {
+        b.x = 168;
+        b.y = 452;
+      }
+      return;
+    }
+    b.vy += GRAVITY * dt;
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+    b.spin += b.vx * dt * 0.08;
+    if (b.x > WORLD_W - 24) { b.x = WORLD_W - 24; b.vx = -Math.abs(b.vx) * 0.4; }
+    if (b.x < 50) { b.x = 50; b.vx = Math.abs(b.vx) * 0.4; }
+
+    if (b.y >= gx) {
+      b.y = gx;
+      if (inPond(b.x, GROUND_Y, park)) {
+        b.y = gx + 8;
+        b.vx *= 0.4;
+        b.vy = 0;
+        if (state.phase === "flying") {
+          state.phase = "retrieve";
+          sfx("splash");
+          addBurst(b.x, GROUND_Y - 6, "#A0E4FF", 14);
+          showToast("Splash!", "Your pup will get it!", 0.9);
+        }
+      } else if (inBush(b.x, b.y, park)) {
+        b.vy = 0;
+        b.vx *= 0.2;
+        if (state.phase === "flying") {
+          state.phase = "retrieve";
+          sfx("bounce");
+        }
+      } else {
+        if (Math.abs(b.vy) > 80) {
+          b.vy = -b.vy * 0.46;
+          b.vx *= 0.78;
+          sfx("bounce");
+          if (state.phase === "flying") state.phase = "bounce";
+        } else {
+          b.vy = 0;
+          b.vx *= 0.85;
+          if (Math.abs(b.vx) < 18) b.vx = 0;
+          if (state.phase === "flying") state.phase = "bounce";
+          if (state.phase === "bounce" && Math.abs(b.vx) < 18) state.phase = "retrieve";
+        }
+      }
+    }
+  }
+
+  function tryCatch() {
+    if (state.dog.hasBall) return;
+    if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return;
+    var mouthX = state.dog.x + state.dog.facing * 26;
+    var mouthY = GROUND_Y - state.dog.jumpY - 34;
+    var dist = hypot(state.ball.x - mouthX, state.ball.y - mouthY);
+    var inter = state.dog.intercept;
+    var park = currentPark();
+
+    if (state.phase === "flying" && inter && inter.type === "midair" && state.flightT > 0.4) {
+      if (state.flightT >= inter.t - 0.12) {
+        if (dist < 78) {
+          state.ball.x = lerp(state.ball.x, mouthX, 0.45);
+          state.ball.y = lerp(state.ball.y, mouthY, 0.45);
+        }
+        if (dist < 70 || (state.flightT >= inter.t && dist < 90)) {
+          doCatch("midair");
+          return;
+        }
+      }
+    }
+
+    if ((state.phase === "bounce" || state.phase === "flying") && dist < 38 && state.ball.y > GROUND_Y - 90) {
+      if (inter && inter.type === "great" && state.flightT < inter.t + 0.35) doCatch("great");
+      else if (state.ball.y < GROUND_Y - 50) doCatch("midair");
+      else doCatch("great");
+      return;
+    }
+
+    if (state.phase === "retrieve" && dist < 36) {
+      if (inPond(state.ball.x, GROUND_Y, park)) doCatch("splash");
+      else if (inBush(state.ball.x, state.ball.y, park)) doCatch("bush");
+      else doCatch("normal");
+    }
+  }
+
+  function finishReturn(dt) {
+    if (state.phase !== "return") return;
+    if (Math.abs(state.dog.x - 250) < 8 && state.dog.jumpY < 8) {
+      state.phase = "celebrate";
+      state.celebrateT = 0.7;
+      state.dog.pose = "wag";
+      state.dog.facing = 1;
+      state.dog.hasBall = false;
+      state.ball.held = true;
+      state.ball.x = 168;
+      state.ball.y = 452;
+    }
+  }
+
+  function afterCelebrate() {
+    state.fetchesInPark += 1;
+    if (state.fetchesInPark >= THROWS_PER_PARK) {
+      state.phase = "parkchange";
+      state.parkChangeT = 1.6;
+      addScore(50);
+      showToast("New park!", "Bonus +50", 1.5);
+      sfx("park");
+      addBurst(WORLD_W / 2, 260, "#FFC83D", 20);
+    } else {
+      placeReady();
+    }
+  }
+
+  function advancePark() {
+    state.parkIndex = (state.parkIndex + 1) % PARKS.length;
+    state.fetchesInPark = 0;
+    seedFlowers();
+    placeReady();
+    updateHud();
+    showToast(currentPark().name, "Ready when you are!", 1.2);
+  }
+
+  function seedFlowers() {
+    var i, arr = [];
+    for (i = 0; i < 40; i++) {
+      arr.push({
+        x: rand(0, WORLD_W),
+        y: rand(GROUND_Y + 10, WORLD_H - 8),
+        c: ["#FF6B8A", "#FFC83D", "#FF8C42", "#E87BE0", "#FFFFFF", "#7EC8FF"][Math.floor(Math.random() * 6)],
+        r: rand(2.5, 4.5)
+      });
+    }
+    state.flowers = arr;
+  }
+
+  function updateParticles(dt) {
+    var i, p, next = [];
+    for (i = 0; i < state.particles.length; i++) {
+      p = state.particles[i];
+      p.t += dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 400 * dt;
+      if (p.t < p.life) next.push(p);
+    }
+    state.particles = next;
+    next = [];
+    for (i = 0; i < state.popups.length; i++) {
+      p = state.popups[i];
+      p.t += dt;
+      p.y -= 40 * dt;
+      if (p.t < 0.9) next.push(p);
+    }
+    state.popups = next;
+  }
+
+  function update(dt) {
+    state.time += dt;
+    if (state.aim.active && state.aim.mode === "hold") {
+      state.aim.holdT += dt;
+      state.aim.pulse += dt;
+      var wave = (Math.sin(state.aim.holdT * 2.4 - Math.PI / 2) + 1) / 2;
+      if (state.aim.holdT < 0.9) state.aim.power = clamp(state.aim.holdT / 0.9, 0, 1);
+      else state.aim.power = 0.2 + 0.8 * wave;
+      state.aim.angle = 0.72 + state.aim.power * 0.35;
+    }
+
+    var i, c;
+    for (i = 0; i < state.clouds.length; i++) {
+      c = state.clouds[i];
+      c.x += c.v * dt;
+      if (c.x > WORLD_W + 140) c.x = -140;
+    }
+
+    if (state.phase === "flying") state.flightT += dt;
+
+    if (state.kidArm < 0.25 && (state.phase === "ready" || state.phase === "aiming")) {
+      state.kidArm = lerp(state.kidArm, 0.25, clamp(dt * 6, 0, 1));
+    }
+
+    updateBall(dt);
+    updateDog(dt);
+    if (!state.ball.held) collectBonuses();
+    else collectBonuses();
+    tryCatch();
+    finishReturn(dt);
+    updateParticles(dt);
+
+    if (state.toast.t > 0) {
+      state.toast.t -= dt;
+      if (state.toast.t <= 0) hideToast();
+    }
+
+    if (state.phase === "celebrate") {
+      state.celebrateT -= dt;
+      if (state.celebrateT <= 0) afterCelebrate();
+    }
+    if (state.phase === "parkchange") {
+      state.parkChangeT -= dt;
+      if (state.parkChangeT <= 0) advancePark();
+    }
+  }
+
+  /* ---------- Drawing helpers ---------- */
+  function pathEllipse(c, x, y, rx, ry) {
+    var k = 0.5522848;
+    var ox = rx * k, oy = ry * k;
+    c.moveTo(x, y - ry);
+    c.bezierCurveTo(x + ox, y - ry, x + rx, y - oy, x + rx, y);
+    c.bezierCurveTo(x + rx, y + oy, x + ox, y + ry, x, y + ry);
+    c.bezierCurveTo(x - ox, y + ry, x - rx, y + oy, x - rx, y);
+    c.bezierCurveTo(x - rx, y - oy, x - ox, y - ry, x, y - ry);
+    c.closePath();
+  }
+  function fillEllipse(c, x, y, rx, ry) {
+    c.beginPath();
+    pathEllipse(c, x, y, rx, ry);
+    c.fill();
+  }
+  function strokeEllipse(c, x, y, rx, ry) {
+    c.beginPath();
+    pathEllipse(c, x, y, rx, ry);
+    c.stroke();
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.lineTo(x + w - r, y);
+    c.quadraticCurveTo(x + w, y, x + w, y + r);
+    c.lineTo(x + w, y + h - r);
+    c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    c.lineTo(x + r, y + h);
+    c.quadraticCurveTo(x, y + h, x, y + h - r);
+    c.lineTo(x, y + r);
+    c.quadraticCurveTo(x, y, x + r, y);
+    c.closePath();
+  }
+
+  function setCloudColor(c, park) {
+    c.fillStyle = park.sunset ? "rgba(255, 220, 190, 0.7)" : "rgba(255,255,255,0.85)";
+  }
+
+  function drawCloud(c, x, y, s) {
+    fillEllipse(c, x, y, 40 * s, 22 * s);
+    fillEllipse(c, x - 28 * s, y + 4 * s, 26 * s, 16 * s);
+    fillEllipse(c, x + 30 * s, y + 6 * s, 28 * s, 16 * s);
+    fillEllipse(c, x + 4 * s, y - 16 * s, 22 * s, 16 * s);
+  }
+
+  function drawTree(c, x, ground, h, kind, park) {
+    var trunkW = kind === "palm" ? 8 : 14;
+    c.fillStyle = kind === "silhouette" ? park.treeB : "#8A5A32";
+    c.fillRect(x - trunkW / 2, ground - h * 0.45, trunkW, h * 0.45);
+    if (kind === "palm") {
+      c.fillStyle = park.treeA;
+      var i, a;
+      for (i = 0; i < 6; i++) {
+        a = -Math.PI / 2 + (i - 2.5) * 0.45;
+        c.save();
+        c.translate(x, ground - h * 0.45);
+        c.rotate(a);
+        fillEllipse(c, 0, -10, 10, 36);
+        c.restore();
+      }
+      return;
+    }
+    if (kind === "silhouette") {
+      c.fillStyle = park.treeA;
+      fillEllipse(c, x, ground - h * 0.65, 46, h * 0.38);
+      fillEllipse(c, x - 24, ground - h * 0.5, 28, 30);
+      fillEllipse(c, x + 22, ground - h * 0.52, 26, 28);
+      return;
+    }
+    c.fillStyle = park.treeA;
+    fillEllipse(c, x, ground - h * 0.62, kind === "autumn" ? 48 : 52, h * 0.4);
+    c.fillStyle = park.treeB;
+    fillEllipse(c, x - 22, ground - h * 0.5, 30, 32);
+    fillEllipse(c, x + 24, ground - h * 0.55, 28, 30);
+    if (kind === "autumn") {
+      c.fillStyle = "#E07A3D";
+      fillEllipse(c, x + 8, ground - h * 0.7, 22, 18);
+      c.fillStyle = "#C0392B";
+      fillEllipse(c, x - 16, ground - h * 0.58, 16, 14);
+    }
+  }
+
+  function drawBush(c, b, park) {
+    var s = b.s || 1;
+    var x = b.x, y = b.y;
+    c.fillStyle = "rgba(40,60,30,0.18)";
+    fillEllipse(c, x, y - 4, 36 * s, 8 * s);
+    c.fillStyle = park.sunset ? "#243228" : (park.leaves ? "#7A9A2A" : "#2F9E4F");
+    fillEllipse(c, x, y - 22 * s, 38 * s, 24 * s);
+    c.fillStyle = park.sunset ? "#1A2420" : (park.leaves ? "#C86B1A" : "#247A3C");
+    fillEllipse(c, x - 20 * s, y - 16 * s, 22 * s, 16 * s);
+    fillEllipse(c, x + 18 * s, y - 18 * s, 20 * s, 15 * s);
+    if (park.leaves) {
+      c.fillStyle = "#E07A3D";
+      fillEllipse(c, x + 6 * s, y - 28 * s, 12 * s, 8 * s);
+    }
+    if (!park.sunset) {
+      c.fillStyle = "rgba(255,255,255,0.15)";
+      fillEllipse(c, x - 10 * s, y - 28 * s, 10 * s, 6 * s);
+    }
+  }
+
+  function drawPond(c, p, park) {
+    if (!p) return;
+    c.fillStyle = "rgba(40,60,80,0.15)";
+    fillEllipse(c, p.x, p.y + 6, p.rx + 8, p.ry);
+    var g = c.createLinearGradient(p.x, p.y - p.ry, p.x, p.y + p.ry);
+    if (park.sunset) {
+      g.addColorStop(0, "rgba(255, 170, 120, 0.85)");
+      g.addColorStop(1, "rgba(80, 90, 140, 0.9)");
+    } else {
+      g.addColorStop(0, "rgba(120, 210, 230, 0.9)");
+      g.addColorStop(1, "rgba(40, 130, 170, 0.95)");
+    }
+    c.fillStyle = g;
+    fillEllipse(c, p.x, p.y, p.rx, p.ry);
+    c.fillStyle = "rgba(255,255,255,0.28)";
+    fillEllipse(c, p.x - p.rx * 0.2, p.y - p.ry * 0.35, p.rx * 0.45, p.ry * 0.28);
+    if (!p.ocean) {
+      c.fillStyle = park.sunset ? "#3A5A30" : "#3CB371";
+      fillEllipse(c, p.x - 20, p.y - 4, 10, 5);
+      fillEllipse(c, p.x + 16, p.y - 2, 8, 4);
+    }
+  }
+
+  function drawPark(c, park, t) {
+    var g = c.createLinearGradient(0, 0, 0, GROUND_Y);
+    g.addColorStop(0, park.skyTop);
+    g.addColorStop(0.55, park.skyMid);
+    g.addColorStop(1, park.skyBot);
+    c.fillStyle = g;
+    c.fillRect(-400, -400, WORLD_W + 800, WORLD_H + 800);
+
+    c.fillStyle = park.sun;
+    fillEllipse(c, park.sunX, park.sunY, park.sunR, park.sunR);
+    c.fillStyle = park.sunset ? "rgba(255, 200, 80, 0.25)" : "rgba(255, 240, 150, 0.28)";
+    fillEllipse(c, park.sunX, park.sunY, park.sunR * 1.55, park.sunR * 1.55);
+
+    var i;
+    setCloudColor(c, park);
+    for (i = 0; i < state.clouds.length; i++) {
+      drawCloud(c, state.clouds[i].x, state.clouds[i].y, state.clouds[i].s);
+    }
+
+    if (park.leaves) {
+      c.fillStyle = "rgba(210, 90, 30, 0.45)";
+      for (i = 0; i < 12; i++) {
+        var lx = (i * 97 + t * 30) % (WORLD_W + 40) - 20;
+        var ly = 180 + (i * 37) % 200 + Math.sin(t + i) * 8;
+        c.save();
+        c.translate(lx, ly);
+        c.rotate(t * 0.8 + i);
+        fillEllipse(c, 0, 0, 6, 3);
+        c.restore();
+      }
+    }
+
+    c.fillStyle = park.grassFar;
+    c.beginPath();
+    c.moveTo(-80, GROUND_Y - 70);
+    c.quadraticCurveTo(300, GROUND_Y - 110, 640, GROUND_Y - 64);
+    c.quadraticCurveTo(940, GROUND_Y - 40, WORLD_W + 80, GROUND_Y - 80);
+    c.lineTo(WORLD_W + 80, GROUND_Y + 20);
+    c.lineTo(-80, GROUND_Y + 20);
+    c.closePath();
+    c.fill();
+
+    for (i = 0; i < park.trees.length; i++) {
+      drawTree(c, park.trees[i].x, GROUND_Y, park.trees[i].h, park.trees[i].kind, park);
+    }
+
+    c.fillStyle = park.grassMid;
+    c.fillRect(-80, GROUND_Y - 18, WORLD_W + 160, 40);
+
+    c.fillStyle = park.dirt;
+    c.beginPath();
+    c.moveTo(40, GROUND_Y);
+    c.quadraticCurveTo(400, GROUND_Y + 10, 800, GROUND_Y + 2);
+    c.quadraticCurveTo(1000, GROUND_Y - 2, 1180, GROUND_Y + 6);
+    c.lineTo(1180, GROUND_Y + 22);
+    c.quadraticCurveTo(700, GROUND_Y + 28, 40, GROUND_Y + 16);
+    c.closePath();
+    c.fill();
+
+    if (park.pond) drawPond(c, park.pond, park);
+
+    for (i = 0; i < park.bushes.length; i++) drawBush(c, park.bushes[i], park);
+
+    c.fillStyle = park.grassNear;
+    c.fillRect(-800, GROUND_Y + 16, WORLD_W + 1600, 5000);
+
+    c.fillStyle = "rgba(255,255,255,0.08)";
+    for (i = 0; i < 28; i++) {
+      c.fillRect((i * 53) % WORLD_W, GROUND_Y + 20 + (i * 17) % 80, 18, 3);
+    }
+
+    if (park.flower || park.lotsOfFlowers) {
+      for (i = 0; i < state.flowers.length; i++) {
+        var f = state.flowers[i];
+        if (!park.lotsOfFlowers && i > 16) continue;
+        c.fillStyle = f.c;
+        fillEllipse(c, f.x, f.y, f.r, f.r);
+        c.fillStyle = "#FFC83D";
+        fillEllipse(c, f.x, f.y, 1.4, 1.4);
+      }
+    }
+  }
+
+  function drawBall(c, x, y, spin, scale) {
+    scale = scale || 1;
+    var r = BALL_R * scale;
+    c.fillStyle = "rgba(40,40,40,0.22)";
+    fillEllipse(c, x, GROUND_Y - 4, r * 0.9, r * 0.28);
+    c.fillStyle = "#E85D2A";
+    fillEllipse(c, x, y, r, r);
+    c.fillStyle = "#FF8A4A";
+    fillEllipse(c, x - r * 0.25, y - r * 0.28, r * 0.45, r * 0.4);
+    c.save();
+    c.translate(x, y);
+    c.rotate(spin);
+    c.strokeStyle = "#F5F5F5";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(-r * 0.72, 0);
+    c.quadraticCurveTo(0, -r * 0.2, r * 0.72, 0);
+    c.moveTo(-r * 0.72, 0);
+    c.quadraticCurveTo(0, r * 0.2, r * 0.72, 0);
+    c.stroke();
+    c.restore();
+    c.strokeStyle = "rgba(80,20,10,0.35)";
+    c.lineWidth = 1.5;
+    strokeEllipse(c, x, y, r, r);
+  }
+
+  function drawBone(c, x, y, s) {
+    s = s || 1;
+    c.save();
+    c.translate(x, y);
+    c.rotate(-0.3);
+    c.fillStyle = "#F4E6C4";
+    fillEllipse(c, -12 * s, -5 * s, 7 * s, 6 * s);
+    fillEllipse(c, -12 * s, 5 * s, 7 * s, 6 * s);
+    fillEllipse(c, 12 * s, -5 * s, 7 * s, 6 * s);
+    fillEllipse(c, 12 * s, 5 * s, 7 * s, 6 * s);
+    c.fillRect(-12 * s, -4.5 * s, 24 * s, 9 * s);
+    c.restore();
+  }
+
+  function drawStar(c, x, y, r, color) {
+    var i, a, rr, px, py;
+    c.fillStyle = color || "#FFE566";
+    c.beginPath();
+    for (i = 0; i < 10; i++) {
+      a = -Math.PI / 2 + i * Math.PI / 5;
+      rr = (i % 2 === 0) ? r : r * 0.42;
+      px = x + Math.cos(a) * rr;
+      py = y + Math.sin(a) * rr;
+      if (i === 0) c.moveTo(px, py);
+      else c.lineTo(px, py);
+    }
+    c.closePath();
+    c.fill();
+  }
+
+  function drawKid(c, t, arm, throwing) {
+    var x = 118, y = GROUND_Y;
+    c.fillStyle = "rgba(40,40,40,0.18)";
+    fillEllipse(c, x + 6, y - 4, 22, 7);
+    c.fillStyle = "#3A5FCD";
+    roundRect(c, x - 12, y - 58, 16, 36, 6);
+    c.fill();
+    roundRect(c, x + 2, y - 58, 16, 36, 6);
+    c.fill();
+    c.fillStyle = "#E85D4C";
+    fillEllipse(c, x + 8, y - 18, 7, 5);
+    fillEllipse(c, x - 10, y - 18, 7, 5);
+
+    c.fillStyle = "#FFC83D";
+    roundRect(c, x - 16, y - 108, 36, 54, 12);
+    c.fill();
+
+    c.save();
+    c.translate(x + 16, y - 96);
+    c.rotate(arm);
+    c.fillStyle = "#E8B48A";
+    fillEllipse(c, 22, 0, 7, 6);
+    c.fillStyle = "#FFC83D";
+    c.fillRect(0, -5, 20, 10);
+    c.restore();
+
+    c.fillStyle = "#E8B48A";
+    c.fillRect(x - 18, y - 100, 8, 28);
+    fillEllipse(c, x + 2, y - 126, 20, 20);
+    c.fillStyle = "#5A3A22";
+    fillEllipse(c, x + 2, y - 136, 20, 10);
+    c.fillRect(x - 16, y - 134, 8, 18);
+    c.fillStyle = "#2C2418";
+    fillEllipse(c, x + 8, y - 128, 3, 3.5);
+    c.fillStyle = "#C45A4A";
+    fillEllipse(c, x + 14, y - 120, 3, 2);
+    c.fillStyle = "#E8B48A";
+    fillEllipse(c, x + 18, y - 118, 5, 4);
+  }
+
+  function drawDog(c, x, groundY, def, opts) {
+    opts = opts || {};
+    var facing = opts.facing || 1;
+    var pose = opts.pose || "idle";
+    var t = opts.t || 0;
+    var jumpY = opts.jumpY || 0;
+    var hasBall = !!opts.hasBall;
+    var scale = opts.scale || 1;
+    var bounce = 0;
+    var run = 0;
+    var tilt = 0;
+    var tail = Math.sin(t * 7) * 0.5;
+    var sit = pose === "sit";
+
+    if (pose === "run" || pose === "return" || pose === "swim") {
+      run = t * 12;
+      bounce = Math.abs(Math.sin(run)) * 7;
+      tilt = -0.14 * facing;
+      tail = Math.sin(t * 16) * 0.8;
+    } else if (pose === "jump") {
+      tilt = -0.28 * facing;
+      tail = 0.7;
+      bounce = 0;
+    } else if (pose === "wag") {
+      tail = Math.sin(t * 18) * 0.9;
+      bounce = Math.abs(Math.sin(t * 8)) * 3;
+    } else if (sit) {
+      tail = Math.sin(t * 5) * 0.4;
+      bounce = 0;
+    } else {
+      bounce = Math.sin(t * 2.2) * 2;
+    }
+
+    var y = groundY - jumpY - bounce;
+    if (pose === "swim") y = groundY + 10 + Math.sin(t * 6) * 3;
+
+    c.save();
+    c.translate(x, y);
+    c.scale(facing * scale, scale);
+    c.rotate(tilt);
+
+    c.fillStyle = "rgba(40,40,40,0.18)";
+    c.save();
+    c.rotate(-tilt);
+    fillEllipse(c, 0, jumpY + bounce + 4, 28, 7);
+    c.restore();
+
+    function leg(px, phase, back) {
+      if (sit && back) return;
+      var swing = 0, lift = 0;
+      if (pose === "run" || pose === "return") {
+        swing = Math.sin(run + phase) * 16;
+        lift = Math.max(0, Math.cos(run + phase)) * 8;
+      } else if (pose === "jump") {
+        swing = -12; lift = 8;
+      } else if (pose === "swim") {
+        swing = Math.sin(t * 8 + phase) * 10;
+      }
+      c.fillStyle = def.bodyDark;
+      c.save();
+      c.translate(px, sit ? -8 : -6);
+      c.rotate(swing * 0.04);
+      roundRect(c, -5, 0 - lift, 9, 22 + (sit ? -6 : 0), 4);
+      c.fill();
+      c.fillStyle = def.belly;
+      fillEllipse(c, 0, 20 - lift, 6, 3.5);
+      c.restore();
+    }
+    leg(-16, 0, true);
+    leg(12, Math.PI, false);
+    leg(-8, Math.PI, true);
+    leg(20, 0, false);
+
+    c.fillStyle = def.body;
+    fillEllipse(c, 0, -28, 32, 22);
+    c.fillStyle = def.belly;
+    fillEllipse(c, 6, -20, 18, 12);
+
+    if (def.spots) {
+      c.fillStyle = "#8B5A2B";
+      fillEllipse(c, -8, -32, 6, 5);
+      fillEllipse(c, 10, -26, 5, 4);
+      fillEllipse(c, -16, -18, 4, 3.5);
+    }
+
+    c.save();
+    c.translate(-28, -30);
+    c.rotate(-0.7 + tail);
+    c.fillStyle = def.bodyDark;
+    if (def.ears === "prick") {
+      fillEllipse(c, -8, 0, 6, 14);
+    } else {
+      fillEllipse(c, -10, 0, 7, 16);
+    }
+    c.restore();
+
+    c.save();
+    c.translate(26, -40);
+    if (def.ears === "prick") {
+      c.fillStyle = def.ear;
+      fillEllipse(c, 6, -12, 7, 16);
+      fillEllipse(c, -10, -14, 7, 16);
+      c.fillStyle = def.muzzle;
+      fillEllipse(c, 4, -10, 3, 6);
+    } else {
+      c.fillStyle = def.ear;
+      fillEllipse(c, 10, -2, 9, 16);
+      fillEllipse(c, -12, -4, 9, 16);
+    }
+    c.restore();
+
+    c.fillStyle = def.body;
+    fillEllipse(c, 28, -44, 20, 18);
+    c.fillStyle = def.muzzle;
+    fillEllipse(c, 40, -36, 12, 9);
+
+    c.fillStyle = "#2C2418";
+    fillEllipse(c, 48, -38, 4.2, 3.2);
+    c.fillStyle = "#2C2418";
+    fillEllipse(c, 30, -50, 3.2, 3.6);
+    c.fillStyle = "#FFFFFF";
+    fillEllipse(c, 31, -51.5, 1.3, 1.3);
+
+    c.strokeStyle = "rgba(40,20,10,0.45)";
+    c.lineWidth = 1.2;
+    c.beginPath();
+    c.arc(42, -33, 5, 0.15, Math.PI - 0.15, false);
+    c.stroke();
+
+    if (pose === "wag" || pose === "idle" || pose === "sit") {
+      c.fillStyle = "#F07A8A";
+      c.beginPath();
+      c.moveTo(46, -30);
+      c.lineTo(52, -22);
+      c.lineTo(42, -26);
+      c.closePath();
+      c.fill();
+    }
+
+    c.fillStyle = def.collar;
+    roundRect(c, 12, -38, 22, 6, 3);
+    c.fill();
+    c.fillStyle = def.tag;
+    fillEllipse(c, 24, -30, 4, 4);
+
+    if (hasBall) {
+      c.restore();
+      drawBall(c, x + facing * 28 * scale, groundY - jumpY - bounce - 36 * scale, t * 2, 0.75);
+      return;
+    }
+
+    c.restore();
+  }
+
+  function drawAim(c) {
+    if (!state.aim.active) return;
+    var ox = 168, oy = 452;
+    var ang = state.aim.angle;
+    var pow = state.aim.power;
+    var len = 40 + pow * 160;
+    var x2 = ox + Math.cos(ang) * len;
+    var y2 = oy - Math.sin(ang) * len;
+    c.strokeStyle = "rgba(255,255,255,0.85)";
+    c.lineWidth = 3;
+    if (c.setLineDash) c.setLineDash([8, 8]);
+    c.beginPath();
+    c.moveTo(ox, oy);
+    c.lineTo(x2, y2);
+    c.stroke();
+
+    var pred = predictPath(ox, oy, Math.cos(ang) * lerp(300, 980, pow), -Math.sin(ang) * lerp(300, 980, pow));
+    c.strokeStyle = "rgba(255,255,255,0.45)";
+    c.lineWidth = 2;
+    c.beginPath();
+    var i, drawn = 0;
+    for (i = 0; i < pred.points.length; i += 3) {
+      if (drawn === 0) c.moveTo(pred.points[i].x, pred.points[i].y);
+      else c.lineTo(pred.points[i].x, pred.points[i].y);
+      drawn++;
+      if (pred.points[i].y > GROUND_Y - 8) break;
+    }
+    c.stroke();
+    if (c.setLineDash) c.setLineDash([]);
+
+    c.fillStyle = "#FF6B4A";
+    c.beginPath();
+    c.moveTo(x2, y2);
+    c.lineTo(x2 - Math.cos(ang - 0.4) * 16, y2 + Math.sin(ang - 0.4) * 16);
+    c.lineTo(x2 - Math.cos(ang + 0.4) * 16, y2 + Math.sin(ang + 0.4) * 16);
+    c.closePath();
+    c.fill();
+
+    if (state.aim.mode === "hold") {
+      var mx = 86, my = 300, mw = 18, mh = 120;
+      roundRect(c, mx, my, mw, mh, 9);
+      c.fillStyle = "rgba(255,255,255,0.85)";
+      c.fill();
+      var fillH = mh * pow;
+      c.fillStyle = pow > 0.85 ? "#FF6B4A" : "#3B9AED";
+      roundRect(c, mx + 3, my + mh - fillH + 3, mw - 6, fillH - 6, 6);
+      c.fill();
+      c.fillStyle = "#2C3A4A";
+      c.font = "800 13px Trebuchet MS, sans-serif";
+      c.textAlign = "center";
+      c.fillText("POWER", mx + mw / 2, my + mh + 16);
+    }
+  }
+
+  function drawBonuses(c) {
+    var i, b, py;
+    for (i = 0; i < state.bonuses.length; i++) {
+      b = state.bonuses[i];
+      if (b.got) continue;
+      py = b.y + Math.sin(state.time * 3 + b.bob) * 5;
+      c.fillStyle = "rgba(40,40,40,0.15)";
+      fillEllipse(c, b.x, GROUND_Y - 4, 10, 4);
+      if (b.type === "star") drawStar(c, b.x, py, 16);
+      else drawBone(c, b.x, py, 1);
+    }
+  }
+
+  function drawParticles(c) {
+    var i, p, a;
+    for (i = 0; i < state.particles.length; i++) {
+      p = state.particles[i];
+      a = 1 - p.t / p.life;
+      c.fillStyle = p.color;
+      c.globalAlpha = a;
+      fillEllipse(c, p.x, p.y, p.r, p.r);
+      c.globalAlpha = 1;
+    }
+    c.font = "800 22px Trebuchet MS, sans-serif";
+    c.textAlign = "center";
+    for (i = 0; i < state.popups.length; i++) {
+      p = state.popups[i];
+      a = p.t < 0.15 ? p.t / 0.15 : (p.t > 0.65 ? (0.9 - p.t) / 0.25 : 1);
+      if (a < 0) a = 0;
+      c.globalAlpha = a;
+      c.fillStyle = p.color;
+      c.strokeStyle = "rgba(44,58,74,0.35)";
+      c.lineWidth = 3;
+      c.strokeText(p.text, p.x, p.y);
+      c.fillText(p.text, p.x, p.y);
+      c.globalAlpha = 1;
+    }
+  }
+
+  function drawWorld(c) {
+    var park = currentPark();
+    drawPark(c, park, state.time);
+    drawBonuses(c);
+    drawKid(c, state.time, state.phase === "aiming" && state.aim.mode === "flick" ? -state.aim.angle * 0.5 : state.kidArm);
+    var def = getDog(state.dogId);
+    drawDog(c, state.dog.x, state.dog.y, def, {
+      facing: state.dog.facing,
+      pose: state.dog.pose,
+      t: state.time,
+      jumpY: state.dog.jumpY,
+      hasBall: state.dog.hasBall
+    });
+    if (state.ball.visible && !state.dog.hasBall) {
+      drawBall(c, state.ball.x, state.ball.y, state.ball.spin);
+    }
+    drawAim(c);
+    drawParticles(c);
+    if (state.phase === "parkchange") {
+      c.fillStyle = "rgba(255, 248, 230, " + (state.parkChangeT < 0.4 || state.parkChangeT > 1.2 ? 0.35 : 0.15) + ")";
+      c.fillRect(-20, -20, WORLD_W + 40, WORLD_H + 40);
+    }
+  }
+
+  function loopHero(ts) {
+    if (state.screen !== "start") return;
+    var c = heroCtx;
+    if (!c) return;
+    var w = heroCanvas.width, h = heroCanvas.height;
+    c.clearRect(0, 0, w, h);
+    var t = (ts || 0) / 1000;
+    var g = c.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, "rgba(185, 230, 255, 0)");
+    g.addColorStop(1, "rgba(185, 230, 255, 0.35)");
+    c.fillStyle = g;
+    c.fillRect(0, 0, w, h);
+    c.save();
+    c.translate(w / 2, h * 0.82);
+    c.scale(2.15, 2.15);
+    drawDog(c, 0, 0, getDog(state.dogId), { facing: 1, pose: "sit", t: t, scale: 1 });
+    drawBall(c, 48, -8, t * 0.6, 0.9);
+    c.restore();
+    if (window.requestAnimationFrame) requestAnimationFrame(loopHero);
+  }
+
+  function resizeCanvas() {
+    if (!canvas) return;
+    var wrap = canvas.parentNode;
+    var cssW = wrap.clientWidth || window.innerWidth || 800;
+    var cssH = wrap.clientHeight || window.innerHeight || 500;
+    var dpr = window.devicePixelRatio || 1;
+    if (dpr > 2.5) dpr = 2.5;
+    view.cssW = cssW;
+    view.cssH = cssH;
+    view.dpr = dpr;
+    canvas.width = Math.max(1, Math.floor(cssW * dpr));
+    canvas.height = Math.max(1, Math.floor(cssH * dpr));
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
+    updateView();
+  }
+
+  function updateView() {
+    var cssW = view.cssW, cssH = view.cssH;
+    var tall = cssH > cssW * 1.05;
+    if (tall) {
+      var visW = 860;
+      view.scale = cssW / visW;
+      var focus = 400;
+      if (state && state.ball && state.phase !== "ready" && state.phase !== "aiming" && state.phase !== "celebrate" && state.phase !== "parkchange") {
+        focus = state.ball.x;
+        if (state.dog) focus = (state.ball.x + state.dog.x) / 2;
+      }
+      var camX = clamp(focus - visW * 0.38, 0, Math.max(0, WORLD_W - visW));
+      view.ox = -camX * view.scale;
+      view.oy = cssH * 0.68 - GROUND_Y * view.scale;
+    } else {
+      view.scale = Math.min(cssW / WORLD_W, cssH / WORLD_H);
+      view.ox = (cssW - WORLD_W * view.scale) / 2;
+      view.oy = (cssH - WORLD_H * view.scale) / 2;
+    }
+  }
+
+  function screenToWorld(px, py) {
+    return { x: (px - view.ox) / view.scale, y: (py - view.oy) / view.scale };
+  }
+
+  function eventPos(e, touchObj) {
+    var rect = canvas.getBoundingClientRect();
+    var cx, cy;
+    if (touchObj) {
+      cx = touchObj.clientX - rect.left;
+      cy = touchObj.clientY - rect.top;
+    } else {
+      cx = e.clientX - rect.left;
+      cy = e.clientY - rect.top;
+    }
+    return screenToWorld(cx * (rect.width ? (view.cssW / rect.width) : 1), cy * (rect.height ? (view.cssH / rect.height) : 1));
+  }
+
+  function render() {
+    if (!ctx) return;
+    updateView();
+    var dpr = view.dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var park = currentPark();
+    var horizon = view.oy + GROUND_Y * view.scale;
+    ctx.fillStyle = park.skyTop;
+    ctx.fillRect(0, 0, view.cssW, view.cssH);
+    ctx.fillStyle = park.grassNear;
+    ctx.fillRect(0, Math.max(0, horizon - 2), view.cssW, view.cssH);
+    ctx.save();
+    ctx.translate(view.ox, view.oy);
+    ctx.scale(view.scale, view.scale);
+    drawWorld(ctx);
+    ctx.restore();
+  }
+
+  function frame(ts) {
+    if (!running) return;
+    if (!lastTs) lastTs = ts;
+    var raw = (ts - lastTs) / 1000;
+    if (raw < 0) raw = 0;
+    if (raw > 0.05) raw = 0.05;
+    lastTs = ts;
+    var acc = raw * speedMul;
+    var step;
+    while (acc > 0) {
+      step = acc > 0.016 ? 0.016 : acc;
+      update(step);
+      acc -= step;
+    }
+    render();
+    if (window.requestAnimationFrame) requestAnimationFrame(frame);
+  }
+
+  function startLoop() {
+    if (running) return;
+    running = true;
+    lastTs = 0;
+    if (window.requestAnimationFrame) requestAnimationFrame(frame);
+  }
+
+  /* ---------- Input ---------- */
+  function canAim() {
+    return state.screen === "play" && (state.phase === "ready" || state.phase === "aiming");
+  }
+
+  function onDown(wx, wy) {
+    if (!canAim()) return;
+    pointer.down = true;
+    pointer.sx = wx; pointer.sy = wy;
+    pointer.x = wx; pointer.y = wy;
+    pointer.moved = false;
+    state.phase = "aiming";
+    state.aim.active = true;
+    state.aim.mode = "hold";
+    state.aim.holdT = 0;
+    state.aim.power = 0.08;
+    state.aim.angle = 0.85;
+    resumeAudio();
+  }
+
+  function onMove(wx, wy) {
+    if (!pointer.down || !state.aim.active) return;
+    pointer.x = wx; pointer.y = wy;
+    var dx = wx - pointer.sx;
+    var dy = wy - pointer.sy;
+    var dist = hypot(dx, dy);
+    if (dist > 22) {
+      pointer.moved = true;
+      state.aim.mode = "flick";
+      var adx = dx, ady = -dy;
+      if (adx < 8) adx = 8;
+      state.aim.angle = Math.atan2(ady, adx);
+      if (state.aim.angle < 0.15) state.aim.angle = 0.15;
+      if (state.aim.angle > 1.45) state.aim.angle = 1.45;
+      state.aim.power = clamp(dist / 220, 0.12, 1);
+    }
+  }
+
+  function onUp() {
+    if (!pointer.down) return;
+    pointer.down = false;
+    if (state.phase !== "aiming" || !state.aim.active) return;
+    var power = state.aim.power;
+    var angle = state.aim.angle;
+    if (state.aim.mode === "hold" && power < 0.12) power = 0.35;
+    beginThrow(angle, power);
+  }
+
+  function bindInput() {
+    function prevent(e) { if (e && e.preventDefault) e.preventDefault(); }
+
+    canvas.addEventListener("mousedown", function (e) {
+      if (e.button !== 0) return;
+      prevent(e);
+      var p = eventPos(e);
+      onDown(p.x, p.y);
+    }, false);
+
+    window.addEventListener("mousemove", function (e) {
+      if (!pointer.down) return;
+      var p = eventPos(e);
+      onMove(p.x, p.y);
+    }, false);
+
+    window.addEventListener("mouseup", function () { onUp(); }, false);
+
+    canvas.addEventListener("touchstart", function (e) {
+      prevent(e);
+      var t = e.changedTouches && e.changedTouches[0];
+      if (!t) return;
+      var p = eventPos(e, t);
+      onDown(p.x, p.y);
+    }, false);
+
+    window.addEventListener("touchmove", function (e) {
+      if (!pointer.down) return;
+      prevent(e);
+      var t = e.changedTouches && e.changedTouches[0];
+      if (!t) return;
+      var p = eventPos(e, t);
+      onMove(p.x, p.y);
+    }, false);
+
+    window.addEventListener("touchend", function (e) {
+      prevent(e);
+      onUp();
+    }, false);
+    window.addEventListener("touchcancel", function () { onUp(); }, false);
+  }
+
+  /* ---------- UI ---------- */
+  function updateMuteButtons() {
+    var label = state.muted ? "Unmute sounds" : "Mute sounds";
+    var text = state.muted ? "×" : "♪";
+    var a = $("muteStart"), b = $("mutePlay");
+    if (a) { a.setAttribute("aria-pressed", state.muted ? "true" : "false"); a.setAttribute("aria-label", label); a.innerHTML = text; }
+    if (b) { b.setAttribute("aria-pressed", state.muted ? "true" : "false"); b.setAttribute("aria-label", label); b.innerHTML = text; }
+  }
+
+  function renderDogPicker() {
+    var root = $("dogPicker");
+    if (!root) return;
+    root.innerHTML = "";
+    var i, dog, btn, unlocked, face, earCls;
+    for (i = 0; i < DOGS.length; i++) {
+      dog = DOGS[i];
+      unlocked = isUnlockedId(state.unlocked, dog.id);
+      btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "dog-card" + (state.dogId === dog.id ? " selected" : "") + (unlocked ? "" : " locked");
+      btn.setAttribute("data-dog", dog.id);
+      if (unlocked) btn.setAttribute("aria-label", "Choose " + dog.name);
+      else btn.setAttribute("aria-label", dog.name + " locked. Score " + dog.unlock + " to unlock.");
+      earCls = dog.ears === "prick" ? "face-ear prick" : "face-ear";
+      face = "<span class='face' aria-hidden='true'>";
+      face += "<span class='" + earCls + " l' style='background:" + dog.ear + "'></span>";
+      face += "<span class='" + earCls + " r' style='background:" + dog.ear + "'></span>";
+      face += "<span class='face-head' style='background:" + dog.body + "'></span>";
+      if (dog.spots) face += "<span class='face-spot'></span>";
+      face += "</span>";
+      btn.innerHTML = face + "<span class='name'>" + (unlocked ? dog.name : "???") + "</span>" +
+        "<span class='meta'>" + (unlocked ? dog.title : dog.unlock + " pts") + "</span>";
+      (function (id, can) {
+        btn.onclick = function () {
+          if (!can) return;
+          resumeAudio();
+          sfx("button");
+          state.dogId = id;
+          saveNow();
+          renderDogPicker();
+        };
+      })(dog.id, unlocked);
+      root.appendChild(btn);
+    }
+  }
+
+  function showScreen(name) {
+    state.screen = name;
+    var a = $("screen-start"), b = $("screen-play");
+    if (a) a.className = name === "start" ? "active" : "";
+    if (b) b.className = name === "play" ? "active" : "";
+    if (name === "start" && window.requestAnimationFrame) requestAnimationFrame(loopHero);
+    if (name === "play") {
+      resizeCanvas();
+      startLoop();
+      render();
+    }
+  }
+
+  function startGame() {
+    resumeAudio();
+    sfx("button");
+    hideJsTip();
+    state.score = 0;
+    state.streak = 0;
+    state.fetchesInPark = 0;
+    state.parkIndex = 0;
+    seedFlowers();
+    placeReady();
+    updateHud();
+    showScreen("play");
+    showToast("Go fetch!", "Drag or hold to throw", 1.4);
+  }
+
+  function goHome() {
+    resumeAudio();
+    sfx("button");
+    if (state.score > state.best) state.best = state.score;
+    saveNow();
+    updateHud();
+    pointer.down = false;
+    showScreen("start");
+    renderDogPicker();
+  }
+
+  function bindUi() {
+    var sb = $("startBtn");
+    if (sb) {
+      sb.onclick = function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        startGame();
+        return false;
+      };
+    }
+    function togMute(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      resumeAudio();
+      setMuted(!state.muted);
+      sfx("button");
+    }
+    if ($("muteStart")) $("muteStart").onclick = togMute;
+    if ($("mutePlay")) $("mutePlay").onclick = togMute;
+    if ($("homeBtn")) $("homeBtn").onclick = function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      goHome();
+    };
+    window.addEventListener("resize", function () {
+      if (state.screen === "play") { resizeCanvas(); render(); }
+    }, false);
+    window.addEventListener("orientationchange", function () {
+      setTimeout(function () { resizeCanvas(); render(); }, 120);
+    }, false);
+  }
+
+  function simulateThrow(angle, power) {
+    if (state.screen !== "play") startGame();
+    if (state.phase !== "ready" && state.phase !== "aiming") {
+      placeReady();
+    }
+    if (typeof angle !== "number") angle = 0.9;
+    if (typeof power !== "number") power = 0.7;
+    beginThrow(angle, power);
+  }
+
+  function init() {
+    var save = loadSave();
+    state = freshState(save);
+    audio.muted = state.muted;
+    canvas = $("game");
+    if (canvas && canvas.getContext) ctx = canvas.getContext("2d");
+    heroCanvas = $("heroCanvas");
+    if (heroCanvas && heroCanvas.getContext) heroCtx = heroCanvas.getContext("2d");
+    hideJsTip();
+    bindUi();
+    if (canvas) bindInput();
+    renderDogPicker();
+    updateMuteButtons();
+    updateHud();
+    showScreen("start");
+    if (window.requestAnimationFrame) requestAnimationFrame(loopHero);
+
+    window.fetchPup = {
+      start: startGame,
+      goHome: goHome,
+      simulateThrow: simulateThrow,
+      getScore: function () { return state.score; },
+      getBest: function () { return state.best; },
+      getState: function () {
+        return {
+          screen: state.screen,
+          phase: state.phase,
+          score: state.score,
+          best: state.best,
+          park: currentPark().name,
+          dog: state.dogId,
+          ball: { x: state.ball.x, y: state.ball.y, held: state.ball.held },
+          dogX: state.dog.x,
+          jumpY: state.dog.jumpY,
+          pose: state.dog.pose,
+          intercept: state.dog.intercept,
+          muted: state.muted
+        };
+      },
+      setMuted: setMuted,
+      setSpeed: function (n) { speedMul = n > 0 ? n : 1; },
+      ready: true
+    };
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, false);
+  } else {
+    init();
+  }
+})();
+  </script>
+</body>
+</html>
