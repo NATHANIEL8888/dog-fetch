@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123b -->
+<!-- fetch-pup build 20261123c -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -146,13 +146,13 @@
     .start-bottom { flex-shrink: 0; padding-top: 4px; }
 
     #heroCanvas {
-      width: 220px;
-      height: 120px;
+      width: 180px;
+      height: 96px;
       display: block;
     }
 
     h1 {
-      font-size: clamp(40px, 9vw, 64px);
+      font-size: clamp(36px, 8vw, 58px);
       line-height: 0.9;
       letter-spacing: -0.04em;
       font-weight: 800;
@@ -219,10 +219,24 @@
       box-shadow: 0 0 0 3px rgba(255, 200, 61, 0.35);
     }
 
-    .dogs {
+    .pickers {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .dogs, .parks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .picker-note {
+      min-height: 1.3em;
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold);
     }
 
     .dog-card {
@@ -235,7 +249,7 @@
       font: inherit;
       color: var(--ink);
       text-align: center;
-      min-height: 98px;
+      min-height: 86px;
       box-shadow: 0 4px 0 rgba(44, 58, 74, 0.05);
       display: flex;
       flex-direction: column;
@@ -283,6 +297,12 @@
       position: absolute; width: 7px; height: 7px; border-radius: 50%;
       left: 22px; top: 16px; background: #8B5A2B;
     }
+    .park-swatch {
+      width: 36px; height: 24px;
+      border-radius: 8px;
+      margin: 2px auto 6px;
+      box-shadow: inset 0 -6px 0 rgba(0,0,0,0.12);
+    }
 
     .best-row {
       display: flex;
@@ -323,6 +343,15 @@
     .btn:hover { background: #ff7d60; }
     .btn:active { transform: translateY(3px); box-shadow: 0 5px 0 var(--coral-dark); }
     .btn:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink);
+      box-shadow: none;
+      border: 2px solid var(--line);
+      margin-top: 12px;
+    }
+    .btn-ghost:hover { background: var(--panel-2); }
+    .btn-ghost:active { transform: translateY(1px); box-shadow: none; }
 
     .kickoff { margin-top: 10px; }
 
@@ -373,7 +402,7 @@
     .hud > * { pointer-events: auto; }
     .hud-cluster { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .hud-cluster:first-child { justify-self: start; }
-    .hud > .hud-chip { justify-self: center; margin-top: 0; }
+    .hud-center { justify-self: center; }
     .hud-cluster:last-child { justify-self: end; justify-content: flex-end; flex-wrap: nowrap; }
     .hud-chip {
       background: rgba(255,255,255,0.92);
@@ -388,6 +417,123 @@
     }
     .hud-chip span { color: var(--muted); font-weight: 700; margin-right: 4px; }
     .hud-chip .park-name { color: var(--sky-deep); }
+    .hud-center {
+      justify-self: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+    .timer-badge {
+      min-width: 118px;
+      padding: 6px 20px 8px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.95);
+      font-size: clamp(34px, 7.5vw, 54px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--sky-deep);
+      box-shadow: 0 6px 16px rgba(44,58,74,0.16);
+      line-height: 1;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+    .timer-badge.low {
+      background: #FFF1D6;
+      color: #E25535;
+    }
+    .timer-badge .timer-label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    /* ---- Results screen ---- */
+    #screen-results {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 8;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(255, 200, 61, 0.45), transparent 32%),
+        radial-gradient(circle at 96% 8%, rgba(59, 154, 237, 0.28), transparent 34%),
+        #FFF6EA;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+      overflow: auto;
+    }
+    #screen-results.active { display: flex; }
+    .results-card {
+      width: min(520px, 100%);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 28px 22px 22px;
+      text-align: center;
+    }
+    .results-card h1 { margin: 6px 0 8px; }
+    .results-scores {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 16px 0 14px;
+    }
+    .results-scores div {
+      background: var(--panel-2);
+      border-radius: 16px;
+      padding: 12px 8px 10px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .results-scores strong {
+      display: block;
+      color: var(--ink);
+      font-size: clamp(32px, 8vw, 44px);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-top: 4px;
+    }
+    .results-scores .new-best strong { color: var(--coral); }
+    .unlock-box {
+      background: #FFF8E6;
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin: 0 0 16px;
+      text-align: left;
+    }
+    .unlock-box h2 {
+      font-size: 14px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .unlock-box ul { list-style: none; }
+    .unlock-box li {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink);
+      padding: 4px 0 4px 28px;
+      position: relative;
+    }
+    .unlock-box li::before {
+      content: "";
+      position: absolute;
+      left: 4px; top: 9px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--sun);
+    }
 
     .canvas-wrap {
       flex: 1;
@@ -442,10 +588,12 @@
     }
 
     @media (max-width: 520px) {
-      .dogs { gap: 6px; }
-      .dog-card { min-height: 84px; padding: 6px 2px; }
+      .pickers { grid-template-columns: 1fr; }
+      .dogs, .parks { grid-template-columns: repeat(4, 1fr); }
+      .dog-card { min-height: 80px; padding: 6px 2px; }
       .dog-card .name { font-size: 12px; }
       .hud-chip { font-size: 13px; padding: 6px 10px; }
+      .timer-badge { font-size: 40px; min-width: 96px; padding: 5px 14px 6px; }
       .icon-btn { width: 42px; height: 42px; }
       .home-btn { width: auto; }
       .lede { font-size: 16px; }
@@ -470,11 +618,18 @@
       <div class="hero-wrap"><canvas id="heroCanvas" width="560" height="380" aria-hidden="true"></canvas></div>
       <p class="kicker">A park adventure</p>
       <h1><span class="coral">Fetch,</span> <span class="sky">Pup!</span></h1>
-      <p class="lede">Throw the ball. Your pup will run, catch it, and bring it back. Mid-air catches score extra!</p>
+      <p class="lede">You have one minute. Throw, catch, and unlock new pups and parks with your total points!</p>
 
-      <div class="panel" style="margin-bottom:10px;">
-        <h2>Pick a pup</h2>
-        <div class="dogs" id="dogPicker" role="group" aria-label="Choose a dog"></div>
+      <p class="picker-note" id="pickerNote"></p>
+      <div class="pickers">
+        <div class="panel">
+          <h2>Pick a pup</h2>
+          <div class="dogs" id="dogPicker" role="group" aria-label="Choose a dog"></div>
+        </div>
+        <div class="panel">
+          <h2>Pick a park</h2>
+          <div class="parks" id="parkPicker" role="group" aria-label="Choose a park"></div>
+        </div>
       </div>
 
       <div class="panel">
@@ -482,13 +637,14 @@
         <ul class="how-list">
           <li>Drag or flick the ball to aim and throw.</li>
           <li>Or press and hold to power up, then let go.</li>
-          <li>Grab bones and stars. New parks unlock as you play!</li>
+          <li>Grab bones and stars. Unlock new parks and pups with your total points!</li>
         </ul>
       </div>
       </div>
       <div class="start-bottom">
       <div class="best-row">
         <div class="score-chip">Best <strong id="bestChip">0</strong></div>
+        <div class="score-chip">Total <strong id="totalChip">0</strong></div>
       </div>
 
       <button class="btn kickoff" id="startBtn" type="button" onclick="if(window.fetchPup){window.fetchPup.start();}return false;">Let's Play Fetch!</button>
@@ -507,7 +663,10 @@
           <div class="hud-chip" id="scoreChip"><span>Score</span> <strong id="liveScore">0</strong></div>
           <div class="hud-chip" id="bestLive"><span>Best</span> <strong id="liveBest">0</strong></div>
         </div>
-        <div class="hud-chip"><span class="park-name" id="parkLabel">Sunny Meadow</span></div>
+        <div class="hud-center">
+          <div class="timer-badge" id="timerBadge" aria-live="polite"><span id="timerText">1:00</span><span class="timer-label">Time left</span></div>
+          <div class="hud-chip"><span class="park-name" id="parkLabel">Sunny Meadow</span></div>
+        </div>
         <div class="hud-cluster">
           <button class="icon-btn" id="mutePlay" type="button" aria-pressed="false" aria-label="Mute sounds" title="Mute">♪</button>
           <button class="icon-btn home-btn" id="homeBtn" type="button" aria-label="Back to start" title="Home">Home</button>
@@ -519,37 +678,55 @@
         <div class="hint" id="hint">Drag or hold to throw</div>
       </div>
     </section>
+
+    <section id="screen-results" aria-label="Time's up">
+      <div class="results-card">
+        <p class="kicker">What a fetch!</p>
+        <h1><span class="coral">Time's</span> <span class="sky">up!</span></h1>
+        <p class="lede" id="resultLede">You and your pup had a great minute.</p>
+        <div class="results-scores">
+          <div>This game <strong id="resultScore">0</strong></div>
+          <div id="resultBestWrap">Best <strong id="resultBest">0</strong></div>
+        </div>
+        <div class="unlock-box" id="resultUnlocks" hidden>
+          <h2>New unlocks</h2>
+          <ul id="resultUnlockList"></ul>
+        </div>
+        <button class="btn" id="playAgainBtn" type="button">Play Again</button>
+        <button class="btn btn-ghost" id="changeBtn" type="button">Change Dog / Park</button>
+      </div>
+    </section>
   </div>
   <script>
 (function () {
   "use strict";
 
-  var BUILD = "20261123b";
+  var BUILD = "20261123c";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
   var BALL_R = 14;
   var GRAVITY = 1550;
   var SAVE_KEY = "fetchPupSave";
-  var THROWS_PER_PARK = 5;
+  var ROUND_TIME = 60;
 
   var DOGS = [
     { id: "sunny", name: "Sunny", title: "Golden pal", unlock: 0, speed: 470, jump: 195,
       body: "#E2A64A", bodyDark: "#C48430", belly: "#F6E0B0", ear: "#C48430",
       eye: "#2C2418", collar: "#E25535", tag: "#FFC83D", ears: "flop", muzzle: "#F3D7A0" },
-    { id: "cocoa", name: "Cocoa", title: "Chocolate lab", unlock: 150, speed: 530, jump: 175,
+    { id: "cocoa", name: "Cocoa", title: "Chocolate lab", unlock: 80, speed: 530, jump: 175,
       body: "#6B3E26", bodyDark: "#4E2A18", belly: "#8A5A3C", ear: "#4E2A18",
       eye: "#1A120C", collar: "#3B9AED", tag: "#FFC83D", ears: "flop", muzzle: "#8A5A3C" },
-    { id: "speckles", name: "Speckles", title: "Spotty pal", unlock: 400, speed: 490, jump: 230,
+    { id: "speckles", name: "Speckles", title: "Spotty pal", unlock: 220, speed: 490, jump: 230,
       body: "#F4EFE6", bodyDark: "#DED4C4", belly: "#FFFFFF", ear: "#8B5A2B",
       eye: "#2C2418", collar: "#3CB371", tag: "#FFC83D", ears: "flop", muzzle: "#F8F4EC", spots: true },
-    { id: "blue", name: "Blue", title: "Speedy pal", unlock: 800, speed: 560, jump: 190,
+    { id: "blue", name: "Blue", title: "Speedy pal", unlock: 420, speed: 560, jump: 190,
       body: "#7A8B9C", bodyDark: "#5A6A7A", belly: "#D5DCE3", ear: "#4A5560",
       eye: "#1A1F28", collar: "#FFC83D", tag: "#E25535", ears: "prick", muzzle: "#D5DCE3" }
   ];
 
   var PARKS = [
-    { id: "meadow", name: "Sunny Meadow",
+    { id: "meadow", name: "Sunny Meadow", short: "Meadow", unlock: 0, swatch: "#57C05D",
       skyTop: "#5EB7F5", skyMid: "#B9E6FF", skyBot: "#E8F7FF",
       sun: "#FFE566", sunX: 980, sunY: 110, sunR: 54,
       grassFar: "#7ED67E", grassMid: "#57C05D", grassNear: "#3FA84A",
@@ -559,7 +736,7 @@
       bushes: [{ x: 740, y: GROUND_Y, s: 1 }],
       trees: [{ x: 430, h: 180, kind: "round" }, { x: 1080, h: 210, kind: "round" }]
     },
-    { id: "autumn", name: "Autumn Park",
+    { id: "autumn", name: "Autumn Park", short: "Autumn", unlock: 70, swatch: "#C49A32",
       skyTop: "#6EA4D4", skyMid: "#FFD8B0", skyBot: "#FFE9CC",
       sun: "#FFB347", sunX: 160, sunY: 130, sunR: 48,
       grassFar: "#D2B24A", grassMid: "#C49A32", grassNear: "#B8860B",
@@ -569,7 +746,7 @@
       bushes: [{ x: 520, y: GROUND_Y, s: 1.1 }],
       trees: [{ x: 300, h: 190, kind: "autumn" }, { x: 640, h: 150, kind: "autumn" }, { x: 1100, h: 200, kind: "autumn" }]
     },
-    { id: "beach", name: "Sandy Beach",
+    { id: "beach", name: "Sandy Beach", short: "Beach", unlock: 180, swatch: "#4CA9E0",
       skyTop: "#4CA9E0", skyMid: "#C5ECFF", skyBot: "#FFF4DC",
       sun: "#FFE566", sunX: 1040, sunY: 90, sunR: 58,
       grassFar: "#F3D39A", grassMid: "#EBC07A", grassNear: "#E0B266",
@@ -579,7 +756,7 @@
       bushes: [{ x: 600, y: GROUND_Y, s: 0.85, palm: true }],
       trees: [{ x: 260, h: 200, kind: "palm" }, { x: 420, h: 160, kind: "palm" }]
     },
-    { id: "garden", name: "Flower Garden",
+    { id: "garden", name: "Flower Garden", short: "Garden", unlock: 320, swatch: "#E07AB5",
       skyTop: "#8EC9FF", skyMid: "#FFE4F0", skyBot: "#FFF6EA",
       sun: "#FFD36A", sunX: 200, sunY: 100, sunR: 44,
       grassFar: "#8ED98E", grassMid: "#62C46A", grassNear: "#45B352",
@@ -589,7 +766,7 @@
       bushes: [{ x: 580, y: GROUND_Y, s: 0.9 }, { x: 720, y: GROUND_Y, s: 1.05 }],
       trees: [{ x: 380, h: 170, kind: "round" }, { x: 1120, h: 160, kind: "round" }]
     },
-    { id: "sunset", name: "Sunset Hill",
+    { id: "sunset", name: "Sunset Hill", short: "Sunset", unlock: 550, swatch: "#E85D4C",
       skyTop: "#E85D4C", skyMid: "#F7A072", skyBot: "#FFD6A0",
       sun: "#FFDD66", sunX: 980, sunY: 160, sunR: 72,
       grassFar: "#4A7A45", grassMid: "#3C6B3A", grassNear: "#2F5A30",
@@ -621,19 +798,36 @@
 
   function loadSave() {
     var raw = storageGet(SAVE_KEY);
-    var data = { best: 0, unlocked: ["sunny"], dog: "sunny", muted: false };
-    if (!raw) return data;
-    try {
-      var parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object") {
-        if (typeof parsed.best === "number" && parsed.best >= 0) data.best = Math.floor(parsed.best);
-        if (parsed.unlocked && parsed.unlocked.length) data.unlocked = parsed.unlocked;
-        if (typeof parsed.dog === "string") data.dog = parsed.dog;
-        if (typeof parsed.muted === "boolean") data.muted = parsed.muted;
-      }
-    } catch (err) {}
+    var data = { best: 0, totalPoints: 0, unlocked: ["sunny"], unlockedParks: ["meadow"], dog: "sunny", park: "meadow", muted: false };
+    if (raw) {
+      try {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          if (typeof parsed.best === "number" && parsed.best >= 0) data.best = Math.floor(parsed.best);
+          if (typeof parsed.totalPoints === "number" && parsed.totalPoints >= 0) data.totalPoints = Math.floor(parsed.totalPoints);
+          else data.totalPoints = data.best;
+          if (parsed.unlocked && parsed.unlocked.length) data.unlocked = parsed.unlocked;
+          if (parsed.unlockedParks && parsed.unlockedParks.length) data.unlockedParks = parsed.unlockedParks;
+          if (typeof parsed.dog === "string") data.dog = parsed.dog;
+          if (typeof parsed.park === "string") data.park = parsed.park;
+          if (typeof parsed.muted === "boolean") data.muted = parsed.muted;
+        }
+      } catch (err) {}
+    }
     if (!isUnlockedId(data.unlocked, "sunny")) data.unlocked.push("sunny");
+    if (!isUnlockedId(data.unlockedParks, "meadow")) data.unlockedParks.push("meadow");
+    // Apply current thresholds so older saves stay in sync.
+    var i, item;
+    for (i = 0; i < DOGS.length; i++) {
+      item = DOGS[i];
+      if (data.totalPoints >= item.unlock && !isUnlockedId(data.unlocked, item.id)) data.unlocked.push(item.id);
+    }
+    for (i = 0; i < PARKS.length; i++) {
+      item = PARKS[i];
+      if (data.totalPoints >= item.unlock && !isUnlockedId(data.unlockedParks, item.id)) data.unlockedParks.push(item.id);
+    }
     if (!isUnlockedId(data.unlocked, data.dog)) data.dog = "sunny";
+    if (!isUnlockedId(data.unlockedParks, data.park)) data.park = "meadow";
     return data;
   }
 
@@ -646,8 +840,11 @@
   function saveNow() {
     storageSet(SAVE_KEY, JSON.stringify({
       best: state.best,
+      totalPoints: state.totalPoints,
       unlocked: state.unlocked,
+      unlockedParks: state.unlockedParks,
       dog: state.dogId,
+      park: state.parkId,
       muted: state.muted
     }));
   }
@@ -686,7 +883,13 @@
     return DOGS[0];
   }
 
-  function currentPark() { return PARKS[state.parkIndex % PARKS.length]; }
+  function getPark(id) {
+    var i;
+    for (i = 0; i < PARKS.length; i++) if (PARKS[i].id === id) return PARKS[i];
+    return PARKS[0];
+  }
+
+  function currentPark() { return getPark(state.parkId); }
 
   function inPond(x, y, park) {
     var p = park.pond;
@@ -835,10 +1038,16 @@
       best: save.best || 0,
       streak: 0,
       fetchesInPark: 0,
-      parkIndex: 0,
+      parkId: save.park || "meadow",
       dogId: save.dog || "sunny",
       unlocked: save.unlocked ? save.unlocked.slice(0) : ["sunny"],
+      unlockedParks: save.unlockedParks ? save.unlockedParks.slice(0) : ["meadow"],
+      totalPoints: save.totalPoints || 0,
       muted: !!save.muted,
+      timeLeft: ROUND_TIME,
+      timedUp: false,
+      pendingResults: false,
+      sessionUnlocks: [],
       time: 0,
       flightT: 0,
       ball: { x: 168, y: 452, vx: 0, vy: 0, spin: 0, visible: true, held: true },
@@ -864,6 +1073,10 @@
   }
 
   function placeReady() {
+    if (state.timedUp || state.pendingResults) {
+      showResults();
+      return;
+    }
     state.phase = "ready";
     state.flightT = 0;
     state.ball.x = 168;
@@ -894,7 +1107,7 @@
   function spawnBonuses() {
     var park = currentPark();
     var items = [];
-    var n = 2 + (state.parkIndex % 2);
+    var n = 2 + (state.totalPoints % 2);
     var i, kind, x, y, tries, ok, j;
     for (i = 0; i < n; i++) {
       kind = (i === 0 && Math.random() < 0.55) || Math.random() < 0.35 ? "star" : "bone";
@@ -950,15 +1163,40 @@
     state.toast.t = 0;
   }
 
+  function formatTime(secs) {
+    var s = Math.ceil(secs);
+    if (s < 0) s = 0;
+    if (s > ROUND_TIME) s = ROUND_TIME;
+    var m = Math.floor(s / 60);
+    var r = s % 60;
+    return m + ":" + (r < 10 ? "0" : "") + r;
+  }
+
+  function updateTimerHud() {
+    var el = $("timerText");
+    var badge = $("timerBadge");
+    if (el) el.innerHTML = formatTime(state.timeLeft);
+    if (badge) {
+      if (state.timeLeft <= 10 && state.timeLeft > 0) {
+        if (badge.className.indexOf("low") === -1) badge.className += " low";
+      } else {
+        badge.className = "timer-badge";
+      }
+    }
+  }
+
   function updateHud() {
     var a = $("liveScore"); if (a) a.innerHTML = String(state.score);
     var b = $("liveBest"); if (b) b.innerHTML = String(state.best);
     var c = $("bestChip"); if (c) c.innerHTML = String(state.best);
+    var tot = $("totalChip"); if (tot) tot.innerHTML = String(state.totalPoints || 0);
     var p = $("parkLabel"); if (p) p.innerHTML = currentPark().name;
+    updateTimerHud();
   }
 
   function addScore(n) {
     state.score += n;
+    state.totalPoints += n;
     if (state.score > state.best) state.best = state.score;
     updateHud();
     checkUnlocks();
@@ -966,24 +1204,37 @@
   }
 
   function checkUnlocks() {
-    var i, dog, newly;
+    var i, item, newly = false, label;
     for (i = 0; i < DOGS.length; i++) {
-      dog = DOGS[i];
-      if (state.score >= dog.unlock && !isUnlockedId(state.unlocked, dog.id)) {
-        state.unlocked.push(dog.id);
-        newly = dog;
-        showToast(dog.name + " unlocked!", "A new friend! Pick " + dog.name + " next game.", 2.4);
+      item = DOGS[i];
+      if (state.totalPoints >= item.unlock && !isUnlockedId(state.unlocked, item.id)) {
+        state.unlocked.push(item.id);
+        state.sessionUnlocks.push({ kind: "dog", name: item.name });
+        newly = true;
+        showToast(item.name + " unlocked!", "A new friend! Pick " + item.name + " next time.", 2.2);
+        sfx("unlock");
+      }
+    }
+    for (i = 0; i < PARKS.length; i++) {
+      item = PARKS[i];
+      if (state.totalPoints >= item.unlock && !isUnlockedId(state.unlockedParks, item.id)) {
+        state.unlockedParks.push(item.id);
+        state.sessionUnlocks.push({ kind: "park", name: item.name });
+        newly = true;
+        showToast(item.name + " unlocked!", "A new park to play in!", 2.2);
         sfx("unlock");
       }
     }
     if (newly) {
       renderDogPicker();
+      renderParkPicker();
       saveNow();
     }
   }
 
   /* ---------- Throw / physics ---------- */
   function beginThrow(angle, power) {
+    if (state.timedUp || state.pendingResults || state.screen !== "play") return;
     power = clamp(power, 0.12, 1);
     angle = clamp(angle, 0.12, Math.PI - 0.12);
     var speed = lerp(300, 980, power);
@@ -1300,25 +1551,11 @@
 
   function afterCelebrate() {
     state.fetchesInPark += 1;
-    if (state.fetchesInPark >= THROWS_PER_PARK) {
-      state.phase = "parkchange";
-      state.parkChangeT = 1.6;
-      addScore(50);
-      showToast("New park!", "Bonus +50", 1.5);
-      sfx("park");
-      addBurst(WORLD_W / 2, 260, "#FFC83D", 20);
-    } else {
-      placeReady();
+    if (state.timedUp || state.pendingResults) {
+      showResults();
+      return;
     }
-  }
-
-  function advancePark() {
-    state.parkIndex = (state.parkIndex + 1) % PARKS.length;
-    state.fetchesInPark = 0;
-    seedFlowers();
     placeReady();
-    updateHud();
-    showToast(currentPark().name, "Ready when you are!", 1.2);
   }
 
   function seedFlowers() {
@@ -1392,13 +1629,20 @@
       if (state.toast.t <= 0) hideToast();
     }
 
+    if (state.screen === "play" && !state.timedUp) {
+      state.timeLeft -= dt;
+      if (state.timeLeft <= 0) {
+        state.timeLeft = 0;
+        updateTimerHud();
+        onTimeUp();
+      } else {
+        updateTimerHud();
+      }
+    }
+
     if (state.phase === "celebrate") {
       state.celebrateT -= dt;
       if (state.celebrateT <= 0) afterCelebrate();
-    }
-    if (state.phase === "parkchange") {
-      state.parkChangeT -= dt;
-      if (state.parkChangeT <= 0) advancePark();
     }
   }
 
@@ -2110,7 +2354,7 @@
 
   /* ---------- Input ---------- */
   function canAim() {
-    return state.screen === "play" && (state.phase === "ready" || state.phase === "aiming");
+    return state.screen === "play" && !state.timedUp && !state.pendingResults && (state.phase === "ready" || state.phase === "aiming");
   }
 
   function onDown(wx, wy) {
@@ -2211,6 +2455,11 @@
     if (b) { b.setAttribute("aria-pressed", state.muted ? "true" : "false"); b.setAttribute("aria-label", label); b.innerHTML = text; }
   }
 
+  function setPickerNote(msg) {
+    var el = $("pickerNote");
+    if (el) el.innerHTML = msg || "";
+  }
+
   function renderDogPicker() {
     var root = $("dogPicker");
     if (!root) return;
@@ -2224,7 +2473,7 @@
       btn.className = "dog-card" + (state.dogId === dog.id ? " selected" : "") + (unlocked ? "" : " locked");
       btn.setAttribute("data-dog", dog.id);
       if (unlocked) btn.setAttribute("aria-label", "Choose " + dog.name);
-      else btn.setAttribute("aria-label", dog.name + " locked. Score " + dog.unlock + " to unlock.");
+      else btn.setAttribute("aria-label", dog.name + " locked. " + dog.unlock + " total points to unlock.");
       earCls = dog.ears === "prick" ? "face-ear prick" : "face-ear";
       face = "<span class='face' aria-hidden='true'>";
       face += "<span class='" + earCls + " l' style='background:" + dog.ear + "'></span>";
@@ -2234,25 +2483,136 @@
       face += "</span>";
       btn.innerHTML = face + "<span class='name'>" + (unlocked ? dog.name : "???") + "</span>" +
         "<span class='meta'>" + (unlocked ? dog.title : dog.unlock + " pts") + "</span>";
-      (function (id, can) {
-        btn.onclick = function () {
-          if (!can) return;
-          resumeAudio();
-          sfx("button");
+      (function (id, can, name, pts) {
+        bindActivate(btn, function () {
+          if (!can) {
+            setPickerNote(name + " unlocks at " + pts + " total points.");
+            return;
+          }
+          setPickerNote("");
+          try { resumeAudio(); sfx("button"); } catch (err) {}
           state.dogId = id;
           saveNow();
           renderDogPicker();
-        };
-      })(dog.id, unlocked);
+        });
+      })(dog.id, unlocked, dog.name, dog.unlock);
       root.appendChild(btn);
     }
   }
 
+  function renderParkPicker() {
+    var root = $("parkPicker");
+    if (!root) return;
+    root.innerHTML = "";
+    var i, park, btn, unlocked;
+    for (i = 0; i < PARKS.length; i++) {
+      park = PARKS[i];
+      unlocked = isUnlockedId(state.unlockedParks, park.id);
+      btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "dog-card" + (state.parkId === park.id ? " selected" : "") + (unlocked ? "" : " locked");
+      btn.setAttribute("data-park", park.id);
+      if (unlocked) btn.setAttribute("aria-label", "Choose " + park.name);
+      else btn.setAttribute("aria-label", park.name + " locked. " + park.unlock + " total points to unlock.");
+      btn.innerHTML = "<span class='park-swatch' style='background:" + park.swatch + "' aria-hidden='true'></span>" +
+        "<span class='name'>" + (unlocked ? park.short : "???") + "</span>" +
+        "<span class='meta'>" + (unlocked ? park.name : park.unlock + " pts") + "</span>";
+      (function (id, can, name, pts) {
+        bindActivate(btn, function () {
+          if (!can) {
+            setPickerNote(name + " unlocks at " + pts + " total points.");
+            return;
+          }
+          setPickerNote("");
+          try { resumeAudio(); sfx("button"); } catch (err) {}
+          state.parkId = id;
+          saveNow();
+          renderParkPicker();
+        });
+      })(park.id, unlocked, park.name, park.unlock);
+      root.appendChild(btn);
+    }
+  }
+
+  function onTimeUp() {
+    if (state.screen === "results") return;
+    state.timedUp = true;
+    state.timeLeft = 0;
+    updateTimerHud();
+    pointer.down = false;
+    state.aim.active = false;
+    state.aim.mode = "none";
+    var hint = $("hint");
+    if (hint) hint.style.display = "none";
+    if (state.phase === "aiming") {
+      state.phase = "ready";
+      state.ball.held = true;
+      state.ball.x = 168;
+      state.ball.y = 452;
+    }
+    if (state.phase === "ready" || state.phase === "celebrate") {
+      showResults();
+    } else if (state.screen === "play") {
+      state.pendingResults = true;
+      showToast("Time's up!", "Nice catching!", 1.2);
+    }
+  }
+
+  function showResults() {
+    state.pendingResults = false;
+    state.timedUp = true;
+    state.timeLeft = 0;
+    pointer.down = false;
+    if (state.score > state.best) state.best = state.score;
+    saveNow();
+    updateHud();
+    var sc = $("resultScore");
+    if (sc) sc.innerHTML = String(state.score);
+    var wrap = $("resultBestWrap");
+    if (wrap) {
+      if (state.score > 0 && state.score >= state.best) {
+        wrap.className = "new-best";
+        wrap.innerHTML = 'New best! <strong id="resultBest">' + state.best + "</strong>";
+      } else {
+        wrap.className = "";
+        wrap.innerHTML = 'Best <strong id="resultBest">' + state.best + "</strong>";
+      }
+    }
+    var lede = $("resultLede");
+    if (lede) {
+      if (state.score <= 0) lede.innerHTML = "Ready to try a fun minute of fetch?";
+      else if (state.score >= state.best) lede.innerHTML = "Wow, that's your best game yet!";
+      else lede.innerHTML = "You and your pup had a great minute.";
+    }
+    var box = $("resultUnlocks"), list = $("resultUnlockList");
+    if (box && list) {
+      list.innerHTML = "";
+      if (state.sessionUnlocks && state.sessionUnlocks.length) {
+        box.hidden = false;
+        if (box.removeAttribute) box.removeAttribute("hidden");
+        box.style.display = "block";
+        var i, item, li;
+        for (i = 0; i < state.sessionUnlocks.length; i++) {
+          item = state.sessionUnlocks[i];
+          li = document.createElement("li");
+          li.innerHTML = "You unlocked " + item.name + "!";
+          list.appendChild(li);
+        }
+      } else {
+        box.hidden = true;
+        box.style.display = "none";
+      }
+    }
+    showScreen("results");
+    try { sfx("park"); } catch (err) {}
+  }
+
   function showScreen(name) {
     state.screen = name;
-    var a = $("screen-start"), b = $("screen-play");
+    var a = $("screen-start"), b = $("screen-play"), c = $("screen-results");
     if (a) a.className = name === "start" ? "active" : "";
     if (b) b.className = name === "play" ? "active" : "";
+    if (c) c.className = name === "results" ? "active" : "";
     if (name === "start" && window.requestAnimationFrame) requestAnimationFrame(loopHero);
     if (name === "play") {
       resizeCanvas();
@@ -2268,13 +2628,17 @@
       state.score = 0;
       state.streak = 0;
       state.fetchesInPark = 0;
-      state.parkIndex = 0;
+      state.timeLeft = ROUND_TIME;
+      state.timedUp = false;
+      state.pendingResults = false;
+      state.sessionUnlocks = [];
       seedFlowers();
-      placeReady();
       pointer.down = false;
+      state.aim.active = false;
+      placeReady();
       updateHud();
       showScreen("play");
-      showToast("Go fetch!", "Drag or hold to throw", 1.4);
+      showToast("Go fetch!", "You have one minute!", 1.4);
     } catch (err) {}
     try {
       resumeAudio();
@@ -2290,6 +2654,7 @@
       pointer.down = false;
       showScreen("start");
       renderDogPicker();
+      renderParkPicker();
     } catch (err) {}
     try {
       resumeAudio();
@@ -2333,6 +2698,8 @@
     bindActivate($("muteStart"), togMute);
     bindActivate($("mutePlay"), togMute);
     bindActivate($("homeBtn"), function () { goHome(); });
+    bindActivate($("playAgainBtn"), function () { startGame(); });
+    bindActivate($("changeBtn"), function () { goHome(); });
     window.addEventListener("resize", function () {
       if (state.screen === "play") { resizeCanvas(); render(); }
     }, false);
@@ -2363,6 +2730,7 @@
     bindUi();
     if (canvas) bindInput();
     renderDogPicker();
+    renderParkPicker();
     updateMuteButtons();
     updateHud();
     showScreen("start");
@@ -2381,8 +2749,14 @@
           phase: state.phase,
           score: state.score,
           best: state.best,
+          totalPoints: state.totalPoints,
+          timeLeft: state.timeLeft,
+          timedUp: state.timedUp,
           park: currentPark().name,
+          parkId: state.parkId,
           dog: state.dogId,
+          unlockedParks: state.unlockedParks.slice(0),
+          unlocked: state.unlocked.slice(0),
           ball: { x: state.ball.x, y: state.ball.y, held: state.ball.held },
           dogX: state.dog.x,
           jumpY: state.dog.jumpY,
@@ -2393,6 +2767,11 @@
       },
       setMuted: setMuted,
       setSpeed: function (n) { speedMul = n > 0 ? n : 1; },
+      setTimeLeft: function (n) {
+        state.timeLeft = n;
+        if (n <= 0) onTimeUp();
+        else updateTimerHud();
+      },
       ready: true
     };
   }
