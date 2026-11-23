@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123c -->
+<!-- fetch-pup build 20261123d -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -225,9 +225,14 @@
       gap: 10px;
       margin-bottom: 10px;
     }
-    .dogs, .parks {
+    .dogs {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .parks {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 6px;
     }
     .picker-note {
@@ -589,7 +594,8 @@
 
     @media (max-width: 520px) {
       .pickers { grid-template-columns: 1fr; }
-      .dogs, .parks { grid-template-columns: repeat(4, 1fr); }
+      .dogs { grid-template-columns: repeat(4, 1fr); }
+      .parks { grid-template-columns: repeat(3, 1fr); }
       .dog-card { min-height: 80px; padding: 6px 2px; }
       .dog-card .name { font-size: 12px; }
       .hud-chip { font-size: 13px; padding: 6px 10px; }
@@ -701,7 +707,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123c";
+  var BUILD = "20261123d";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
