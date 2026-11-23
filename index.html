@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123d -->
+<!-- fetch-pup build 20261123e -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -270,12 +270,83 @@
     }
     .dog-card.locked {
       cursor: default;
-      opacity: 0.85;
-      background: #F6F3EE;
+      background: #D8D3CB;
+      border-color: #B4AEA6;
+      box-shadow: none;
+      color: #5A6A7A;
+    }
+    .card-art {
+      position: relative;
+      width: 44px;
+      height: 36px;
+      margin: 0 auto 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .dog-card.locked .face,
+    .dog-card.locked .park-swatch {
+      opacity: 0.28;
+      filter: grayscale(1);
+    }
+    .lock-badge {
+      display: none;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 28px;
+      height: 28px;
+      margin: -15px 0 0 -14px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .dog-card.locked .lock-badge { display: block; }
+    .lock-body {
+      position: absolute;
+      left: 4px;
+      bottom: 0;
+      width: 20px;
+      height: 15px;
+      background: #FFC83D;
+      border: 2.5px solid #2C3A4A;
+      border-radius: 4px;
+    }
+    .lock-shackle {
+      position: absolute;
+      left: 8px;
+      top: 0;
+      width: 12px;
+      height: 12px;
+      border: 2.5px solid #2C3A4A;
+      border-bottom: 0;
+      border-radius: 12px 12px 0 0;
+      background: transparent;
+    }
+    .dog-card.locked .pts-needed {
+      display: inline-block;
+      margin-top: 3px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #2C3A4A;
+      color: #fff !important;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .total-points {
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0 0 8px;
+    }
+    .total-points strong {
+      color: var(--sky-deep);
+      font-size: 18px;
     }
     .dog-card .face {
       width: 44px; height: 36px;
-      margin: 0 auto 4px;
+      margin: 0;
       position: relative;
     }
     .dog-card .name {
@@ -305,7 +376,7 @@
     .park-swatch {
       width: 36px; height: 24px;
       border-radius: 8px;
-      margin: 2px auto 6px;
+      margin: 0;
       box-shadow: inset 0 -6px 0 rgba(0,0,0,0.12);
     }
 
@@ -626,6 +697,7 @@
       <h1><span class="coral">Fetch,</span> <span class="sky">Pup!</span></h1>
       <p class="lede">You have one minute. Throw, catch, and unlock new pups and parks with your total points!</p>
 
+      <p class="total-points">Total points: <strong id="totalNear">0</strong></p>
       <p class="picker-note" id="pickerNote"></p>
       <div class="pickers">
         <div class="panel">
@@ -707,13 +779,13 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123d";
+  var BUILD = "20261123e";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
   var BALL_R = 14;
   var GRAVITY = 1550;
-  var SAVE_KEY = "fetchPupSave";
+  var SAVE_KEY = "fetchPupSave_v2";
   var ROUND_TIME = 60;
 
   var DOGS = [
@@ -811,7 +883,6 @@
         if (parsed && typeof parsed === "object") {
           if (typeof parsed.best === "number" && parsed.best >= 0) data.best = Math.floor(parsed.best);
           if (typeof parsed.totalPoints === "number" && parsed.totalPoints >= 0) data.totalPoints = Math.floor(parsed.totalPoints);
-          else data.totalPoints = data.best;
           if (parsed.unlocked && parsed.unlocked.length) data.unlocked = parsed.unlocked;
           if (parsed.unlockedParks && parsed.unlockedParks.length) data.unlockedParks = parsed.unlockedParks;
           if (typeof parsed.dog === "string") data.dog = parsed.dog;
@@ -822,7 +893,6 @@
     }
     if (!isUnlockedId(data.unlocked, "sunny")) data.unlocked.push("sunny");
     if (!isUnlockedId(data.unlockedParks, "meadow")) data.unlockedParks.push("meadow");
-    // Apply current thresholds so older saves stay in sync.
     var i, item;
     for (i = 0; i < DOGS.length; i++) {
       item = DOGS[i];
@@ -1196,6 +1266,7 @@
     var b = $("liveBest"); if (b) b.innerHTML = String(state.best);
     var c = $("bestChip"); if (c) c.innerHTML = String(state.best);
     var tot = $("totalChip"); if (tot) tot.innerHTML = String(state.totalPoints || 0);
+    var tn = $("totalNear"); if (tn) tn.innerHTML = String(state.totalPoints || 0);
     var p = $("parkLabel"); if (p) p.innerHTML = currentPark().name;
     updateTimerHud();
   }
@@ -2487,8 +2558,10 @@
       face += "<span class='face-head' style='background:" + dog.body + "'></span>";
       if (dog.spots) face += "<span class='face-spot'></span>";
       face += "</span>";
-      btn.innerHTML = face + "<span class='name'>" + (unlocked ? dog.name : "???") + "</span>" +
-        "<span class='meta'>" + (unlocked ? dog.title : dog.unlock + " pts") + "</span>";
+      btn.innerHTML = "<span class='card-art'>" + face +
+        "<span class='lock-badge' aria-hidden='true'><span class='lock-shackle'></span><span class='lock-body'></span></span></span>" +
+        "<span class='name'>" + (unlocked ? dog.name : "???") + "</span>" +
+        "<span class='meta" + (unlocked ? "" : " pts-needed") + "'>" + (unlocked ? dog.title : dog.unlock + " pts") + "</span>";
       (function (id, can, name, pts) {
         bindActivate(btn, function () {
           if (!can) {
@@ -2520,9 +2593,10 @@
       btn.setAttribute("data-park", park.id);
       if (unlocked) btn.setAttribute("aria-label", "Choose " + park.name);
       else btn.setAttribute("aria-label", park.name + " locked. " + park.unlock + " total points to unlock.");
-      btn.innerHTML = "<span class='park-swatch' style='background:" + park.swatch + "' aria-hidden='true'></span>" +
+      btn.innerHTML = "<span class='card-art'><span class='park-swatch' style='background:" + park.swatch + "' aria-hidden='true'></span>" +
+        "<span class='lock-badge' aria-hidden='true'><span class='lock-shackle'></span><span class='lock-body'></span></span></span>" +
         "<span class='name'>" + (unlocked ? park.short : "???") + "</span>" +
-        "<span class='meta'>" + (unlocked ? park.name : park.unlock + " pts") + "</span>";
+        "<span class='meta" + (unlocked ? "" : " pts-needed") + "'>" + (unlocked ? park.name : park.unlock + " pts") + "</span>";
       (function (id, can, name, pts) {
         bindActivate(btn, function () {
           if (!can) {
