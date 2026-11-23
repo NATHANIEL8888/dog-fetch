@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123e -->
+<!-- fetch-pup build 20261123f -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -695,7 +695,7 @@
       <div class="hero-wrap"><canvas id="heroCanvas" width="560" height="380" aria-hidden="true"></canvas></div>
       <p class="kicker">A park adventure</p>
       <h1><span class="coral">Fetch,</span> <span class="sky">Pup!</span></h1>
-      <p class="lede">You have one minute. Throw, catch, and unlock new pups and parks with your total points!</p>
+      <p class="lede">You have 45 seconds. Throw, catch, and unlock new pups and parks with your total points!</p>
 
       <p class="total-points">Total points: <strong id="totalNear">0</strong></p>
       <p class="picker-note" id="pickerNote"></p>
@@ -742,7 +742,7 @@
           <div class="hud-chip" id="bestLive"><span>Best</span> <strong id="liveBest">0</strong></div>
         </div>
         <div class="hud-center">
-          <div class="timer-badge" id="timerBadge" aria-live="polite"><span id="timerText">1:00</span><span class="timer-label">Time left</span></div>
+          <div class="timer-badge" id="timerBadge" aria-live="polite"><span id="timerText">0:45</span><span class="timer-label">Time left</span></div>
           <div class="hud-chip"><span class="park-name" id="parkLabel">Sunny Meadow</span></div>
         </div>
         <div class="hud-cluster">
@@ -761,7 +761,7 @@
       <div class="results-card">
         <p class="kicker">What a fetch!</p>
         <h1><span class="coral">Time's</span> <span class="sky">up!</span></h1>
-        <p class="lede" id="resultLede">You and your pup had a great minute.</p>
+        <p class="lede" id="resultLede">You and your pup had a great round.</p>
         <div class="results-scores">
           <div>This game <strong id="resultScore">0</strong></div>
           <div id="resultBestWrap">Best <strong id="resultBest">0</strong></div>
@@ -779,14 +779,14 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123e";
+  var BUILD = "20261123f";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
   var BALL_R = 14;
   var GRAVITY = 1550;
   var SAVE_KEY = "fetchPupSave_v2";
-  var ROUND_TIME = 60;
+  var ROUND_TIME = 45;
 
   var DOGS = [
     { id: "sunny", name: "Sunny", title: "Golden pal", unlock: 0, speed: 470, jump: 195,
@@ -1390,37 +1390,40 @@
     state.ball.vx = 0;
     state.ball.vy = 0;
     state.phase = "return";
-    var pts = 10;
+    var pts = 1;
     var msg = "Nice fetch!";
-    var sub = "+10";
+    var sub = "+1";
     if (kind === "midair") {
-      pts = 35; msg = "Mid-air catch!"; sub = "+35";
+      pts = 5; msg = "Mid-air catch!"; sub = "+5";
       state.streak += 1;
       sfx("midair"); sfx("bark");
       addBurst(state.ball.x, state.ball.y, "#FFC83D", 16);
       addBurst(state.ball.x, state.ball.y, "#FFFFFF", 8);
     } else if (kind === "great") {
-      pts = 20; msg = "Great catch!"; sub = "+20";
+      pts = 3; msg = "Great catch!"; sub = "+3";
       state.streak += 1;
       sfx("catch"); sfx("bark");
       addBurst(state.ball.x, state.ball.y, "#7ED97E", 12);
     } else if (kind === "splash") {
-      pts = 15; msg = "Splash catch!"; sub = "+15";
+      pts = 2; msg = "Splash catch!"; sub = "+2";
       state.streak = 0;
       sfx("splash"); sfx("catch");
     } else if (kind === "bush") {
-      pts = 12; msg = "Found it!"; sub = "+12";
+      pts = 2; msg = "Found it!"; sub = "+2";
       state.streak = 0;
       sfx("catch"); sfx("bark");
     } else {
-      pts = 10; msg = "Nice fetch!"; sub = "+10";
+      pts = 1; msg = "Nice fetch!"; sub = "+1";
       state.streak = 0;
       sfx("catch");
     }
     if (state.streak >= 2 && (kind === "midair" || kind === "great")) {
-      var bonus = 5 * (state.streak - 1);
-      pts += bonus;
-      sub += "  Streak +" + bonus;
+      var bonus = 1;
+      if (pts + bonus > 5) bonus = 5 - pts;
+      if (bonus > 0) {
+        pts += bonus;
+        sub += "  Streak +" + bonus;
+      }
     }
     addScore(pts);
     addPopup(sub, state.ball.x, state.ball.y - 40, "#FFF36A");
@@ -1440,12 +1443,12 @@
       if (hit) {
         b.got = true;
         if (b.type === "star") {
-          addScore(25);
-          addPopup("+25 star!", b.x, py - 20, "#FFE566");
+          addScore(2);
+          addPopup("+2 star!", b.x, py - 20, "#FFE566");
           addBurst(b.x, py, "#FFE566", 14);
         } else {
-          addScore(15);
-          addPopup("+15 bone!", b.x, py - 20, "#F4D19B");
+          addScore(1);
+          addPopup("+1 bone!", b.x, py - 20, "#F4D19B");
           addBurst(b.x, py, "#E0A54B", 10);
         }
         sfx("bonus");
@@ -2660,9 +2663,9 @@
     }
     var lede = $("resultLede");
     if (lede) {
-      if (state.score <= 0) lede.innerHTML = "Ready to try a fun minute of fetch?";
+      if (state.score <= 0) lede.innerHTML = "Ready to try another 45 seconds of fetch?";
       else if (state.score >= state.best) lede.innerHTML = "Wow, that's your best game yet!";
-      else lede.innerHTML = "You and your pup had a great minute.";
+      else lede.innerHTML = "You and your pup had a great round.";
     }
     var box = $("resultUnlocks"), list = $("resultUnlockList");
     if (box && list) {
@@ -2718,7 +2721,7 @@
       placeReady();
       updateHud();
       showScreen("play");
-      showToast("Go fetch!", "You have one minute!", 1.4);
+      showToast("Go fetch!", "You have 45 seconds!", 1.4);
     } catch (err) {}
     try {
       resumeAudio();
