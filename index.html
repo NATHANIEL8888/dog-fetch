@@ -143,6 +143,33 @@
       z-index: 4;
       flex-shrink: 0;
     }
+    .mute-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 4;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+    .mute-wrap .mute-btn { pointer-events: auto; }
+    .mute-label {
+      display: block;
+      margin-top: 3px;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: 0.01em;
+      color: var(--ink);
+      background: rgba(255,255,255,0.94);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 1px 7px;
+      white-space: nowrap;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(44,58,74,0.12);
+      pointer-events: none;
+    }
     .mute-glyph {
       position: relative;
       display: block;
@@ -626,6 +653,14 @@
       position: absolute; width: 7px; height: 7px; border-radius: 50%;
       left: 22px; top: 16px; background: #8B5A2B;
     }
+    .face-mask {
+      position: absolute;
+      left: 14px; top: 14px;
+      width: 16px; height: 11px;
+      border-radius: 8px 8px 7px 7px;
+      z-index: 1;
+      opacity: 0.92;
+    }
     .park-swatch {
       width: 36px; height: 24px;
       border-radius: 8px;
@@ -1006,7 +1041,7 @@
     .hud-cluster { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .hud-cluster:first-child { justify-self: start; }
     .hud-center { justify-self: center; }
-    .hud-cluster:last-child { justify-self: end; justify-content: flex-end; flex-wrap: nowrap; position: relative; z-index: 6; }
+    .hud-cluster:last-child { justify-self: end; justify-content: flex-end; flex-wrap: nowrap; position: relative; z-index: 6; align-items: flex-start; }
     .hud-chip {
       background: rgba(255,255,255,0.92);
       border: 1px solid var(--line);
@@ -1218,7 +1253,7 @@
       <div class="start-top">
       <header class="brand-bar">
         <div class="mark"><span class="mark-block" aria-hidden="true"></span> Fetch, Pup!</div>
-        <button class="icon-btn mute-btn" id="muteStart" type="button" aria-pressed="false" aria-label="Turn sound off" title="Sound on" onclick="if(window.fetchPup){window.fetchPup.toggleMute();}return false;"><span class="mute-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M9.4 3.2v11.15a3.55 3.55 0 1 0 2.15 3.3V8.05l8.3-1.85v8.25a3.55 3.55 0 1 0 2.15 3.3V3.85L9.4 6.15V3.2z"/></svg><span class="mute-slash"></span></span></button>
+        <div class="mute-wrap"><button class="icon-btn mute-btn" id="muteStart" type="button" aria-pressed="false" aria-label="Turn sound off" title="Sound on" onclick="if(window.fetchPup){window.fetchPup.toggleMute();}return false;"><span class="mute-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M9.4 3.2v11.15a3.55 3.55 0 1 0 2.15 3.3V8.05l8.3-1.85v8.25a3.55 3.55 0 1 0 2.15 3.3V3.85L9.4 6.15V3.2z"/></svg><span class="mute-slash"></span></span></button><span class="mute-label" id="muteLabelStart" aria-hidden="true">Sound On</span></div>
       </header>
       <div class="hero-wrap"><canvas id="heroCanvas" width="560" height="380" aria-hidden="true"></canvas></div>
       <p class="kicker">A park adventure</p>
@@ -1318,7 +1353,7 @@
           <div class="hud-chip"><span class="park-name" id="parkLabel">Sunny Meadow</span></div>
         </div>
         <div class="hud-cluster">
-          <button class="icon-btn mute-btn" id="mutePlay" type="button" aria-pressed="false" aria-label="Turn sound off" title="Sound on" onclick="if(window.fetchPup){window.fetchPup.toggleMute();}return false;"><span class="mute-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M9.4 3.2v11.15a3.55 3.55 0 1 0 2.15 3.3V8.05l8.3-1.85v8.25a3.55 3.55 0 1 0 2.15 3.3V3.85L9.4 6.15V3.2z"/></svg><span class="mute-slash"></span></span></button>
+          <div class="mute-wrap"><button class="icon-btn mute-btn" id="mutePlay" type="button" aria-pressed="false" aria-label="Turn sound off" title="Sound on" onclick="if(window.fetchPup){window.fetchPup.toggleMute();}return false;"><span class="mute-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M9.4 3.2v11.15a3.55 3.55 0 1 0 2.15 3.3V8.05l8.3-1.85v8.25a3.55 3.55 0 1 0 2.15 3.3V3.85L9.4 6.15V3.2z"/></svg><span class="mute-slash"></span></span></button><span class="mute-label" id="muteLabelPlay" aria-hidden="true">Sound On</span></div>
           <button class="icon-btn home-btn" id="homeBtn" type="button" aria-label="Back to start" title="Home">Home</button>
         </div>
       </div>
@@ -1330,7 +1365,7 @@
     </section>
 
     <section id="screen-results" aria-label="Time's up">
-      <button class="icon-btn mute-btn results-mute" id="muteResults" type="button" aria-pressed="false" aria-label="Turn sound off" title="Sound on" onclick="if(window.fetchPup){window.fetchPup.toggleMute();}return false;"><span class="mute-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M9.4 3.2v11.15a3.55 3.55 0 1 0 2.15 3.3V8.05l8.3-1.85v8.25a3.55 3.55 0 1 0 2.15 3.3V3.85L9.4 6.15V3.2z"/></svg><span class="mute-slash"></span></span></button>
+      <div class="mute-wrap results-mute"><button class="icon-btn mute-btn" id="muteResults" type="button" aria-pressed="false" aria-label="Turn sound off" title="Sound on" onclick="if(window.fetchPup){window.fetchPup.toggleMute();}return false;"><span class="mute-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M9.4 3.2v11.15a3.55 3.55 0 1 0 2.15 3.3V8.05l8.3-1.85v8.25a3.55 3.55 0 1 0 2.15 3.3V3.85L9.4 6.15V3.2z"/></svg><span class="mute-slash"></span></span></button><span class="mute-label" id="muteLabelResults" aria-hidden="true">Sound On</span></div>
       <div class="results-card">
         <p class="kicker">What a fetch!</p>
         <h1><span class="coral">Time's</span> <span class="sky">up!</span></h1>
@@ -1353,7 +1388,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ac";
+  var BUILD = "20261123ad";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1379,6 +1414,10 @@
     { id: "speckles", name: "Speckles", title: "Spotty pal", unlock: 330, speed: 490, jump: 230,
       body: "#F4EFE6", bodyDark: "#DED4C4", belly: "#FFFFFF", ear: "#8B5A2B",
       eye: "#2C2418", collar: "#3CB371", tag: "#FFC83D", ears: "flop", muzzle: "#F8F4EC", spots: true },
+    { id: "maple", name: "Maple", title: "Fluffy pal", unlock: 480, speed: 520, jump: 210,
+      body: "#F0D2A0", bodyDark: "#C88848", belly: "#FFF6E8", ear: "#B44A22",
+      eye: "#2C2418", collar: "#2A9B8A", tag: "#FFC83D", ears: "prick", muzzle: "#FFF3E0",
+      mask: "#A85A32", fluff: true },
     { id: "blue", name: "Blue", title: "Speedy pal", unlock: 630, speed: 560, jump: 190,
       body: "#7A8B9C", bodyDark: "#5A6A7A", belly: "#D5DCE3", ear: "#4A5560",
       eye: "#1A1F28", collar: "#FFC83D", tag: "#E25535", ears: "prick", muzzle: "#D5DCE3" },
@@ -1438,6 +1477,16 @@
       pond: { x: 700, y: GROUND_Y + 8, rx: 110, ry: 24 },
       bushes: [{ x: 480, y: GROUND_Y, s: 1 }],
       trees: [{ x: 260, h: 200, kind: "silhouette" }, { x: 400, h: 150, kind: "silhouette" }, { x: 1120, h: 220, kind: "silhouette" }]
+    },
+    { id: "mountains", name: "Snowy Mountains", short: "Mountains", unlock: 1200, swatch: "#8FB7D4",
+      skyTop: "#3A7EC8", skyMid: "#C5E3FF", skyBot: "#F3F8FF",
+      sun: "#FFF4C8", sunX: 170, sunY: 96, sunR: 46,
+      grassFar: "#7BAF7A", grassMid: "#5E9A5C", grassNear: "#4A8648",
+      dirt: "#C8B49A", treeA: "#1F6B3A", treeB: "#164C2A",
+      flower: false, leaves: false, snow: true, beach: false, sunset: false, mountains: true,
+      pond: { x: 860, y: GROUND_Y + 8, rx: 92, ry: 20 },
+      bushes: [{ x: 620, y: GROUND_Y, s: 0.95 }, { x: 760, y: GROUND_Y, s: 0.8 }],
+      trees: [{ x: 250, h: 210, kind: "pine" }, { x: 390, h: 160, kind: "pine" }, { x: 1060, h: 230, kind: "pine" }, { x: 1180, h: 170, kind: "pine" }]
     }
   ];
 
@@ -1828,18 +1877,18 @@
   }
 
   var SHOP_ITEMS = [
-    { id: "hat-party", slot: "hat", name: "Party Hat", price: 16 },
-    { id: "hat-beanie", slot: "hat", name: "Cozy Beanie", price: 24 },
-    { id: "hat-cowboy", slot: "hat", name: "Cowboy Hat", price: 40 },
-    { id: "hat-shades", slot: "hat", name: "Cool Shades", price: 58 },
-    { id: "bandana-red", slot: "bandana", name: "Red Bandana", price: 12 },
-    { id: "bandana-blue", slot: "bandana", name: "Blue Bandana", price: 20 },
-    { id: "bandana-star", slot: "bandana", name: "Starry Bandana", price: 36 },
-    { id: "bandana-picnic", slot: "bandana", name: "Picnic Bandana", price: 52 },
-    { id: "collar-sky", slot: "collar", name: "Sky Collar", price: 12 },
-    { id: "collar-gold", slot: "collar", name: "Gold Collar", price: 32 },
-    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 48 },
-    { id: "collar-gem", slot: "collar", name: "Gem Collar", price: 64 }
+    { id: "hat-party", slot: "hat", name: "Party Hat", price: 24 },
+    { id: "hat-beanie", slot: "hat", name: "Cozy Beanie", price: 36 },
+    { id: "hat-cowboy", slot: "hat", name: "Cowboy Hat", price: 60 },
+    { id: "hat-shades", slot: "hat", name: "Cool Shades", price: 87 },
+    { id: "bandana-red", slot: "bandana", name: "Red Bandana", price: 18 },
+    { id: "bandana-blue", slot: "bandana", name: "Blue Bandana", price: 30 },
+    { id: "bandana-star", slot: "bandana", name: "Starry Bandana", price: 54 },
+    { id: "bandana-picnic", slot: "bandana", name: "Picnic Bandana", price: 78 },
+    { id: "collar-sky", slot: "collar", name: "Sky Collar", price: 18 },
+    { id: "collar-gold", slot: "collar", name: "Gold Collar", price: 48 },
+    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 72 },
+    { id: "collar-gem", slot: "collar", name: "Gem Collar", price: 96 }
   ];
   var shopSelected = null;
   var shopPreviewAnim = 0;
@@ -1953,6 +2002,9 @@
         clusters.push({ x: rand(420, 820), y: rand(250, 400), got: false, wob: rand(0, 6) });
       }
       state.surprise = { type: "fireflies", clusters: clusters, active: true };
+    } else if (type === "mountains") {
+      var eagleX = ((typeof view.camX === "number") ? view.camX : 0) + cameraVisW() + 60;
+      state.surprise = { type: "eagle", x: eagleX, y: 130, vx: -390, awarded: false, active: true };
     }
   }
 
@@ -1972,6 +2024,10 @@
       s.x += s.vx * dt;
       s.y = 150 + Math.sin(clamp((WORLD_W - s.x) / WORLD_W, 0, 1) * Math.PI) * 130;
       if (s.x < -80) s.active = false;
+    } else if (s.type === "eagle") {
+      s.x += s.vx * dt;
+      s.y = 130 + Math.sin(clamp((WORLD_W - s.x) / WORLD_W, 0, 1) * Math.PI) * 150;
+      if (s.x < -90) s.active = false;
     } else if (s.type === "butterflies") {
       d = state.dog;
       for (i = 0; i < s.bugs.length; i++) {
@@ -2021,13 +2077,15 @@
   }
 
   function awardSeagullDodge(kind) {
-    var s = state.surprise;
-    if (kind !== "midair" || !s || s.type !== "seagull" || !s.active || s.awarded) return;
+    var s = state.surprise, label;
+    if (kind !== "midair" || !s || !s.active || s.awarded) return;
+    if (s.type !== "seagull" && s.type !== "eagle") return;
     if (hypot(state.ball.x - s.x, state.ball.y - s.y) < 140 && s.y > 200) {
       s.awarded = true;
       addScore(2);
-      addPopup("+2 Seagull dodge!", state.ball.x, state.ball.y - 54, "#FFF36A");
-      showToast("Seagull dodge!", "+2", 1.15);
+      label = s.type === "eagle" ? "Eagle dodge!" : "Seagull dodge!";
+      addPopup("+2 " + label, state.ball.x, state.ball.y - 54, "#FFF36A");
+      showToast(label, "+2", 1.15);
     }
   }
 
@@ -2064,6 +2122,32 @@
       c.fill();
       c.fillStyle = "#2C2418";
       fillEllipse(c, 10, -2, 1.4, 1.4);
+      c.restore();
+    } else if (s.type === "eagle") {
+      c.save();
+      c.translate(s.x, s.y);
+      c.scale((s.vx < 0 ? -1 : 1) * 1.55, 1.55);
+      c.fillStyle = "#5A3A22";
+      fillEllipse(c, 0, 0, 20, 9);
+      c.fillStyle = "#C48A3A";
+      fillEllipse(c, 8, -3, 10, 7);
+      c.fillStyle = "#F4E6C8";
+      fillEllipse(c, 16, -4, 7, 5.5);
+      c.fillStyle = "#3A2414";
+      c.beginPath();
+      c.moveTo(-2, 0);
+      c.quadraticCurveTo(10, -26, 30, -4);
+      c.quadraticCurveTo(10, -8, -2, 0);
+      c.fill();
+      c.fillStyle = "#E0A020";
+      c.beginPath();
+      c.moveTo(22, -4);
+      c.lineTo(32, -2);
+      c.lineTo(22, 1);
+      c.closePath();
+      c.fill();
+      c.fillStyle = "#1A120C";
+      fillEllipse(c, 18, -6, 1.6, 1.6);
       c.restore();
     } else if (s.type === "butterflies") {
       for (i = 0; i < s.bugs.length; i++) {
@@ -3446,6 +3530,33 @@
       }
       return;
     }
+    if (kind === "pine") {
+      c.fillStyle = "#6B4424";
+      c.fillRect(x - 5, ground - h * 0.28, 10, h * 0.28);
+      var pi, ly, lw, lh;
+      for (pi = 0; pi < 4; pi++) {
+        ly = ground - h * (0.22 + pi * 0.2);
+        lw = 36 - pi * 7;
+        lh = 44 - pi * 5;
+        c.fillStyle = pi % 2 ? park.treeB : park.treeA;
+        c.beginPath();
+        c.moveTo(x, ly - lh);
+        c.lineTo(x + lw, ly + 8);
+        c.lineTo(x - lw, ly + 8);
+        c.closePath();
+        c.fill();
+        if (park.snow) {
+          c.fillStyle = "rgba(255,255,255,0.92)";
+          c.beginPath();
+          c.moveTo(x, ly - lh);
+          c.lineTo(x + lw * 0.38, ly - lh + 15);
+          c.lineTo(x - lw * 0.3, ly - lh + 17);
+          c.closePath();
+          c.fill();
+        }
+      }
+      return;
+    }
     if (kind === "silhouette") {
       c.fillStyle = park.treeA;
       fillEllipse(c, x, ground - h * 0.65, 46, h * 0.38);
@@ -3480,7 +3591,11 @@
       c.fillStyle = "#E07A3D";
       fillEllipse(c, x + 6 * s, y - 28 * s, 12 * s, 8 * s);
     }
-    if (!park.sunset) {
+    if (park.snow) {
+      c.fillStyle = "rgba(255,255,255,0.9)";
+      fillEllipse(c, x - 8 * s, y - 30 * s, 12 * s, 6 * s);
+      fillEllipse(c, x + 10 * s, y - 24 * s, 8 * s, 4 * s);
+    } else if (!park.sunset) {
       c.fillStyle = "rgba(255,255,255,0.15)";
       fillEllipse(c, x - 10 * s, y - 28 * s, 10 * s, 6 * s);
     }
@@ -3610,6 +3725,54 @@
     }
   }
 
+  function drawMountains(c, park) {
+    var base = GROUND_Y - 62;
+    function range(peaks, fill, snow) {
+      var i, p, mid;
+      for (i = 0; i < peaks.length; i++) {
+        p = peaks[i];
+        c.fillStyle = fill;
+        c.beginPath();
+        c.moveTo(p.x - p.w, base + 8);
+        c.lineTo(p.x - p.w * 0.22, p.y + (base - p.y) * 0.38);
+        c.lineTo(p.x, p.y);
+        c.lineTo(p.x + p.w * 0.26, p.y + (base - p.y) * 0.34);
+        c.lineTo(p.x + p.w, base + 8);
+        c.closePath();
+        c.fill();
+        c.fillStyle = snow;
+        c.beginPath();
+        c.moveTo(p.x, p.y);
+        c.lineTo(p.x + p.w * 0.2, p.y + (base - p.y) * 0.22);
+        c.lineTo(p.x + p.w * 0.05, p.y + (base - p.y) * 0.14);
+        c.lineTo(p.x - p.w * 0.06, p.y + (base - p.y) * 0.2);
+        c.lineTo(p.x - p.w * 0.18, p.y + (base - p.y) * 0.24);
+        c.closePath();
+        c.fill();
+        mid = p.y + (base - p.y) * 0.12;
+        c.fillStyle = "rgba(255,255,255,0.35)";
+        c.beginPath();
+        c.moveTo(p.x - 4, p.y + 6);
+        c.lineTo(p.x + 10, mid + 8);
+        c.lineTo(p.x - 2, mid + 4);
+        c.closePath();
+        c.fill();
+      }
+    }
+    range([
+      { x: 180, y: 210, w: 210 },
+      { x: 460, y: 150, w: 230 },
+      { x: 760, y: 190, w: 200 },
+      { x: 1080, y: 155, w: 250 }
+    ], "#8AA7C4", "#F7FBFF");
+    range([
+      { x: 80, y: 250, w: 180 },
+      { x: 340, y: 200, w: 170 },
+      { x: 980, y: 215, w: 200 },
+      { x: 1220, y: 230, w: 170 }
+    ], "#6E8EAE", "#FFFFFF");
+  }
+
   function drawPark(c, park, t) {
     var g = c.createLinearGradient(0, 0, 0, GROUND_Y);
     g.addColorStop(0, park.skyTop);
@@ -3628,6 +3791,7 @@
     for (i = 0; i < state.clouds.length; i++) {
       drawCloud(c, state.clouds[i].x, state.clouds[i].y, state.clouds[i].s);
     }
+    if (park.mountains) drawMountains(c, park);
     drawSkyBirds(c);
 
     if (park.leaves) {
@@ -3690,6 +3854,15 @@
         fillEllipse(c, f.x, f.y, f.r, f.r);
         c.fillStyle = "#FFC83D";
         fillEllipse(c, f.x, f.y, 1.4, 1.4);
+      }
+    }
+
+    if (park.snow) {
+      c.fillStyle = "rgba(255,255,255,0.9)";
+      for (i = 0; i < 40; i++) {
+        var sx = (i * 73 + t * 36) % (WORLD_W + 40) - 20;
+        var sy = (i * 51 + t * (26 + (i % 5) * 8)) % (GROUND_Y + 30);
+        fillEllipse(c, sx, sy, 1.8 + (i % 3) * 0.7, 1.8 + (i % 3) * 0.7);
       }
     }
   }
@@ -4247,7 +4420,12 @@
     c.translate(-28, -30);
     c.rotate(-0.7 + tail);
     c.fillStyle = def.bodyDark;
-    if (def.ears === "prick") {
+    if (def.fluff) {
+      fillEllipse(c, -8, 0, 8, 18);
+      fillEllipse(c, -2, -4, 6, 11);
+      c.fillStyle = def.body;
+      fillEllipse(c, -6, -8, 4.5, 8);
+    } else if (def.ears === "prick") {
       fillEllipse(c, -8, 0, 6, 14);
     } else {
       fillEllipse(c, -10, 0, 7, 16);
@@ -4271,8 +4449,21 @@
     }
     c.restore();
 
+    if (def.fluff) {
+      c.fillStyle = def.body;
+      fillEllipse(c, 16, -40, 11, 9);
+      fillEllipse(c, 20, -34, 9, 8);
+      c.fillStyle = def.bodyDark;
+      fillEllipse(c, 14, -44, 6, 6);
+    }
+
     c.fillStyle = def.body;
     fillEllipse(c, 28, -44, 20, 18);
+    if (def.mask) {
+      c.fillStyle = def.mask;
+      fillEllipse(c, 28, -48, 11, 9);
+      fillEllipse(c, 34, -46, 8, 7);
+    }
     c.fillStyle = def.muzzle;
     fillEllipse(c, 40, -36, 12, 9);
 
@@ -4820,8 +5011,10 @@
     var muted = !!(state && state.muted);
     var label = muted ? "Turn sound on" : "Turn sound off";
     var title = muted ? "Sound off" : "Sound on";
+    var text = muted ? "Sound off" : "Sound On";
     var ids = ["muteStart", "mutePlay", "muteResults"];
-    var i, el;
+    var labelIds = ["muteLabelStart", "muteLabelPlay", "muteLabelResults"];
+    var i, el, lab;
     for (i = 0; i < ids.length; i++) {
       el = $(ids[i]);
       if (!el) continue;
@@ -4829,6 +5022,8 @@
       el.setAttribute("aria-label", label);
       el.setAttribute("title", title);
       setClassFlag(el, "is-muted", muted);
+      lab = $(labelIds[i]);
+      if (lab) lab.innerHTML = text;
     }
   }
 
@@ -4859,6 +5054,7 @@
       face += "<span class='face-head" + (dog.shine ? " gloss" : "") + "' style='background:" + dog.body + "'></span>";
       if (dog.athletic) face += "<span class='face-muzzle' style='background:" + dog.muzzle + "'></span>";
       if (dog.spots) face += "<span class='face-spot'></span>";
+      if (dog.mask) face += "<span class='face-mask' style='background:" + dog.mask + "'></span>";
       if (dog.shine && dog.collar) face += "<span class='face-collar' style='background:" + dog.collar + "'></span>";
       face += "</span>";
       btn.innerHTML = (isGoal ? '<span class="goal-ribbon" aria-hidden="true"><span class="goal-crown" aria-hidden="true"><svg viewBox="0 0 24 18" focusable="false"><path d="M3 15V7.5L8.2 12 12 3.2 15.8 12 21 7.5V15z" fill="#FFC83D" stroke="#2C3A4A" stroke-width="1.6" stroke-linejoin="round"/><rect x="3" y="14" width="18" height="3.2" rx="1" fill="#E0A520" stroke="#2C3A4A" stroke-width="1.4"/><circle cx="12" cy="3.2" r="1.7" fill="#FF6B4A" stroke="#2C3A4A" stroke-width="1"/></svg></span>Goal!</span><span class="goal-shimmer" aria-hidden="true"></span><span class="goal-spark a" aria-hidden="true"></span><span class="goal-spark b" aria-hidden="true"></span>' : "") +
@@ -5332,6 +5528,42 @@
           }
         }
         return false;
+      },
+      setDogId: function (id) {
+        var i;
+        for (i = 0; i < DOGS.length; i++) {
+          if (DOGS[i].id === id) {
+            state.dogId = id;
+            updateHud();
+            renderDogPicker();
+            if (state.screen === "play") render();
+            return true;
+          }
+        }
+        return false;
+      },
+      unlockForTest: function (dogId, parkId) {
+        var i, item;
+        if (!state.unlocked) state.unlocked = ["sunny"];
+        if (!state.unlockedParks) state.unlockedParks = ["meadow"];
+        for (i = 0; i < DOGS.length; i++) {
+          item = DOGS[i];
+          if (!isUnlockedId(state.unlocked, item.id)) state.unlocked.push(item.id);
+        }
+        for (i = 0; i < PARKS.length; i++) {
+          item = PARKS[i];
+          if (!isUnlockedId(state.unlockedParks, item.id)) state.unlockedParks.push(item.id);
+        }
+        if (dogId) state.dogId = dogId;
+        if (parkId) {
+          state.parkId = parkId;
+          seedFlowers();
+          spawnBonuses();
+        }
+        renderDogPicker();
+        renderParkPicker();
+        updateHud();
+        if (state.screen === "play") render();
       },
       tryPickup: function (kind) {
         var i, b, held, bx, by, py;
