@@ -5694,6 +5694,8 @@
     }, false);
 
     window.addEventListener("mouseup", function () { onUp(); }, false);
+    window.addEventListener("pointerup", function () { onUp(); }, false);
+    window.addEventListener("pointercancel", function () { onUp(); }, false);
 
     canvas.addEventListener("touchstart", function (e) {
       if (!playing()) return;
