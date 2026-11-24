@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123w -->
+<!-- fetch-pup build 20261123x -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -730,6 +730,176 @@
       font-weight: 700;
     }
     .reset-progress:hover { background: #E8F4FC; }
+
+    .start-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 0 auto 10px;
+    }
+    .start-actions .reset-progress { margin: 0; }
+    .dress-up-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 8px 16px;
+      border: 2px solid #C06814;
+      background: #FFE08A;
+      color: #6A3A08;
+      border-radius: 999px;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 3px 0 rgba(160, 90, 20, 0.25);
+    }
+    .dress-up-btn:hover { background: #FFD56A; }
+    .dress-up-btn:active { transform: translateY(1px); }
+    .treat-count {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin: 0 auto 8px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #6A3A08;
+    }
+    .treat-count strong { font-size: 18px; }
+    .treat-icon, .treat-icon svg { width: 22px; height: 16px; display: block; }
+
+    .combo-meter {
+      background: rgba(255,248,220,0.95);
+      border: 2px solid #E0A520;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #7A4A00;
+      box-shadow: 0 2px 0 rgba(160, 90, 20, 0.2);
+      white-space: nowrap;
+    }
+    .combo-meter[hidden] { display: none !important; }
+    .combo-meter strong { color: #C06814; font-size: 16px; }
+
+    #shopOverlay.dialog-overlay { z-index: 30; padding: 10px; align-items: stretch; }
+    .shop-panel {
+      width: min(520px, 100%);
+      max-height: min(640px, calc(100dvh - 20px));
+      margin: auto;
+      background: #FFF8EF;
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      text-align: left;
+    }
+    .shop-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 14px 8px;
+      flex-shrink: 0;
+    }
+    .shop-head h2 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+    }
+    .shop-close {
+      min-width: 44px;
+      min-height: 44px;
+      border: 2px solid var(--line);
+      background: #fff;
+      border-radius: 50%;
+      font: inherit;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .shop-treats {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 14px 8px;
+      font-weight: 800;
+      color: #6A3A08;
+      flex-shrink: 0;
+    }
+    .shop-copy {
+      margin: 0 14px 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+      flex-shrink: 0;
+    }
+    .shop-preview-wrap {
+      background: linear-gradient(#B9E6FF, #FFF6C8 70%, #8FCB6E);
+      margin: 0 14px 10px;
+      border-radius: 16px;
+      height: 150px;
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 2px solid rgba(44,58,74,0.08);
+    }
+    #shopPreview { width: 100%; height: 100%; display: block; }
+    .shop-body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 0 14px 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .shop-cat { margin: 0 0 14px; }
+    .shop-cat h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--sky-deep);
+    }
+    .shop-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .shop-item {
+      min-height: 72px;
+      padding: 10px 10px 12px;
+      border: 2px solid var(--line);
+      background: #fff;
+      border-radius: 16px;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      color: var(--ink);
+    }
+    .shop-item:focus, .shop-item.selected { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(59,154,237,0.25); }
+    .shop-item.owned { background: #F3FFF6; }
+    .shop-item.equipped { border-color: #C06814; background: #FFF4D0; }
+    .shop-item .item-name { display: block; font-size: 16px; font-weight: 800; }
+    .shop-item .item-price { display: block; margin-top: 4px; font-size: 13px; font-weight: 800; color: #8A5A12; }
+    .shop-item .item-state { display: block; margin-top: 2px; font-size: 12px; font-weight: 800; color: var(--sky-deep); }
+    .shop-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      flex-shrink: 0;
+      padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--line);
+      background: #fff;
+    }
+    .shop-actions .btn { flex: 1; min-height: 48px; margin: 0; }
+    .shop-actions .btn:disabled { opacity: 0.45; cursor: default; }
+
     .reset-progress:active { transform: translateY(1px); box-shadow: 0 2px 0 rgba(24, 97, 158, 0.18); }
     .reset-progress:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
 
@@ -1014,13 +1184,17 @@
       <p class="lede">You have 45 seconds. Throw, catch, and unlock new pups and parks with your total points!</p>
 
       <p class="total-points">Total points: <strong id="totalNear">0</strong></p>
+      <p class="treat-count"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> Treats: <strong id="treatsNear">0</strong></p>
       <div class="goal-progress" id="goalProgress">
         <p class="goal-progress-label" id="goalProgressLabel">Goal: Mystery Pup, 1500 pts</p>
         <div class="goal-progress-track" id="goalTrack" role="progressbar" aria-valuemin="0" aria-valuemax="1500" aria-valuenow="0" aria-label="Progress toward the mystery goal pup">
           <span class="goal-progress-bar" id="goalBar"></span>
         </div>
       </div>
-      <button class="reset-progress" id="resetBtn" type="button"><span class="reset-icon" aria-hidden="true">↺</span> Reset progress</button>
+      <div class="start-actions">
+        <button class="dress-up-btn" id="dressUpBtn" type="button">Dress Up</button>
+        <button class="reset-progress" id="resetBtn" type="button"><span class="reset-icon" aria-hidden="true">↺</span> Reset progress</button>
+      </div>
       <p class="picker-note" id="pickerNote"></p>
       <div class="pickers">
         <div class="panel">
@@ -1039,6 +1213,9 @@
           <li>Drag or flick the ball to aim and throw.</li>
           <li>Or press and hold to power up, then let go.</li>
           <li>Grab <span class="howto-bonus" aria-hidden="true"><svg viewBox="0 0 24 16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> bones and <span class="howto-bonus" aria-hidden="true"><svg viewBox="0 0 18 18"><path d="M9 1.2l2.15 5.15L16.8 7.1l-4.2 3.72L13.8 16.8 9 13.95 4.2 16.8l1.2-5.98L1.2 7.1l5.65-.75z" fill="#FFD24A" stroke="#E07000" stroke-width="1.6" stroke-linejoin="round"/></svg></span> stars. Unlock new parks and pups with your total points!</li>
+          <li>Sometimes the next ball is special: a golden ball doubles the catch, and a bouncy ball keeps hopping.</li>
+          <li>String mid-air catches for combos. A big combo makes your pup flip!</li>
+          <li>You earn Treats when you score. Spend them in Dress Up to fancy up your pup. Treats never spend your Total points.</li>
         </ul>
       </div>
       </div>
@@ -1058,10 +1235,27 @@
       </div>
     </section>
 
+    <div id="shopOverlay" class="dialog-overlay" hidden>
+      <div class="shop-panel" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+        <div class="shop-head">
+          <h2 id="shopTitle">Dress Up</h2>
+          <button class="shop-close" id="shopClose" type="button" aria-label="Close shop">×</button>
+        </div>
+        <div class="shop-treats"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> <span>Treats: <strong id="shopTreats">0</strong></span></div>
+        <p class="shop-copy">Spend Treats to dress your pup. Buying outfits does not use up your Total points or unlocks.</p>
+        <div class="shop-preview-wrap"><canvas id="shopPreview" width="480" height="150" aria-hidden="true"></canvas></div>
+        <div class="shop-body" id="shopBody"></div>
+        <div class="shop-actions">
+          <button class="btn" id="shopBuyBtn" type="button">Buy</button>
+          <button class="btn btn-ghost" id="shopWearBtn" type="button">Wear it!</button>
+        </div>
+      </div>
+    </div>
+
     <div id="resetDialog" class="dialog-overlay" hidden>
       <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="resetTitle" aria-describedby="resetCopy">
         <h2 id="resetTitle">Start over?</h2>
-        <p id="resetCopy">This sets your points to 0 and re-locks dogs and parks.</p>
+        <p id="resetCopy">This sets your points and Treats to 0, takes off outfits, and re-locks dogs and parks.</p>
         <div class="dialog-actions">
           <button class="btn" id="resetYes" type="button">Yes</button>
           <button class="btn btn-ghost" id="resetCancel" type="button">Cancel</button>
@@ -1074,6 +1268,7 @@
         <div class="hud-cluster">
           <div class="hud-chip" id="scoreChip"><span>Score</span> <strong id="liveScore">0</strong></div>
           <div class="hud-chip" id="bestLive"><span>Best</span> <strong id="liveBest">0</strong></div>
+          <div class="combo-meter" id="comboMeter" hidden><span>Combo</span> <strong id="comboValue">x1</strong></div>
         </div>
         <div class="hud-center">
           <div class="timer-badge" id="timerBadge" aria-live="polite"><span id="timerText">0:45</span><span class="timer-label">Time left</span></div>
@@ -1114,7 +1309,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123w";
+  var BUILD = "20261123x";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1222,7 +1417,7 @@
 
   function loadSave() {
     var raw = storageGet(SAVE_KEY);
-    var data = { best: 0, totalPoints: 0, unlocked: ["sunny"], unlockedParks: ["meadow"], dog: "sunny", park: "meadow", muted: false, unlockGen: UNLOCK_GEN };
+    var data = { best: 0, totalPoints: 0, unlocked: ["sunny"], unlockedParks: ["meadow"], dog: "sunny", park: "meadow", muted: false, unlockGen: UNLOCK_GEN, treats: 0, treatsGranted: false, ownedItems: [], equipped: { hat: null, bandana: null, collar: null } };
     var migrated = false;
     if (raw) {
       try {
@@ -1237,6 +1432,18 @@
           if (typeof parsed.muted === "boolean") data.muted = parsed.muted;
           if (typeof parsed.unlockGen === "number" && parsed.unlockGen >= 0) data.unlockGen = Math.floor(parsed.unlockGen);
           else data.unlockGen = 0;
+          if (parsed.ownedItems && parsed.ownedItems.length) data.ownedItems = parsed.ownedItems.slice(0);
+          if (parsed.equipped && typeof parsed.equipped === "object") {
+            data.equipped = {
+              hat: parsed.equipped.hat || null,
+              bandana: parsed.equipped.bandana || null,
+              collar: parsed.equipped.collar || null
+            };
+          }
+          if (parsed.treatsGranted === true) {
+            data.treatsGranted = true;
+            if (typeof parsed.treats === "number" && parsed.treats >= 0) data.treats = Math.floor(parsed.treats);
+          }
         }
       } catch (err) {}
     }
@@ -1271,6 +1478,25 @@
     }
     if (!isUnlockedId(data.unlocked, data.dog)) data.dog = "sunny";
     if (!isUnlockedId(data.unlockedParks, data.park)) data.park = "meadow";
+    if (!data.treatsGranted) {
+      data.treats = data.totalPoints;
+      data.treatsGranted = true;
+      migrated = true;
+    }
+    (function sanitizeGear() {
+      var slot, id, ok, i, item;
+      for (slot in data.equipped) {
+        if (!data.equipped.hasOwnProperty(slot)) continue;
+        id = data.equipped[slot];
+        ok = false;
+        if (id) {
+          for (i = 0; i < data.ownedItems.length; i++) if (data.ownedItems[i] === id) ok = true;
+          item = null;
+          for (i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) item = SHOP_ITEMS[i];
+          if (!ok || !item || item.slot !== slot) data.equipped[slot] = null;
+        }
+      }
+    })();
     if (migrated) {
       persistSave({
         best: data.best,
@@ -1280,7 +1506,11 @@
         dog: data.dog,
         park: data.park,
         muted: data.muted,
-        unlockGen: data.unlockGen
+        unlockGen: data.unlockGen,
+        treats: data.treats,
+        treatsGranted: data.treatsGranted,
+        ownedItems: data.ownedItems,
+        equipped: data.equipped
       });
     }
     return data;
@@ -1305,7 +1535,11 @@
       dog: state.dogId,
       park: state.parkId,
       muted: state.muted,
-      unlockGen: state.unlockGen || UNLOCK_GEN
+      unlockGen: state.unlockGen || UNLOCK_GEN,
+      treats: state.treats || 0,
+      treatsGranted: true,
+      ownedItems: state.ownedItems ? state.ownedItems.slice(0) : [],
+      equipped: state.equipped ? { hat: state.equipped.hat || null, bandana: state.equipped.bandana || null, collar: state.equipped.collar || null } : { hat: null, bandana: null, collar: null }
     });
   }
 
@@ -1539,7 +1773,625 @@
       tone(784, 0.16, "sine", 0.05, null, 0.1);
       tone(1046, 0.28, "triangle", 0.05, null, 0.22);
     }
+    else if (kind === "cheer") {
+      tone(523, 0.12, "sine", 0.05);
+      tone(659, 0.14, "sine", 0.05, null, 0.08);
+      tone(784, 0.16, "sine", 0.055, null, 0.16);
+      tone(1046, 0.22, "triangle", 0.05, null, 0.26);
+      tone(1318, 0.28, "sine", 0.04, null, 0.38);
+    }
     } catch (err) {}
+  }
+
+  var SHOP_ITEMS = [
+    { id: "hat-party", slot: "hat", name: "Party Hat", price: 35 },
+    { id: "hat-beanie", slot: "hat", name: "Cozy Beanie", price: 55 },
+    { id: "hat-cowboy", slot: "hat", name: "Cowboy Hat", price: 90 },
+    { id: "hat-shades", slot: "hat", name: "Cool Shades", price: 150 },
+    { id: "bandana-red", slot: "bandana", name: "Red Bandana", price: 30 },
+    { id: "bandana-blue", slot: "bandana", name: "Blue Bandana", price: 45 },
+    { id: "bandana-star", slot: "bandana", name: "Starry Bandana", price: 85 },
+    { id: "bandana-picnic", slot: "bandana", name: "Picnic Bandana", price: 130 },
+    { id: "collar-sky", slot: "collar", name: "Sky Collar", price: 30 },
+    { id: "collar-gold", slot: "collar", name: "Gold Collar", price: 75 },
+    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 120 },
+    { id: "collar-gem", slot: "collar", name: "Gem Collar", price: 200 }
+  ];
+  var shopSelected = null;
+  var shopPreviewAnim = 0;
+
+  function emptyGear() {
+    return { hat: null, bandana: null, collar: null };
+  }
+
+  function shopItemById(id) {
+    var i;
+    if (!id) return null;
+    for (i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i];
+    return null;
+  }
+
+  function ownsItem(id) {
+    var i;
+    if (!state || !state.ownedItems || !id) return false;
+    for (i = 0; i < state.ownedItems.length; i++) if (state.ownedItems[i] === id) return true;
+    return false;
+  }
+
+  function equippedId(slot) {
+    if (!state || !state.equipped) return null;
+    return state.equipped[slot] || null;
+  }
+
+  function spendTreats(n) {
+    if (!state || !(n > 0) || state.treats < n) return false;
+    state.treats -= n;
+    saveNow();
+    updateHud();
+    return true;
+  }
+
+  function buyShopItem(id) {
+    var item = shopItemById(id);
+    if (!item || ownsItem(id) || state.treats < item.price) return false;
+    if (!spendTreats(item.price)) return false;
+    state.ownedItems.push(id);
+    state.equipped[item.slot] = id;
+    saveNow();
+    renderShop();
+    return true;
+  }
+
+  function equipShopItem(id, on) {
+    var item = shopItemById(id);
+    if (!item || !ownsItem(id)) return false;
+    if (on === false || (on == null && equippedId(item.slot) === id)) state.equipped[item.slot] = null;
+    else state.equipped[item.slot] = id;
+    saveNow();
+    renderShop();
+    return true;
+  }
+
+  function pickHeldSpecial() {
+    var kind = null;
+    var forced = state.forceSpecial;
+    if (forced === "gold" || forced === "bouncy") {
+      if (state.forceSpecialOnce || !state.lastSpecial) kind = forced;
+      if (state.forceSpecialOnce) state.forceSpecialOnce = false;
+    } else if (forced) {
+      if (!state.lastSpecial) kind = Math.random() < 0.5 ? "gold" : "bouncy";
+    } else if (!state.lastSpecial && Math.random() < 1 / 6) {
+      kind = Math.random() < 0.5 ? "gold" : "bouncy";
+    }
+    state.ball.special = kind;
+    state.ball.bounces = 0;
+    state.ball.maxBounces = kind === "bouncy" ? (Math.random() < 0.5 ? 2 : 3) : 0;
+  }
+
+  function clearSurprise() {
+    state.surprise = null;
+  }
+
+  function startSurprise() {
+    var park, type, i, bugs, clusters;
+    clearSurprise();
+    if (state.fetchesInPark < 1 && !state.forceSurpriseAlways) return;
+    if (!state.forceSurprise && Math.random() >= 0.25) return;
+    park = currentPark();
+    type = park.id;
+    if (type === "meadow") {
+      var enterX = ((typeof view.camX === "number") ? view.camX : 0) + cameraVisW() + 36;
+      state.surprise = { type: "squirrel", x: enterX, y: GROUND_Y, hasBall: false, dropped: false, beaten: false, runT: 0, active: true };
+    } else if (type === "autumn") {
+      state.surprise = { type: "gust", t: 0, dir: 1, active: true, leaves: [] };
+      for (i = 0; i < 14; i++) {
+        state.surprise.leaves.push({
+          x: rand(state.ball.x - 40, state.ball.x + 80),
+          y: rand(200, GROUND_Y - 40),
+          vx: rand(140, 280),
+          vy: rand(-40, 40),
+          rot: rand(0, 6),
+          c: ["#E07A2F", "#C44B1A", "#F0C14A", "#A33A12"][i % 4],
+          s: rand(5, 9)
+        });
+      }
+    } else if (type === "beach") {
+      var gullX = ((typeof view.camX === "number") ? view.camX : 0) + cameraVisW() + 50;
+      state.surprise = { type: "seagull", x: gullX, y: 150, vx: -420, awarded: false, active: true };
+    } else if (type === "garden") {
+      bugs = [];
+      for (i = 0; i < 4; i++) {
+        bugs.push({ x: rand(380, 780), y: rand(300, 430), got: false, wob: rand(0, 6), c: ["#E86AD0", "#7EC8FF", "#FFC83D", "#B388FF"][i % 4] });
+      }
+      state.surprise = { type: "butterflies", bugs: bugs, active: true };
+    } else if (type === "sunset") {
+      clusters = [];
+      for (i = 0; i < 3; i++) {
+        clusters.push({ x: rand(420, 820), y: rand(250, 400), got: false, wob: rand(0, 6) });
+      }
+      state.surprise = { type: "fireflies", clusters: clusters, active: true };
+    }
+  }
+
+  function updateSurprise(dt) {
+    var s = state.surprise, b, d, i, bug, cl, dx, dy, dist, targetX, spd, stolen;
+    if (!s || !s.active) return;
+    if (s.type === "squirrel") {
+      b = state.ball;
+      d = state.dog;
+      if (s.beaten) {
+        s.x += 260 * dt;
+        if (s.x > WORLD_W + 60) s.active = false;
+        return;
+      }
+      if (s.hasBall) {
+        s.x -= 380 * dt;
+        s.runT += dt;
+        b.x = s.x;
+        b.y = GROUND_Y - 20;
+        b.vx = 0; b.vy = 0;
+        if (s.runT > 0.5 || s.x < 520) {
+          s.hasBall = false;
+          s.dropped = true;
+          b.held = false;
+          b.y = GROUND_Y - BALL_R;
+          state.phase = "retrieve";
+        }
+        return;
+      }
+      if (s.dropped) {
+        s.x -= 80 * dt;
+        if (s.x < -40) s.active = false;
+        return;
+      }
+      targetX = b.x;
+      spd = 600;
+      if (s.x > targetX + 8) s.x -= spd * dt;
+      else if (s.x < targetX - 8) s.x += spd * dt;
+      stolen = !d.hasBall && !b.held && (state.phase === "bounce" || state.phase === "retrieve" || (state.phase === "flying" && b.y > GROUND_Y - 70));
+      if (stolen && Math.abs(s.x - b.x) < 30 && b.y > GROUND_Y - 80) {
+        s.hasBall = true;
+        s.runT = 0;
+        b.held = true;
+        b.vx = 0; b.vy = 0;
+        state.phase = "retrieve";
+        showToast("Oh no!", "The squirrel stole the ball!", 1.1);
+      }
+    } else if (s.type === "gust") {
+      s.t += dt;
+      for (i = 0; i < s.leaves.length; i++) {
+        s.leaves[i].x += s.leaves[i].vx * dt;
+        s.leaves[i].y += s.leaves[i].vy * dt;
+        s.leaves[i].rot += 4 * dt;
+        s.leaves[i].vy += 20 * dt;
+      }
+      if (s.t > 1.6) s.active = false;
+    } else if (s.type === "seagull") {
+      s.x += s.vx * dt;
+      s.y = 150 + Math.sin(clamp((WORLD_W - s.x) / WORLD_W, 0, 1) * Math.PI) * 130;
+      if (s.x < -80) s.active = false;
+    } else if (s.type === "butterflies") {
+      d = state.dog;
+      for (i = 0; i < s.bugs.length; i++) {
+        bug = s.bugs[i];
+        if (bug.got) continue;
+        bug.wob += dt * 3;
+        bug.x += Math.sin(bug.wob) * 18 * dt;
+        bug.y += Math.cos(bug.wob * 1.3) * 14 * dt;
+        if (d.jumpY > 28 && hypot(d.x - bug.x, (GROUND_Y - d.jumpY - 36) - bug.y) < 38) {
+          bug.got = true;
+          addScore(1);
+          addPopup("+1 Butterfly!", bug.x, bug.y, "#FFB4F0");
+          sfx("bonus");
+        }
+      }
+    } else if (s.type === "fireflies") {
+      b = state.ball;
+      for (i = 0; i < s.clusters.length; i++) {
+        cl = s.clusters[i];
+        if (cl.got) continue;
+        cl.wob += dt * 4;
+        if (!b.held && hypot(b.x - cl.x, b.y - cl.y) < 44) {
+          cl.got = true;
+          addScore(1);
+          addPopup("+1 Firefly!", cl.x, cl.y, "#F8FF9A");
+          addBurst(cl.x, cl.y, "#E8FF6A", 12);
+          sfx("bonus");
+        }
+      }
+    }
+  }
+
+  function maybeGoldTrail() {
+    var b = state.ball, i, a;
+    if (!b || b.held || b.special !== "gold") return;
+    if (state.time - (state._goldTrailT || 0) < 0.03) return;
+    state._goldTrailT = state.time;
+    for (i = 0; i < 2; i++) {
+      a = rand(0, Math.PI * 2);
+      state.particles.push({
+        x: b.x + rand(-6, 6), y: b.y + rand(-6, 6),
+        vx: Math.cos(a) * 30, vy: Math.sin(a) * 20 - 20,
+        t: 0, life: rand(0.25, 0.5), color: Math.random() < 0.5 ? "#FFE566" : "#FFF4B0",
+        r: rand(2, 4), kind: "spark"
+      });
+    }
+  }
+
+  function awardSquirrelBeat() {
+    var s = state.surprise;
+    if (s && s.type === "squirrel" && s.active && !s.hasBall && !s.dropped && !s.beaten) {
+      s.beaten = true;
+      addScore(2);
+      addPopup("+2 Beat the squirrel!", state.ball.x, state.ball.y - 50, "#FFF36A");
+      showToast("Beat the squirrel!", "+2", 1.15);
+    }
+  }
+
+  function awardSeagullDodge(kind) {
+    var s = state.surprise;
+    if (kind !== "midair" || !s || s.type !== "seagull" || !s.active || s.awarded) return;
+    if (hypot(state.ball.x - s.x, state.ball.y - s.y) < 140 && s.y > 200) {
+      s.awarded = true;
+      addScore(2);
+      addPopup("+2 Seagull dodge!", state.ball.x, state.ball.y - 54, "#FFF36A");
+      showToast("Seagull dodge!", "+2", 1.15);
+    }
+  }
+
+  function drawSurprises(c) {
+    var s = state.surprise, i, leaf, bug, cl, j, px, py;
+    if (!s || !s.active) return;
+    if (s.type === "squirrel") {
+      c.save();
+      c.translate(s.x, s.y);
+      c.scale(s.hasBall || s.x < (state.ball ? state.ball.x : s.x) ? -1 : 1, 1);
+      c.scale(1.25, 1.25);
+      c.fillStyle = "rgba(40,40,40,0.18)";
+      fillEllipse(c, 0, -3, 16, 5);
+      c.fillStyle = "#C68642";
+      fillEllipse(c, 0, -16, 14, 10);
+      fillEllipse(c, 14, -22, 8, 7);
+      c.fillStyle = "#E8C090";
+      fillEllipse(c, 16, -20, 4, 3);
+      c.fillStyle = "#5A3A22";
+      fillEllipse(c, 17, -24, 1.6, 1.6);
+      c.fillStyle = "#C68642";
+      c.save();
+      c.translate(-10, -22);
+      c.rotate(-0.8);
+      fillEllipse(c, 0, 0, 5, 10);
+      c.restore();
+      c.fillStyle = "#8B5A2B";
+      c.beginPath();
+      c.moveTo(-12, -16);
+      c.quadraticCurveTo(-28, -36, -16, -8);
+      c.quadraticCurveTo(-10, -10, -12, -16);
+      c.fill();
+      c.restore();
+    } else if (s.type === "gust") {
+      for (i = 0; i < s.leaves.length; i++) {
+        leaf = s.leaves[i];
+        c.save();
+        c.translate(leaf.x, leaf.y);
+        c.rotate(leaf.rot);
+        c.fillStyle = leaf.c;
+        fillEllipse(c, 0, 0, leaf.s, leaf.s * 0.55);
+        c.restore();
+      }
+    } else if (s.type === "seagull") {
+      c.save();
+      c.translate(s.x, s.y);
+      c.scale(s.vx < 0 ? -1 : 1, 1);
+      c.fillStyle = "#F4F4F8";
+      fillEllipse(c, 0, 0, 16, 7);
+      c.fillStyle = "#E8E8EE";
+      c.beginPath();
+      c.moveTo(-4, 0);
+      c.quadraticCurveTo(8, -18, 24, -2);
+      c.quadraticCurveTo(8, -6, -4, 0);
+      c.fill();
+      c.fillStyle = "#F5C542";
+      c.beginPath();
+      c.moveTo(16, -1);
+      c.lineTo(24, 0);
+      c.lineTo(16, 2);
+      c.fill();
+      c.fillStyle = "#2C2418";
+      fillEllipse(c, 10, -2, 1.4, 1.4);
+      c.restore();
+    } else if (s.type === "butterflies") {
+      for (i = 0; i < s.bugs.length; i++) {
+        bug = s.bugs[i];
+        if (bug.got) continue;
+        c.save();
+        c.translate(bug.x, bug.y + Math.sin(state.time * 3 + bug.wob) * 4);
+        c.globalAlpha = 0.85;
+        c.fillStyle = bug.c;
+        fillEllipse(c, -6, 0, 6, 4 + Math.sin(state.time * 10 + i) * 1.5);
+        fillEllipse(c, 6, 0, 6, 4 + Math.cos(state.time * 10 + i) * 1.5);
+        c.fillStyle = "#3A2A10";
+        fillEllipse(c, 0, 0, 1.4, 3);
+        c.restore();
+      }
+    } else if (s.type === "fireflies") {
+      for (i = 0; i < s.clusters.length; i++) {
+        cl = s.clusters[i];
+        if (cl.got) continue;
+        for (j = 0; j < 6; j++) {
+          px = cl.x + Math.cos(state.time * 2 + j + cl.wob) * (10 + (j % 3) * 5);
+          py = cl.y + Math.sin(state.time * 2.4 + j * 1.3) * (8 + (j % 2) * 4);
+          c.fillStyle = "rgba(255,255,140," + (0.45 + 0.4 * Math.sin(state.time * 6 + j)) + ")";
+          fillEllipse(c, px, py, 3.2, 3.2);
+        }
+      }
+    }
+  }
+
+  function drawHeldBallLabel(c) {
+    var label, b;
+    if (!state || !state.ball || !state.ball.held || state.dog.hasBall) return;
+    if (state.surprise && state.surprise.hasBall) return;
+    if (state.phase !== "ready" && state.phase !== "aiming" && state.phase !== "celebrate") return;
+    b = state.ball;
+    if (!b.special) return;
+    label = b.special === "gold" ? "Golden Ball!" : "Bouncy Ball!";
+    c.save();
+    c.font = "800 16px Trebuchet MS, sans-serif";
+    c.textAlign = "center";
+    c.fillStyle = "rgba(44,58,74,0.82)";
+    roundRect(c, b.x - 58, b.y - 52, 116, 24, 10);
+    c.fill();
+    c.fillStyle = b.special === "gold" ? "#FFE566" : "#FFB4E6";
+    c.fillText(label, b.x, b.y - 35);
+    c.restore();
+  }
+
+  function gearFromState() {
+    return {
+      hat: equippedId("hat"),
+      bandana: equippedId("bandana"),
+      collar: equippedId("collar")
+    };
+  }
+
+  function drawShopCollar(c, x, y, athletic, id) {
+    var w = athletic ? 21 : 22, h = athletic ? 7 : 6;
+    c.save();
+    c.translate(x, y);
+    if (id === "collar-gold") {
+      c.fillStyle = "#E2B84F";
+      roundRect(c, athletic ? -10 : -10, athletic ? -4 : 0, w, h, 3); c.fill();
+      c.fillStyle = "#FFF3A8";
+      fillEllipse(c, athletic ? 3 : 2, athletic ? 5 : 8, 4, 4);
+    } else if (id === "collar-rainbow") {
+      c.fillStyle = "#FF5A7A";
+      roundRect(c, athletic ? -10 : -10, athletic ? -4 : 0, w, h, 3); c.fill();
+      c.fillStyle = "#5AD0FF";
+      roundRect(c, athletic ? -10 : -10, athletic ? -2 : 2, w, h * 0.45, 2); c.fill();
+      c.fillStyle = "#F8E04A";
+      fillEllipse(c, athletic ? 3 : 2, athletic ? 5 : 8, 3.5, 3.5);
+    } else if (id === "collar-gem") {
+      c.fillStyle = "#5B3A8C";
+      roundRect(c, athletic ? -10 : -10, athletic ? -4 : 0, w, h, 3); c.fill();
+      c.fillStyle = "#7EE8FF";
+      c.beginPath();
+      c.moveTo(athletic ? 3 : 2, athletic ? 1 : 5);
+      c.lineTo(athletic ? 8 : 7, athletic ? 6 : 10);
+      c.lineTo(athletic ? 3 : 2, athletic ? 10 : 14);
+      c.lineTo(athletic ? -2 : -3, athletic ? 6 : 10);
+      c.closePath();
+      c.fill();
+    } else {
+      c.fillStyle = "#3B9AED";
+      roundRect(c, athletic ? -10 : -10, athletic ? -4 : 0, w, h, 3); c.fill();
+      c.fillStyle = "#FFF4C8";
+      fillEllipse(c, athletic ? 3 : 2, athletic ? 5 : 8, 4, 4);
+    }
+    c.restore();
+  }
+
+  function drawShopBandana(c, x, y, athletic, id) {
+    var colors = { "bandana-red": "#E4453A", "bandana-blue": "#2F6FE0", "bandana-star": "#4B3A8C", "bandana-picnic": "#F4F0E6" };
+    c.save();
+    c.translate(x, y + (athletic ? 4 : 2));
+    c.fillStyle = colors[id] || "#E4453A";
+    c.beginPath();
+    c.moveTo(-12, -2);
+    c.lineTo(14, -2);
+    c.lineTo(8, 12);
+    c.lineTo(-2, 6);
+    c.closePath();
+    c.fill();
+    if (id === "bandana-star") {
+      c.fillStyle = "#FFD24A";
+      fillEllipse(c, 2, 2, 2.2, 2.2);
+      fillEllipse(c, -4, 0, 1.6, 1.6);
+    } else if (id === "bandana-picnic") {
+      c.strokeStyle = "#E4453A";
+      c.lineWidth = 1.4;
+      c.beginPath(); c.moveTo(-8, 0); c.lineTo(10, 0); c.moveTo(-6, 4); c.lineTo(8, 4); c.stroke();
+    }
+    c.restore();
+  }
+
+  function drawShopHat(c, athletic, drop, id) {
+    drop = drop || 0;
+    c.save();
+    if (athletic) c.translate(36, -92 + drop);
+    else c.translate(30, -62);
+    if (id === "hat-party") {
+      c.fillStyle = "#7B5CFF";
+      c.beginPath();
+      c.moveTo(0, -22);
+      c.lineTo(14, 2);
+      c.lineTo(-14, 2);
+      c.closePath();
+      c.fill();
+      c.fillStyle = "#FFC83D";
+      fillEllipse(c, 0, -24, 3.5, 3.5);
+      c.fillStyle = "#FF6B8A";
+      fillEllipse(c, -6, -8, 2, 2);
+      fillEllipse(c, 5, -12, 2, 2);
+    } else if (id === "hat-beanie") {
+      c.fillStyle = "#3A8F6A";
+      fillEllipse(c, 0, -2, 16, 10);
+      c.fillRect(-16, -4, 32, 8);
+      c.fillStyle = "#2A6B4E";
+      fillEllipse(c, 0, -10, 5, 5);
+    } else if (id === "hat-cowboy") {
+      c.fillStyle = "#8A5A28";
+      fillEllipse(c, 0, 2, 22, 5);
+      c.fillStyle = "#6E451C";
+      fillEllipse(c, 0, -6, 12, 8);
+      c.fillStyle = "#C9A24A";
+      c.fillRect(-12, -2, 24, 2);
+    } else if (id === "hat-shades") {
+      c.translate(athletic ? 2 : 4, athletic ? 14 : 16);
+      c.fillStyle = "#1A1A1A";
+      fillEllipse(c, -7, 0, 7, 5);
+      fillEllipse(c, 8, 0, 7, 5);
+      c.fillRect(-2, -1, 8, 2);
+      c.strokeStyle = "rgba(180,220,255,0.35)";
+      c.lineWidth = 1;
+      c.beginPath(); c.arc(-7, 0, 5, -0.8, 0.6); c.stroke();
+    }
+    c.restore();
+  }
+
+  function drawDogAccessories(c, athletic, drop) {
+    var gear, id;
+    drop = drop || 0;
+    gear = (arguments.length > 3 && arguments[3]) ? arguments[3] : gearFromState();
+    if (!gear) return;
+    if (gear.collar) {
+      if (athletic) drawShopCollar(c, 22, -60 + drop, true, gear.collar);
+      else drawShopCollar(c, 22, -38, false, gear.collar);
+    }
+    if (gear.bandana) {
+      if (athletic) drawShopBandana(c, 22, -56 + drop, true, gear.bandana);
+      else drawShopBandana(c, 22, -36, false, gear.bandana);
+    }
+    if (gear.hat) drawShopHat(c, athletic, drop, gear.hat);
+  }
+
+  function renderShop() {
+    var body = $("shopBody"), i, item, btn, stateLbl, price, owned, eq, sel;
+    var treatsEl = $("shopTreats"), buy, wear;
+    if (treatsEl) treatsEl.innerHTML = String(state.treats || 0);
+    if (!body) return;
+    body.innerHTML = "";
+    function addCat(title, slot) {
+      var wrap = document.createElement("div");
+      var h, grid;
+      wrap.className = "shop-cat";
+      h = document.createElement("h3");
+      h.innerHTML = title;
+      grid = document.createElement("div");
+      grid.className = "shop-grid";
+      wrap.appendChild(h);
+      wrap.appendChild(grid);
+      for (i = 0; i < SHOP_ITEMS.length; i++) {
+        item = SHOP_ITEMS[i];
+        if (item.slot !== slot) continue;
+        btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "shop-item";
+        btn.setAttribute("data-id", item.id);
+        owned = ownsItem(item.id);
+        eq = equippedId(slot) === item.id;
+        if (owned) btn.className += " owned";
+        if (eq) btn.className += " equipped";
+        if (shopSelected === item.id) btn.className += " selected";
+        stateLbl = eq ? "Wearing" : (owned ? "Owned" : "For sale");
+        price = owned ? "Yours!" : (item.price + " Treats");
+        btn.innerHTML = "<span class=\"item-name\">" + item.name + "</span><span class=\"item-price\">" + price + "</span><span class=\"item-state\">" + stateLbl + "</span>";
+        grid.appendChild(btn);
+      }
+      body.appendChild(wrap);
+    }
+    addCat("Hats", "hat");
+    addCat("Bandanas", "bandana");
+    addCat("Collars", "collar");
+    sel = shopItemById(shopSelected);
+    buy = $("shopBuyBtn");
+    wear = $("shopWearBtn");
+    if (buy) {
+      if (!sel || ownsItem(sel.id)) {
+        buy.disabled = true;
+        buy.innerHTML = "Buy";
+      } else if (state.treats < sel.price) {
+        buy.disabled = true;
+        buy.innerHTML = "Need " + sel.price + " Treats";
+      } else {
+        buy.disabled = false;
+        buy.innerHTML = "Buy for " + sel.price + " Treats";
+      }
+    }
+    if (wear) {
+      if (!sel || !ownsItem(sel.id)) {
+        wear.disabled = true;
+        wear.innerHTML = "Wear it!";
+      } else if (equippedId(sel.slot) === sel.id) {
+        wear.disabled = false;
+        wear.innerHTML = "Take off";
+      } else {
+        wear.disabled = false;
+        wear.innerHTML = "Wear it!";
+      }
+    }
+    drawShopPreview();
+  }
+
+  function previewGear() {
+    var gear = gearFromState(), item;
+    item = shopItemById(shopSelected);
+    if (item) gear[item.slot] = item.id;
+    return gear;
+  }
+
+  function drawShopPreview() {
+    var canvas = $("shopPreview"), c, def, w, h;
+    if (!canvas || !canvas.getContext) return;
+    c = canvas.getContext("2d");
+    w = canvas.width; h = canvas.height;
+    c.clearRect(0, 0, w, h);
+    def = getDog(state.dogId);
+    c.save();
+    c.translate(w * 0.52, h * 0.86);
+    c.scale(1.55, 1.55);
+    drawDog(c, 0, 0, def, {
+      facing: 1,
+      pose: "wag",
+      t: (nowMs() / 1000),
+      jumpY: 0,
+      hasBall: false,
+      gear: previewGear()
+    });
+    c.restore();
+  }
+
+  function openShop() {
+    var el = $("shopOverlay");
+    if (!el) return;
+    shopSelected = equippedId("hat") || equippedId("bandana") || equippedId("collar") || "hat-party";
+    if (el.removeAttribute) el.removeAttribute("hidden");
+    el.hidden = false;
+    el.className = "dialog-overlay open";
+    renderShop();
+    sfx("button");
+  }
+
+  function closeShop() {
+    var el = $("shopOverlay");
+    if (!el) return;
+    el.className = "dialog-overlay";
+    el.hidden = true;
+  }
+
+  function isShopOpen() {
+    var el = $("shopOverlay");
+    return !!(el && !el.hidden && el.className.indexOf("open") >= 0);
   }
 
   /* ---------- State ---------- */
@@ -1574,7 +2426,7 @@
       phaseSeen: "ready",
       time: 0,
       flightT: 0,
-      ball: { x: 168, y: 452, vx: 0, vy: 0, spin: 0, visible: true, held: true },
+      ball: { x: 168, y: 452, vx: 0, vy: 0, spin: 0, visible: true, held: true, special: null, bounces: 0, maxBounces: 0 },
       dog: { x: 250, y: GROUND_Y, facing: 1, pose: "idle", jumpY: 0, hasBall: false, swim: false, targetX: 250, intercept: null },
       kidArm: 0.2,
       aim: { active: false, mode: "none", power: 0, angle: 0.85, holdT: 0, pulse: 0 },
@@ -1592,7 +2444,20 @@
       parkChangeT: 0,
       catchKind: "",
       pendingUnlocks: [],
-      flowers: []
+      flowers: [],
+      treats: (typeof save.treats === "number" ? save.treats : 0),
+      treatsGranted: save.treatsGranted !== false,
+      ownedItems: save.ownedItems ? save.ownedItems.slice(0) : [],
+      equipped: save.equipped ? { hat: save.equipped.hat || null, bandana: save.equipped.bandana || null, collar: save.equipped.collar || null } : { hat: null, bandana: null, collar: null },
+      combo: 0,
+      lastSpecial: null,
+      forceSpecial: null,
+      forceSpecialOnce: false,
+      forceSurprise: false,
+      forceSurpriseAlways: false,
+      surprise: null,
+      flipT: 0,
+      _goldTrailT: 0
     };
   }
 
@@ -1624,6 +2489,9 @@
     state.aim.mode = "none";
     state.aim.power = 0;
     state.aim.holdT = 0;
+    state.flipT = 0;
+    clearSurprise();
+    if (!opts.keepSpecial) pickHeldSpecial();
     if (!opts.skipBonuses) spawnBonuses();
     var hint = $("hint");
     if (hint) hint.style.display = "block";
@@ -1770,7 +2638,17 @@
     var c = $("bestChip"); if (c) c.innerHTML = String(state.best);
     var tot = $("totalChip"); if (tot) tot.innerHTML = String(state.totalPoints || 0);
     var tn = $("totalNear"); if (tn) tn.innerHTML = String(state.totalPoints || 0);
+    var tr = $("treatsNear"); if (tr) tr.innerHTML = String(state.treats || 0);
     var p = $("parkLabel"); if (p) p.innerHTML = currentPark().name;
+    var cm = $("comboMeter"); var cv = $("comboValue");
+    if (cm) {
+      if (state.combo >= 1 && state.screen === "play") {
+        cm.hidden = false;
+        if (cv) cv.innerHTML = "x" + state.combo;
+      } else {
+        cm.hidden = true;
+      }
+    }
     updateGoalProgress();
     updateTimerHud();
   }
@@ -1803,6 +2681,7 @@
   function addScore(n) {
     state.score += n;
     state.totalPoints += n;
+    state.treats = (state.treats || 0) + n;
     if (state.score > state.best) state.best = state.score;
     updateHud();
     checkUnlocks();
@@ -1866,6 +2745,8 @@
     state.dog.facing = 1;
     state.dog.pose = "run";
     state.dog.hasBall = false;
+    state.lastSpecial = state.ball.special || null;
+    startSurprise();
     sfx("throw");
   }
 
@@ -1910,7 +2791,11 @@
   }
 
   function doCatch(kind, silent) {
+    var pts, msg, sub, streakBonus, comboBonus, cap, gold, total;
     if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return;
+    if (state.ball.special === "bouncy" && (state.ball.bounces || 0) >= 1 && kind !== "splash" && kind !== "bush") {
+      kind = "midair";
+    }
     state.catchKind = kind;
     state.dog.hasBall = true;
     state.dog.pose = "return";
@@ -1919,9 +2804,9 @@
     state.ball.vx = 0;
     state.ball.vy = 0;
     state.phase = "return";
-    var pts = 1;
-    var msg = "Nice fetch!";
-    var sub = "+1";
+    pts = 1;
+    msg = "Nice fetch!";
+    sub = "+1";
     if (kind === "midair") {
       pts = 5; msg = "Mid-air catch!"; sub = "+5";
       state.streak += 1;
@@ -1931,32 +2816,59 @@
     } else if (kind === "great") {
       pts = 3; msg = "Great catch!"; sub = "+3";
       state.streak += 1;
+      state.combo = 0;
       sfx("catch"); sfx("bark");
       addBurst(state.ball.x, state.ball.y, "#7ED97E", 12);
     } else if (kind === "splash") {
       pts = 2; msg = "Splash catch!"; sub = "+2";
       state.streak = 0;
+      state.combo = 0;
       sfx("splash"); sfx("catch");
     } else if (kind === "bush") {
       pts = 2; msg = "Found it!"; sub = "+2";
       state.streak = 0;
+      state.combo = 0;
       sfx("catch"); sfx("bark");
     } else {
       pts = 1; msg = "Nice fetch!"; sub = "+1";
       state.streak = 0;
+      state.combo = 0;
       sfx("catch");
     }
-    if (state.streak >= 2 && (kind === "midair" || kind === "great")) {
-      var bonus = 1;
-      if (pts + bonus > 5) bonus = 5 - pts;
-      if (bonus > 0) {
-        pts += bonus;
-        sub += "  Streak +" + bonus;
-      }
+    streakBonus = 0;
+    if (state.streak >= 2 && (kind === "midair" || kind === "great")) streakBonus = 1;
+    comboBonus = 0;
+    if (kind === "midair") {
+      state.combo = (state.combo || 0) + 1;
+      if (state.combo === 2) comboBonus = 1;
+      else if (state.combo === 3) comboBonus = 2;
+      else if (state.combo >= 4) comboBonus = 3;
     }
-    addScore(pts);
-    addPopup(sub, state.ball.x, state.ball.y - 40, "#FFF36A");
-    showToast(msg, sub, 1.15);
+    gold = state.ball.special === "gold";
+    total = (gold ? pts * 2 : pts) + streakBonus + comboBonus;
+    cap = gold ? 10 : 8;
+    if (total > cap) total = cap;
+    if (gold) {
+      msg = "Golden catch!";
+      sub = "+" + total;
+    } else {
+      sub = "+" + total;
+    }
+    if (streakBonus) sub += "  Streak +" + streakBonus;
+    if (comboBonus) sub += "  Combo +" + comboBonus;
+    addScore(total);
+    addPopup(sub, state.ball.x, state.ball.y - 40, gold ? "#FFE566" : "#FFF36A");
+    if (kind === "midair" && state.combo >= 3) {
+      state.flipT = 0.55;
+      state.dog.pose = "flip";
+      sfx("cheer");
+      showToast("COMBO x" + state.combo + "!", "What a flip!", 1.4);
+    } else {
+      showToast(msg, sub, 1.15);
+    }
+    awardSquirrelBeat();
+    awardSeagullDodge(kind);
+    updateHud();
     if (!silent) {}
   }
 
@@ -2038,15 +2950,25 @@
     } else if (state.phase === "return") {
       d.targetX = 250;
       d.facing = -1;
-      d.pose = "return";
       d.swim = inPond(d.x, GROUND_Y, currentPark());
-      if (d.swim) d.pose = "swim";
-      d.jumpY = lerp(d.jumpY, 0, clamp(dt * 8, 0, 1));
+      if (state.flipT > 0) {
+        state.flipT -= dt;
+        d.pose = "flip";
+        d.jumpY = 36;
+        if (state.flipT <= 0) {
+          state.flipT = 0;
+          d.pose = d.swim ? "swim" : "return";
+        }
+      } else {
+        d.pose = d.swim ? "swim" : "return";
+        d.jumpY = lerp(d.jumpY, 0, clamp(dt * 8, 0, 1));
+      }
     }
 
     var spd = dogDef.speed;
     if (d.swim) spd *= 0.55;
     if (d.pose === "jump") spd *= 0.9;
+    if (d.pose === "flip") spd *= 0.25;
     dist = d.targetX - d.x;
     if (Math.abs(dist) > 4) {
       d.facing = dist > 0 ? 1 : -1;
@@ -2068,11 +2990,17 @@
         var holdDef = getDog(state.dogId);
         b.x = state.dog.x + state.dog.facing * dogCarryFwd(holdDef);
         b.y = GROUND_Y - state.dog.jumpY - dogCarryUp(holdDef, state.dog.swim);
+      } else if (state.surprise && state.surprise.hasBall) {
+        b.x = state.surprise.x;
+        b.y = GROUND_Y - 20;
       } else {
         b.x = 168;
         b.y = 452;
       }
       return;
+    }
+    if (state.surprise && state.surprise.type === "gust" && state.surprise.active && state.phase === "flying" && state.surprise.t < 0.85) {
+      b.vx += (state.surprise.dir || 1) * 220 * dt;
     }
     b.vy += GRAVITY * dt;
     b.x += b.vx * dt;
@@ -2104,9 +3032,17 @@
           sfx("bounce");
         }
       } else {
-        if (Math.abs(b.vy) > 80) {
+        var bouncy = b.special === "bouncy" && (b.bounces || 0) < (b.maxBounces || 0);
+        if (bouncy && Math.abs(b.vy) > 40) {
+          b.bounces = (b.bounces || 0) + 1;
+          b.vy = -Math.max(Math.abs(b.vy) * 0.72, 220);
+          b.vx *= 0.92;
+          sfx("bounce");
+          if (state.phase === "flying" || state.phase === "bounce") state.phase = "bounce";
+        } else if (Math.abs(b.vy) > 80) {
           b.vy = -b.vy * 0.46;
           b.vx *= 0.78;
+          if (b.special === "bouncy") b.bounces = (b.bounces || 0) + 1;
           sfx("bounce");
           if (state.phase === "flying") state.phase = "bounce";
         } else {
@@ -2122,6 +3058,7 @@
 
   function tryCatch() {
     if (state.dog.hasBall) return;
+    if (state.surprise && state.surprise.hasBall) return;
     if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return;
     var ms = dogScale();
     var mouthX = state.dog.x + state.dog.facing * dogMouthFwd();
@@ -2173,6 +3110,7 @@
       state.ball.x = 168;
       state.ball.y = 452;
       spawnBonuses();
+      pickHeldSpecial();
     }
   }
 
@@ -2183,7 +3121,7 @@
       if (state.screen === "play") showResults();
       return;
     }
-    placeReady({ skipBonuses: true });
+    placeReady({ skipBonuses: true, keepSpecial: true });
   }
 
   function seedFlowers() {
@@ -2206,7 +3144,7 @@
       p.t += dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      p.vy += 400 * dt;
+      p.vy += (p.kind === "spark" ? 80 : 400) * dt;
       if (p.t < p.life) next.push(p);
     }
     state.particles = next;
@@ -2247,7 +3185,12 @@
         if (state.screen === "play") showResults();
         return;
       }
-      if (state.screen === "play") placeReady();
+      if (state.screen === "play") {
+        state.combo = 0;
+        state.flipT = 0;
+        clearSurprise();
+        placeReady();
+      }
     } catch (err) {}
   }
 
@@ -2271,7 +3214,9 @@
       state.phaseAge += dt;
     }
     var idle = state.phase === "ready" || state.phase === "aiming";
-    if (isInvalidPos() || (!idle && state.phaseAge > 4)) {
+    var limit = 4;
+    if ((state.ball && state.ball.special === "bouncy") || (state.surprise && state.surprise.active)) limit = 7;
+    if (isInvalidPos() || (!idle && state.phaseAge > limit)) {
       recoverFetch();
     }
   }
@@ -2314,6 +3259,8 @@
 
     updateBall(dt);
     updateDog(dt);
+    updateSurprise(dt);
+    maybeGoldTrail();
     if (!state.ball.held) collectBonuses();
     else collectBonuses();
     tryCatch();
@@ -2548,11 +3495,47 @@
     }
   }
 
-  function drawBall(c, x, y, spin, scale) {
+  function drawBall(c, x, y, spin, scale, special) {
+    var r, i, col, stripe;
     scale = scale || 1;
-    var r = BALL_R * scale;
+    special = special || (state && state.ball && state.ball.special);
+    r = BALL_R * scale;
     c.fillStyle = "rgba(40,40,40,0.22)";
     fillEllipse(c, x, GROUND_Y - 4, r * 0.9, r * 0.28);
+    if (special === "gold") {
+      c.fillStyle = "#F2C14A";
+      fillEllipse(c, x, y, r, r);
+      c.fillStyle = "#FFF0A0";
+      fillEllipse(c, x - r * 0.25, y - r * 0.28, r * 0.45, r * 0.4);
+      c.strokeStyle = "rgba(255,240,160,0.7)";
+      c.lineWidth = 2;
+      strokeEllipse(c, x, y, r * 0.72, r * 0.72);
+      c.strokeStyle = "#C68A12";
+      c.lineWidth = 1.5;
+      strokeEllipse(c, x, y, r, r);
+      return;
+    }
+    if (special === "bouncy") {
+      c.save();
+      c.translate(x, y);
+      c.rotate(spin);
+      stripe = ["#FF5A7A", "#FFC83D", "#6BE07A", "#5AC8FF", "#C07BFF"];
+      for (i = 0; i < 5; i++) {
+        c.fillStyle = stripe[i];
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.arc(0, 0, r, i * Math.PI * 2 / 5 - Math.PI / 2, (i + 1) * Math.PI * 2 / 5 - Math.PI / 2, false);
+        c.closePath();
+        c.fill();
+      }
+      c.fillStyle = "rgba(255,255,255,0.35)";
+      fillEllipse(c, -r * 0.25, -r * 0.28, r * 0.35, r * 0.3);
+      c.restore();
+      c.strokeStyle = "rgba(40,20,40,0.3)";
+      c.lineWidth = 1.4;
+      strokeEllipse(c, x, y, r, r);
+      return;
+    }
     c.fillStyle = "#E85D2A";
     fillEllipse(c, x, y, r, r);
     c.fillStyle = "#FF8A4A";
@@ -2688,6 +3671,11 @@
       tilt = -0.28 * facing;
       tail = 0.7;
       bounce = 0;
+    } else if (pose === "flip") {
+      tilt = 0;
+      tail = 0.8;
+      bounce = 8;
+      run = t * 16;
     } else if (pose === "wag") {
       tail = Math.sin(t * 18) * 0.9;
       bounce = Math.abs(Math.sin(t * 8)) * 3;
@@ -2701,10 +3689,15 @@
     var y = groundY - jumpY - bounce;
     if (pose === "swim") y = groundY + 10 + Math.sin(t * 6) * 3;
 
+    var flipSpin = 0;
+    if (pose === "flip") {
+      if (typeof opts.flipAmt === "number") flipSpin = opts.flipAmt * Math.PI * 2;
+      else if (state && state.flipT > 0) flipSpin = (1 - state.flipT / 0.55) * Math.PI * 2;
+    }
     c.save();
     c.translate(x, y);
     c.scale(facing * scale, scale);
-    c.rotate(tilt);
+    c.rotate(tilt + flipSpin);
 
     c.fillStyle = "rgba(40,40,40,0.18)";
     c.save();
@@ -3007,6 +4000,8 @@
         c.fill();
       }
 
+      drawDogAccessories(c, true, drop, opts.gear);
+
       if (hasBall) {
         c.restore();
         drawBall(c, x + facing * dogCarryFwd(def), groundY - jumpY - bounce - dogCarryUp(def, pose === "swim"), t * 2, 0.75);
@@ -3113,6 +4108,8 @@
     c.fill();
     c.fillStyle = def.tag;
     fillEllipse(c, 24, -30, 4, 4);
+
+    drawDogAccessories(c, false, 0, opts.gear);
 
     if (hasBall) {
       c.restore();
@@ -3235,6 +4232,7 @@
   function drawWorld(c) {
     var park = currentPark();
     drawPark(c, park, state.time);
+    drawSurprises(c);
     drawKid(c, state.time, state.phase === "aiming" && state.aim.mode === "flick" ? -state.aim.angle * 0.5 : state.kidArm);
     var def = getDog(state.dogId);
     drawDog(c, state.dog.x, state.dog.y, def, {
@@ -3247,6 +4245,7 @@
     if (state.ball.visible && !state.dog.hasBall) {
       drawBall(c, state.ball.x, state.ball.y, state.ball.spin);
     }
+    drawHeldBallLabel(c);
     drawBonuses(c);
     drawAim(c);
     drawParticles(c);
@@ -3272,8 +4271,9 @@
     c.translate(w / 2, h * 0.82);
     c.scale(2.15, 2.15);
     drawDog(c, 0, 0, getDog(state.dogId), { facing: 1, pose: "sit", t: t, scale: 1 });
-    drawBall(c, 48, -8, t * 0.6, 0.9);
+    drawBall(c, 48, -8, t * 0.6, 0.9, "none");
     c.restore();
+    if (isShopOpen()) drawShopPreview();
     if (window.requestAnimationFrame) requestAnimationFrame(loopHero);
   }
 
@@ -3780,6 +4780,11 @@
       seedFlowers();
       pointer.down = false;
       state.aim.active = false;
+      state.combo = 0;
+      state.flipT = 0;
+      state.lastSpecial = null;
+      state.popups = [];
+      state.particles = [];
       placeReady();
       snapCameraToTarget();
       updateHud();
@@ -3819,6 +4824,11 @@
       state.dogId = "sunny";
       state.parkId = "meadow";
       state.sessionUnlocks = [];
+      state.treats = 0;
+      state.treatsGranted = true;
+      state.ownedItems = [];
+      state.equipped = { hat: null, bandana: null, collar: null };
+      state.combo = 0;
       saveNow();
       updateHud();
       renderDogPicker();
@@ -3891,6 +4901,30 @@
     bindActivate($("resetBtn"), function () { openResetDialog(); });
     bindActivate($("resetYes"), function () { confirmResetProgress(); });
     bindActivate($("resetCancel"), function () { closeResetDialog(); });
+    bindActivate($("dressUpBtn"), function () { openShop(); });
+    bindActivate($("shopClose"), function () { closeShop(); });
+    bindActivate($("shopBuyBtn"), function () { if (shopSelected) buyShopItem(shopSelected); });
+    bindActivate($("shopWearBtn"), function () {
+      if (!shopSelected) return;
+      equipShopItem(shopSelected, equippedId(shopItemById(shopSelected).slot) !== shopSelected);
+    });
+    var shopOverlay = $("shopOverlay");
+    if (shopOverlay) {
+      shopOverlay.addEventListener("click", function (e) {
+        if (e && e.target === shopOverlay) closeShop();
+      }, false);
+    }
+    var shopBody = $("shopBody");
+    if (shopBody) {
+      shopBody.addEventListener("click", function (e) {
+        var t = e.target;
+        while (t && t !== shopBody && !(t.getAttribute && t.getAttribute("data-id"))) t = t.parentNode;
+        if (t && t.getAttribute) {
+          shopSelected = t.getAttribute("data-id");
+          renderShop();
+        }
+      }, false);
+    }
     var overlay = $("resetDialog");
     if (overlay) {
       overlay.addEventListener("click", function (e) {
@@ -3970,9 +5004,57 @@
               out.push({ type: b.type, x: b.x, y: b.y, py: py, got: !!b.got });
             }
             return out;
-          })()
+          })(),
+          treats: state.treats || 0,
+          combo: state.combo || 0,
+          special: state.ball && state.ball.special,
+          lastSpecial: state.lastSpecial,
+          surprise: state.surprise && state.surprise.type,
+          surpriseActive: !!(state.surprise && state.surprise.active),
+          squirrelHasBall: !!(state.surprise && state.surprise.hasBall),
+          flipT: state.flipT || 0,
+          ownedItems: state.ownedItems ? state.ownedItems.slice(0) : [],
+          equipped: state.equipped ? { hat: state.equipped.hat, bandana: state.equipped.bandana, collar: state.equipped.collar } : { hat: null, bandana: null, collar: null },
+          fetchesInPark: state.fetchesInPark || 0
         };
       },
+      forceSpecial: function (kind) {
+        if (kind === "gold" || kind === "bouncy") {
+          state.forceSpecial = kind;
+          state.forceSpecialOnce = true;
+          state.lastSpecial = null;
+          if (state.ball && state.ball.held && !state.dog.hasBall) pickHeldSpecial();
+        } else if (kind) {
+          state.forceSpecial = true;
+        } else {
+          state.forceSpecial = null;
+          state.forceSpecialOnce = false;
+          if (state.ball) { state.ball.special = null; state.ball.bounces = 0; }
+          state.lastSpecial = null;
+        }
+      },
+      forceSurprise: function (on) {
+        state.forceSurprise = !!on;
+        state.forceSurpriseAlways = !!on;
+        if (on && state.fetchesInPark < 1) state.fetchesInPark = 1;
+      },
+      setTreats: function (n) {
+        state.treats = Math.max(0, Math.floor(n));
+        updateHud();
+        renderShop();
+      },
+      buyItem: function (id) { return buyShopItem(id); },
+      equipItem: function (id, on) { return equipShopItem(id, on); },
+      testCatch: function (kind) {
+        if (state.screen !== "play") startGame();
+        if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") {
+          state.phase = "flying";
+          state.ball.held = false;
+        }
+        doCatch(kind || "midair");
+      },
+      openShop: openShop,
+      closeShop: closeShop,
       setMuted: setMuted,
       toggleMute: toggleMute,
       setParkId: function (id) {
