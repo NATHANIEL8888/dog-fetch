@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123u -->
+<!-- fetch-pup build 20261123v -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1114,7 +1114,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123u";
+  var BUILD = "20261123v";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1544,7 +1544,7 @@
 
   /* ---------- State ---------- */
   var state;
-  var view = { scale: 1, ox: 0, oy: 0, cssW: 800, cssH: 500, dpr: 1 };
+  var view = { scale: 1, ox: 0, oy: 0, cssW: 800, cssH: 500, dpr: 1, camVel: 0 };
   var speedMul = 1;
   var running = false;
   var lastTs = 0;
@@ -1994,7 +1994,13 @@
       if (state.phase !== "celebrate") {
         d.pose = state.phase === "ready" || state.phase === "aiming" ? "idle" : d.pose;
       }
-      if (state.phase === "celebrate") d.pose = "wag";
+      if (state.phase === "celebrate") {
+        d.pose = "wag";
+        d.facing = 1;
+        d.targetX = 250;
+        if (Math.abs(d.x - 250) > 0.4) d.x = lerp(d.x, 250, clamp(dt * 8, 0, 1));
+        else d.x = 250;
+      }
       d.jumpY = lerp(d.jumpY, 0, clamp(dt * 8, 0, 1));
       return;
     }
@@ -2302,7 +2308,7 @@
 
     if (state.phase === "flying") state.flightT += dt;
 
-    if (state.kidArm < 0.25 && (state.phase === "ready" || state.phase === "aiming")) {
+    if (state.kidArm < 0.25 && (state.phase === "ready" || state.phase === "aiming" || state.phase === "celebrate")) {
       state.kidArm = lerp(state.kidArm, 0.25, clamp(dt * 6, 0, 1));
     }
 
@@ -2323,6 +2329,7 @@
       state.celebrateT -= dt;
       if (state.celebrateT <= 0) afterCelebrate();
     }
+    tickCamera(dt);
     } catch (err) {
       logGameError("update", err);
       recoverFetch();
@@ -3295,19 +3302,52 @@
     updateView();
   }
 
+  function cameraFollowsAction() {
+    return !!(state && state.ball && state.phase !== "ready" && state.phase !== "aiming" && state.phase !== "celebrate" && state.phase !== "parkchange");
+  }
+
+  function cameraTargetX() {
+    var visW = 860;
+    var focus = 400;
+    if (cameraFollowsAction()) {
+      focus = state.ball.x;
+      if (state.dog) focus = (state.ball.x + state.dog.x) / 2;
+    }
+    return clamp(focus - visW * 0.38, 0, Math.max(0, WORLD_W - visW));
+  }
+
+  function tickCamera(dt) {
+    if (!state || view.cssH <= view.cssW * 1.05) return;
+    var target = cameraTargetX();
+    if (typeof view.camX !== "number") view.camX = target;
+    if (typeof view.camVel !== "number") view.camVel = 0;
+    // Always ease: omega 16 keeps up with a throw, omega 10 returns home in ~0.5s.
+    // Never snap, including the ready-to-follow handoff at the start of a throw.
+    var omega = cameraFollowsAction() ? 16 : 10;
+    var err = target - view.camX;
+    view.camVel += (omega * omega * err - 2 * omega * view.camVel) * dt;
+    view.camX += view.camVel * dt;
+    if (Math.abs(err) < 0.3 && Math.abs(view.camVel) < 1.5) {
+      view.camX = target;
+      view.camVel = 0;
+    }
+  }
+
+  function snapCameraToTarget() {
+    if (view.cssH > view.cssW * 1.05) {
+      view.camX = cameraTargetX();
+      view.camVel = 0;
+    }
+  }
+
   function updateView() {
     var cssW = view.cssW, cssH = view.cssH;
     var tall = cssH > cssW * 1.05;
     if (tall) {
       var visW = 860;
       view.scale = cssW / visW;
-      var focus = 400;
-      if (state && state.ball && state.phase !== "ready" && state.phase !== "aiming" && state.phase !== "celebrate" && state.phase !== "parkchange") {
-        focus = state.ball.x;
-        if (state.dog) focus = (state.ball.x + state.dog.x) / 2;
-      }
-      var camX = clamp(focus - visW * 0.38, 0, Math.max(0, WORLD_W - visW));
-      view.ox = -camX * view.scale;
+      if (typeof view.camX !== "number") view.camX = cameraTargetX();
+      view.ox = -view.camX * view.scale;
       view.oy = cssH * 0.68 - GROUND_Y * view.scale;
     } else {
       view.scale = Math.min(cssW / WORLD_W, cssH / WORLD_H);
@@ -3388,7 +3428,7 @@
 
   /* ---------- Input ---------- */
   function canAim() {
-    return state.screen === "play" && !state.timedUp && !state.pendingResults && (state.phase === "ready" || state.phase === "aiming");
+    return state.screen === "play" && !state.timedUp && !state.pendingResults && (state.phase === "ready" || state.phase === "aiming" || state.phase === "celebrate");
   }
 
   function onDown(wx, wy) {
@@ -3703,6 +3743,7 @@
       pointer.down = false;
       state.aim.active = false;
       placeReady();
+      snapCameraToTarget();
       updateHud();
       showScreen("play");
       showToast("Go fetch!", "You have 45 seconds!", 1.4);
@@ -3882,7 +3923,7 @@
           pose: state.dog.pose,
           intercept: state.dog.intercept,
           muted: state.muted,
-          view: { scale: view.scale, ox: view.ox, oy: view.oy, cssW: view.cssW, cssH: view.cssH },
+          view: { scale: view.scale, ox: view.ox, oy: view.oy, cssW: view.cssW, cssH: view.cssH, camX: view.camX, camVel: view.camVel },
           bonuses: (function () {
             var out = [], i, b, py;
             for (i = 0; i < state.bonuses.length; i++) {
