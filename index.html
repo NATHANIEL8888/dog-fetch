@@ -1483,7 +1483,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ar";
+  var BUILD = "20261123as";
   var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -2611,7 +2611,7 @@
 
   function collarColors(id, def) {
     if (id === "collar-gold") {
-      return { main: "#E2B84F", edge: "#8A6A22", tag: "#FFF3A8", kind: "disc", stripe: null, stripe2: null };
+      return { main: "#E2B84F", edge: "#6B450E", tag: "#FFF3A8", kind: "disc", stripe: null, stripe2: null };
     }
     if (id === "collar-rainbow") {
       return { main: "#FF5A7A", edge: "#8A2840", tag: "#F8E04A", kind: "disc", stripe: "#5AD0FF", stripe2: "#F8E04A" };
@@ -2624,12 +2624,17 @@
     }
     return {
       main: def.collar,
-      edge: shadeHex(def.collar, 0.55),
+      edge: shadeHex(def.collar, 0.42),
       tag: def.tag,
       kind: "disc",
       stripe: null,
       stripe2: null
     };
+  }
+
+  function collarHiddenByBandana(opts) {
+    var gear = (opts && opts.gear) ? opts.gear : gearFromState();
+    return !!(gear && gear.bandana);
   }
 
   function activeCollarId(opts) {
@@ -2674,10 +2679,10 @@
   function collarPath(athletic, drop) {
     drop = drop || 0;
     if (athletic) {
-      // Short band at the head-neck junction, not a long sash down the neck.
-      return { x0: 21, y0: -74 + drop, xc: 18, yc: -64 + drop, x1: 28, y1: -55.5 + drop, thick: 6.5 };
+      // Short wrap at the head-neck junction, drawn over the fur.
+      return { x0: 20, y0: -76 + drop, xc: 17.5, yc: -64 + drop, x1: 28, y1: -55.5 + drop, thick: 9.5 };
     }
-    return { x0: 15, y0: -51, xc: 12.5, yc: -36, x1: 17.5, y1: -24.5, thick: 6 };
+    return { x0: 13.5, y0: -52, xc: 12.5, yc: -36.5, x1: 18, y1: -24.5, thick: 9.5 };
   }
 
   function strokeCollarQuad(c, x0, y0, xc, yc, x1, y1) {
@@ -2694,19 +2699,33 @@
   }
 
   function drawCollarStrip(c, p, colors, far) {
-    var o, edge;
+    var o, hi, edgeW, sx0, sy0, sx1, sy1, midW;
     c.lineCap = "round";
     c.lineJoin = "round";
+    edgeW = 1.5;
     if (far) {
-      o = offsetAlongNormal(p.x0, p.y0, p.xc, p.yc, p.x1, p.y1, -2.2);
-      c.strokeStyle = shadeHex(colors.main, 0.72);
-      c.globalAlpha = 0.55;
-      c.lineWidth = Math.max(2, p.thick * 0.42);
-      // shorter sliver, mostly the mid-to-lower far edge
-      strokeCollarQuad(c, o.x0, o.y0 + (o.y1 - o.y0) * 0.22, o.xc, o.yc, o.x1, o.y1 - (o.y1 - o.y0) * 0.12);
+      // A little of the far side peeks out at the back of the neck.
+      o = offsetAlongNormal(p.x0, p.y0, p.xc, p.yc, p.x1, p.y1, Math.max(3.6, p.thick * 0.38));
+      sx0 = o.x0 + (o.x1 - o.x0) * 0.02;
+      sy0 = o.y0 + (o.y1 - o.y0) * 0.02;
+      sx1 = o.x1 - (o.x1 - o.x0) * 0.42;
+      sy1 = o.y1 - (o.y1 - o.y0) * 0.42;
+      midW = Math.max(2.8, p.thick * 0.50);
+      c.strokeStyle = colors.edge;
+      c.globalAlpha = 0.92;
+      c.lineWidth = midW + edgeW * 2;
+      strokeCollarQuad(c, sx0, sy0, o.xc, o.yc, sx1, sy1);
+      c.strokeStyle = shadeHex(colors.main, 0.78);
+      c.globalAlpha = 0.95;
+      c.lineWidth = midW;
+      strokeCollarQuad(c, sx0, sy0, o.xc, o.yc, sx1, sy1);
       c.globalAlpha = 1;
       return;
     }
+    // Dark outline so the band pops on light fur, then the band itself.
+    c.strokeStyle = colors.edge;
+    c.lineWidth = p.thick + edgeW * 2;
+    strokeCollarQuad(c, p.x0, p.y0, p.xc, p.yc, p.x1, p.y1);
     c.strokeStyle = colors.main;
     c.lineWidth = p.thick;
     strokeCollarQuad(c, p.x0, p.y0, p.xc, p.yc, p.x1, p.y1);
@@ -2720,23 +2739,48 @@
         strokeCollarQuad(c, p.x0, p.y0, p.xc, p.yc, p.x1, p.y1);
       }
     }
-    edge = offsetAlongNormal(p.x0, p.y0, p.xc, p.yc, p.x1, p.y1, p.thick * 0.42);
-    c.strokeStyle = colors.edge;
-    c.lineWidth = 1.15;
+    // Small highlight stripe along the upper edge of the band.
+    hi = offsetAlongNormal(p.x0, p.y0, p.xc, p.yc, p.x1, p.y1, -p.thick * 0.20);
+    c.strokeStyle = "rgba(255,255,255,0.42)";
+    c.lineWidth = Math.max(1.05, p.thick * 0.13);
     c.globalAlpha = 0.9;
-    strokeCollarQuad(c, edge.x0, edge.y0, edge.xc, edge.yc, edge.x1, edge.y1);
+    strokeCollarQuad(
+      c,
+      hi.x0 + (hi.x1 - hi.x0) * 0.12,
+      hi.y0 + (hi.y1 - hi.y0) * 0.12,
+      hi.xc, hi.yc,
+      hi.x1 - (hi.x1 - hi.x0) * 0.30,
+      hi.y1 - (hi.y1 - hi.y0) * 0.30
+    );
     c.globalAlpha = 1;
   }
 
-  function drawDogCollar(c, athletic, drop, id, def, part) {
-    var colors = collarColors(id, def);
-    var p = collarPath(athletic, drop);
+  function drawDogCollar(c, athletic, drop, id, def, part, opts) {
+    var colors, p;
+    if (collarHiddenByBandana(opts)) return;
+    colors = collarColors(id, def);
+    p = collarPath(athletic, drop);
     if (part === "back") {
       drawCollarStrip(c, p, colors, true);
+    } else if (part === "band") {
       drawCollarStrip(c, p, colors, false);
     } else {
       drawCollarCharm(c, p.x1, p.y1, colors);
     }
+  }
+
+  function drawRegularFarEar(c, def) {
+    // Redraw the far ear over the collar so the band tucks behind it.
+    c.save();
+    c.translate(26, -40);
+    if (def.ears === "prick") {
+      c.fillStyle = def.ear;
+      fillEllipse(c, -10, -14, 7, 16);
+    } else {
+      c.fillStyle = def.ear;
+      fillEllipse(c, -12, -4, 9, 16);
+    }
+    c.restore();
   }
 
   function drawShopBandana(c, x, y, athletic, id) {
@@ -4950,7 +4994,7 @@
       fillEllipse(c, 0, 0, 11, 17);
       c.restore();
 
-      drawDogCollar(c, true, drop, activeCollarId(opts), def, "back");
+      drawDogCollar(c, true, drop, activeCollarId(opts), def, "back", opts);
 
       c.fillStyle = def.body;
       fillEllipse(c, 34, -76 + drop, 16, 15);
@@ -4959,6 +5003,8 @@
       fillEllipse(c, 48, -70 + drop, 13, 8);
       c.fillStyle = "#1A1A1A";
       fillEllipse(c, 60, -70 + drop, 3.2, 2.6);
+
+      drawDogCollar(c, true, drop, activeCollarId(opts), def, "band", opts);
 
       c.fillStyle = def.ear;
       c.save();
@@ -5007,7 +5053,7 @@
       }
 
       drawGearBandana(c, true, drop, opts);
-      drawDogCollar(c, true, drop, activeCollarId(opts), def, "front");
+      drawDogCollar(c, true, drop, activeCollarId(opts), def, "front", opts);
       drawDogAccessories(c, true, drop, opts.gear);
 
       if (hasBall) {
@@ -5185,7 +5231,7 @@
     drawRegularHind("near");
     drawRegularFront("near");
 
-    drawDogCollar(c, false, 0, activeCollarId(opts), def, "back");
+    drawDogCollar(c, false, 0, activeCollarId(opts), def, "back", opts);
 
     c.save();
     c.translate(26, -40);
@@ -5243,8 +5289,10 @@
       c.fill();
     }
 
+    drawDogCollar(c, false, 0, activeCollarId(opts), def, "band", opts);
+    drawDogCollar(c, false, 0, activeCollarId(opts), def, "front", opts);
+    drawRegularFarEar(c, def);
     drawGearBandana(c, false, 0, opts);
-    drawDogCollar(c, false, 0, activeCollarId(opts), def, "front");
     drawDogAccessories(c, false, 0, opts.gear);
 
     if (hasBall) {
