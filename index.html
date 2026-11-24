@@ -907,7 +907,7 @@
       background: linear-gradient(#B9E6FF, #FFF6C8 70%, #8FCB6E);
       margin: 0 14px 10px;
       border-radius: 16px;
-      height: 150px;
+      height: 200px;
       flex-shrink: 0;
       overflow: hidden;
       border: 2px solid rgba(44,58,74,0.08);
@@ -1322,7 +1322,7 @@
         </div>
         <div class="shop-treats"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> <span>Treats: <strong id="shopTreats">0</strong></span></div>
         <p class="shop-copy">Collect bones to earn Treats. Buying outfits does not use up your Total points or unlocks.</p>
-        <div class="shop-preview-wrap"><canvas id="shopPreview" width="480" height="150" aria-hidden="true"></canvas><span id="shopTryingOn" class="shop-trying" aria-hidden="true">Trying on</span></div>
+        <div class="shop-preview-wrap"><canvas id="shopPreview" width="480" height="200" aria-hidden="true"></canvas><span id="shopTryingOn" class="shop-trying" aria-hidden="true">Trying on</span></div>
         <div class="shop-body" id="shopBody"></div>
         <div class="shop-actions">
           <button class="btn" id="shopBuyBtn" type="button">Buy</button>
@@ -1390,7 +1390,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ah";
+  var BUILD = "20261123ai";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -2666,23 +2666,97 @@
     return gear;
   }
 
+  var shopView = { tx: 0, ty: 0, sc: 1 };
+
+  function sizeShopPreview() {
+    var canvas = $("shopPreview"), wrap, cssW, cssH, dpr, w, h;
+    if (!canvas) return false;
+    wrap = canvas.parentNode;
+    cssW = (wrap && wrap.clientWidth) || 0;
+    cssH = (wrap && wrap.clientHeight) || 0;
+    if (cssW < 2 || cssH < 2) return false;
+    dpr = window.devicePixelRatio || 1;
+    if (dpr > 2.5) dpr = 2.5;
+    w = Math.max(1, Math.floor(cssW * dpr));
+    h = Math.max(1, Math.floor(cssH * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    return true;
+  }
+
+  function shopDogBounds(def, gear) {
+    var sc = dogScale(def);
+    var athletic = !!(def && def.athletic);
+    var hat = gear && gear.hat;
+    var hop = barkHopAmt();
+    var x0, x1, y0, y1;
+    if (athletic) {
+      x0 = -68 * sc;
+      x1 = 82 * sc;
+      y0 = -112 * sc;
+      y1 = 22 * sc;
+      if (hat === "hat-party") y0 = -124 * sc;
+      else if (hat === "hat-cowboy") {
+        y0 = Math.min(y0, -114 * sc);
+        x0 = Math.min(x0, 10 * sc);
+        x1 = Math.max(x1, 64 * sc);
+      } else if (hat === "hat-beanie") y0 = Math.min(y0, -116 * sc);
+    } else {
+      x0 = def && def.fluff ? -66 : -60;
+      x1 = 60;
+      y0 = -78;
+      y1 = 24;
+      if (hat === "hat-party") y0 = -92;
+      else if (hat === "hat-cowboy") {
+        y0 = Math.min(y0, -78);
+        x1 = Math.max(x1, 58);
+      } else if (hat === "hat-beanie") y0 = Math.min(y0, -82);
+    }
+    y0 = Math.min(y0, athletic ? -152 * sc : -122);
+    x1 = Math.max(x1, athletic ? 56 * sc : 48);
+    y0 -= hop;
+    y1 -= hop;
+    return { x0: x0, y0: y0, x1: x1, y1: y1 };
+  }
+
+  function layoutShopPreview(w, h, def, gear) {
+    var b, bw, bh, sc, padX, padY, cx, cy;
+    b = shopDogBounds(def, gear);
+    bw = b.x1 - b.x0;
+    bh = b.y1 - b.y0;
+    padX = Math.max(18, w * 0.06);
+    padY = Math.max(14, h * 0.08);
+    sc = Math.min((w - padX * 2) / Math.max(1, bw), (h - padY * 2) / Math.max(1, bh));
+    cx = (b.x0 + b.x1) / 2;
+    cy = (b.y0 + b.y1) / 2;
+    shopView.tx = w / 2 - cx * sc;
+    shopView.ty = h / 2 - cy * sc;
+    shopView.sc = sc;
+    return shopView;
+  }
+
   function drawShopPreview() {
-    var canvas = $("shopPreview"), c, def, w, h, tag;
+    var canvas = $("shopPreview"), c, def, w, h, tag, gear, view;
     if (!canvas || !canvas.getContext) return;
+    sizeShopPreview();
     c = canvas.getContext("2d");
     w = canvas.width; h = canvas.height;
     c.clearRect(0, 0, w, h);
     def = getDog(state.dogId);
+    gear = previewGear();
+    view = layoutShopPreview(w, h, def, gear);
     c.save();
-    c.translate(w * 0.52, h * 0.86);
-    c.scale(1.55, 1.55);
+    c.translate(view.tx, view.ty);
+    c.scale(view.sc, view.sc);
     drawDog(c, 0, 0, def, {
       facing: 1,
       pose: "wag",
       t: (nowMs() / 1000),
       jumpY: barkHopAmt(),
       hasBall: false,
-      gear: previewGear()
+      gear: gear
     });
     drawBarkBubble(c, 0, 0, def, { facing: 1, pose: "wag", jumpY: barkHopAmt(), room: "shop" });
     c.restore();
@@ -2701,6 +2775,10 @@
     el.hidden = false;
     el.className = "dialog-overlay open";
     renderShop();
+    sizeShopPreview();
+    if (window.requestAnimationFrame) {
+      requestAnimationFrame(function () { sizeShopPreview(); drawShopPreview(); });
+    }
     sfx("button");
   }
 
@@ -4271,10 +4349,7 @@
       c.restore();
     }
 
-    if (athletic) {
-      var drop = sit ? 18 : 0;
-
-      function jointStep(x, y, ang, len, r) {
+    function jointStep(x, y, ang, len, r) {
         return { x: x + Math.sin(ang) * len, y: y + Math.cos(ang) * len, r: r };
       }
 
@@ -4330,7 +4405,7 @@
           right.push({ x: p.x - pr.x * p.r, y: p.y - pr.y * p.r });
         }
         backEdge = right.slice().reverse();
-        fillCol = far ? "#08080C" : def.body;
+        fillCol = far ? (opts.farFill || "#08080C") : (opts.nearFill || def.body);
         c.fillStyle = fillCol;
         c.strokeStyle = fillCol;
         c.lineWidth = 1.2;
@@ -4343,8 +4418,8 @@
         c.stroke();
 
         if (!far && !opts.noEdge) {
-          c.strokeStyle = "rgba(210,214,230,0.34)";
-          c.lineWidth = 1.9;
+          c.strokeStyle = opts.edgeStyle || "rgba(210,214,230,0.34)";
+          c.lineWidth = opts.edgeWidth || 1.9;
           c.lineCap = "round";
           c.lineJoin = "round";
           c.beginPath();
@@ -4352,13 +4427,16 @@
           c.stroke();
         }
 
-        c.fillStyle = far ? "#050508" : def.bodyDark;
+        c.fillStyle = far ? (opts.farPaw || "#050508") : (opts.nearPaw || def.bodyDark);
         fillEllipse(c, paw.x, paw.y, paw.rx, paw.ry);
-        if (!far) {
+        if (!far && !opts.noHighlight) {
           c.fillStyle = "rgba(210,214,230,0.16)";
           fillEllipse(c, paw.x + 1.0, paw.y - 0.3, paw.rx * 0.5, paw.ry * 0.45);
         }
       }
+
+    if (athletic) {
+      var drop = sit ? 18 : 0;
 
       function sitRearChain(hx, far) {
         var ox = far ? -8 : 0;
@@ -4625,13 +4703,79 @@
       return;
     }
 
-    function sitHind(px, far) {
-      c.fillStyle = far ? def.bodyDark : def.body;
-      fillEllipse(c, px, -12, far ? 12 : 14, 18);
-      c.fillStyle = def.bodyDark;
-      fillEllipse(c, px + 3, 4, 6, 6);
-      c.fillStyle = def.belly;
-      fillEllipse(c, px + 5, 11.5, 6.2, 3.4);
+    function regularRearChain(hx, phase) {
+      var a = run + phase, lift = 0, thighA = 0.16, gaskinA = -0.36, pastA = 0.18;
+      var p0, p1, p2, p3, p4, p5, p6, paw;
+      if (pose === "run" || pose === "return") {
+        thighA = 0.16 + Math.sin(a) * 0.40;
+        gaskinA = -0.40 - Math.max(0, Math.cos(a)) * 0.32 - Math.max(0, -Math.sin(a)) * 0.08;
+        pastA = 0.16 + Math.sin(a) * 0.14 - Math.max(0, Math.cos(a)) * 0.08;
+        lift = Math.max(0, Math.cos(a)) * 5;
+      } else if (pose === "jump") {
+        thighA = 0.50;
+        gaskinA = -0.92;
+        pastA = 0.40;
+        lift = 6;
+      } else if (pose === "swim") {
+        thighA = 0.16 + Math.sin(t * 8 + phase) * 0.48;
+        gaskinA = -0.36 + Math.cos(t * 8 + phase) * 0.28;
+        pastA = 0.16 + Math.sin(t * 8 + phase) * 0.18;
+        lift = 2 + Math.max(0, Math.cos(t * 8 + phase)) * 3;
+      }
+      p0 = { x: hx, y: -22, r: 7.2 };
+      p1 = { x: hx - 1, y: -10 + lift * 0.12, r: 8.4 };
+      p2 = jointStep(p1.x, p1.y, thighA, 9, 7.0);
+      p3 = jointStep(p2.x, p2.y, thighA, 6, 6.0);
+      p4 = jointStep(p3.x, p3.y, gaskinA, 6.5, 5.4);
+      p5 = jointStep(p4.x, p4.y, gaskinA, 5.5, 4.8);
+      p6 = jointStep(p5.x, p5.y, pastA, 6.2, 4.3);
+      paw = {
+        x: p6.x + Math.sin(pastA) * 2.2,
+        y: p6.y + Math.cos(pastA) * 2.0,
+        rx: 5.6,
+        ry: 3.3
+      };
+      if (pose !== "jump" && pose !== "swim") plantChain([p0, p1, p2, p3, p4, p5, p6], paw, 14.5);
+      return { joints: [p0, p1, p2, p3, p4, p5, p6], paw: paw };
+    }
+
+    function regularSitRearChain(hx, far) {
+      var ox = far ? -6 : 0;
+      var hipX = hx + ox;
+      var p0, p1, p2, p3, p4, p5, p6, paw;
+      var thighA = 0.40, gaskinA = -1.08, pastA = 1.15;
+      p0 = { x: hipX, y: -16, r: 7.2 };
+      p1 = { x: hipX + 1.5, y: -5, r: 8.6 };
+      p2 = jointStep(p1.x, p1.y, thighA, 8, 7.0);
+      p3 = jointStep(p2.x, p2.y, thighA * 0.45, 6, 5.6);
+      p4 = jointStep(p3.x, p3.y, gaskinA, 6.5, 5.0);
+      p5 = jointStep(p4.x, p4.y, gaskinA, 5.2, 4.6);
+      p6 = jointStep(p5.x, p5.y, pastA, 7, 4.2);
+      paw = {
+        x: p6.x + Math.sin(pastA) * 2.2,
+        y: p6.y + Math.cos(pastA) * 2.0,
+        rx: 5.6,
+        ry: 3.3
+      };
+      plantChain([p0, p1, p2, p3, p4, p5, p6], paw, 14.5);
+      return { joints: [p0, p1, p2, p3, p4, p5, p6], paw: paw };
+    }
+
+    function drawRegularHind(side) {
+      var far, hind, opts;
+      far = side === "far";
+      hind = sit ? regularSitRearChain(-16, far) : regularRearChain(far ? -12 : -22, far ? Math.PI : 0);
+      opts = {
+        farFill: def.bodyDark,
+        farPaw: def.bodyDark,
+        nearFill: def.body,
+        nearPaw: def.belly,
+        noEdge: far,
+        noHighlight: true,
+        edgeStyle: "rgba(0,0,0,0.12)",
+        edgeWidth: 1.2
+      };
+      if (hind) fillShapedLeg(c, hind.joints, hind.paw, far, opts);
     }
 
     function leg(px, phase, back) {
@@ -4664,17 +4808,9 @@
       fillEllipse(c, 0, (back && !sit ? 18 : 20) - lift, 6, 3.5);
       c.restore();
     }
-    if (sit) {
-      sitHind(-26, true);
-      sitHind(-16, false);
-      leg(12, Math.PI, false);
-      leg(20, 0, false);
-    } else {
-      leg(-30, 0, true);
-      leg(12, Math.PI, false);
-      leg(-18, Math.PI, true);
-      leg(20, 0, false);
-    }
+    drawRegularHind("far");
+    leg(12, Math.PI, false);
+    leg(20, 0, false);
 
     c.fillStyle = def.body;
     fillEllipse(c, 0, -28, 32, 22);
@@ -4703,6 +4839,8 @@
       fillEllipse(c, -11, 0, 14, 6.5);
     }
     c.restore();
+
+    drawRegularHind("near");
 
     drawDogCollar(c, false, 0, activeCollarId(opts), def, "back");
 
@@ -4967,12 +5105,10 @@
   }
 
   function hitShopDog(cx, cy) {
-    var cnv = $("shopPreview"), w, h, lx, ly;
-    if (!cnv) return false;
-    w = cnv.width;
-    h = cnv.height;
-    lx = (cx - w * 0.52) / 1.55;
-    ly = (cy - h * 0.86) / 1.55;
+    var sc, lx, ly;
+    sc = shopView && shopView.sc ? shopView.sc : 1;
+    lx = (cx - shopView.tx) / sc;
+    ly = (cy - shopView.ty) / sc;
     return dogLocalHit(lx, ly, getDog(state && state.dogId), "wag");
   }
 
@@ -4996,8 +5132,8 @@
     fs = Math.round((athletic ? 22 : 18) * scale * (0.88 + pop * 0.14));
     if (opts.room === "shop") {
       fs = Math.round(15 * scale * (0.92 + pop * 0.1));
-      headUp = (athletic ? 28 : 52) * scale;
-      bx = x + facing * (athletic ? 24 : 18) * scale;
+      headUp = (athletic ? 128 : 96) * scale;
+      bx = x + facing * (athletic ? 10 : 8) * scale;
     } else if (opts.room === "hero") {
       headUp = (athletic ? (sit ? 66 : 78) : (sit ? 70 : 74)) * scale;
       bx = x + facing * 14 * scale;
@@ -5152,6 +5288,7 @@
     canvas.style.width = cssW + "px";
     canvas.style.height = cssH + "px";
     updateView();
+    if (isShopOpen()) sizeShopPreview();
   }
 
   function cameraVisW() {
