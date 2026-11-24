@@ -221,6 +221,8 @@
       width: 180px;
       height: 96px;
       display: block;
+      cursor: pointer;
+      touch-action: manipulation;
     }
 
     h1 {
@@ -910,7 +912,7 @@
       overflow: hidden;
       border: 2px solid rgba(44,58,74,0.08);
     }
-    #shopPreview { width: 100%; height: 100%; display: block; }
+    #shopPreview { width: 100%; height: 100%; display: block; cursor: pointer; touch-action: manipulation; }
     .shop-trying {
       display: none;
       position: absolute;
@@ -1388,7 +1390,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ad";
+  var BUILD = "20261123ae";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1829,6 +1831,173 @@
     g.connect(audio.master);
     src.start();
     } catch (err) {}
+  }
+
+  var barkFx = { t: 0, life: 0.55, text: "Woof!", coolUntil: 0, where: "" };
+  var lastBarkPlayed = null;
+  var lastPointerTs = 0;
+  var lastPointerType = "";
+
+  function acceptPointer(typ) {
+    var now = (new Date()).getTime();
+    var dt = now - lastPointerTs;
+    if (dt < 50) return false;
+    if (dt < 350 && typ && typ !== lastPointerType) return false;
+    lastPointerTs = now;
+    lastPointerType = typ || "down";
+    return true;
+  }
+
+  function barkOsc(freq, dur, type, vol, slide, delay, attack) {
+    try {
+      if (!audio.ctx || audio.muted) return;
+      var ctx = audio.ctx;
+      var t0 = ctx.currentTime + (delay || 0);
+      var atk = attack || 0.02;
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.type = type || "triangle";
+      osc.frequency.setValueAtTime(Math.max(20, freq), t0);
+      if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slide), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol || 0.08, t0 + atk);
+      if (dur > atk + 0.06) g.gain.exponentialRampToValueAtTime((vol || 0.08) * 0.7, t0 + Math.max(atk + 0.04, dur - 0.1));
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g);
+      g.connect(audio.master);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.1);
+    } catch (err) {}
+  }
+
+  function barkNoise(dur, vol, filterFreq, delay, attack) {
+    try {
+      if (!audio.ctx || audio.muted) return;
+      var ctx = audio.ctx;
+      var n = Math.max(1, Math.floor(ctx.sampleRate * dur));
+      var buf = ctx.createBuffer(1, n, ctx.sampleRate);
+      var data = buf.getChannelData(0);
+      var i;
+      for (i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
+      var src = ctx.createBufferSource();
+      src.buffer = buf;
+      var filt = ctx.createBiquadFilter();
+      filt.type = "lowpass";
+      filt.frequency.value = filterFreq || 400;
+      var g = ctx.createGain();
+      var t0 = ctx.currentTime + (delay || 0);
+      var atk = attack || 0.02;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol || 0.05, t0 + atk);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      src.connect(filt);
+      filt.connect(g);
+      g.connect(audio.master);
+      src.start(t0);
+    } catch (err) {}
+  }
+
+  function barkText(def) {
+    var id = def && def.id;
+    if (id === "sunny") return "Yip!";
+    if (id === "cocoa") return "Woof!";
+    if (id === "speckles") return "Yap yap!";
+    if (id === "maple") return "Yip yip!";
+    if (id === "blue") return "Arf!";
+    if (id === "jasper") return "WOOF!";
+    return "Woof!";
+  }
+
+  function playDogBark(def) {
+    var id;
+    try {
+      if (audio.muted || (state && state.muted)) return false;
+      if (!audio.ctx) return false;
+      id = (def && def.id) || "sunny";
+      if (id === "sunny") {
+        // Light, bright single yip.
+        barkOsc(820, 0.09, "sine", 0.07, 1000, 0, 0.01);
+        barkOsc(980, 0.08, "triangle", 0.03, 740, 0.012, 0.01);
+      } else if (id === "cocoa") {
+        // Warm, mid, single rounded woof.
+        barkOsc(240, 0.18, "triangle", 0.08, 150, 0, 0.02);
+        barkOsc(180, 0.16, "sine", 0.05, 120, 0.02, 0.02);
+        barkNoise(0.14, 0.03, 700, 0, 0.02);
+      } else if (id === "speckles") {
+        // Playful mid-high double yap.
+        barkOsc(520, 0.08, "triangle", 0.06, 400, 0, 0.01);
+        barkOsc(560, 0.07, "sine", 0.03, 480, 0.015, 0.01);
+        barkOsc(560, 0.09, "triangle", 0.06, 420, 0.13, 0.01);
+        barkOsc(600, 0.07, "sine", 0.03, 500, 0.145, 0.01);
+      } else if (id === "maple") {
+        // Soft, airy double yip, a little fluffier than Sunny.
+        barkOsc(700, 0.07, "sine", 0.055, 860, 0, 0.012);
+        barkOsc(880, 0.06, "triangle", 0.025, 760, 0.02, 0.01);
+        barkOsc(760, 0.08, "sine", 0.05, 920, 0.14, 0.012);
+        barkOsc(940, 0.06, "triangle", 0.022, 800, 0.16, 0.01);
+      } else if (id === "blue") {
+        // Sharp, snappy single arf.
+        barkOsc(400, 0.11, "square", 0.03, 220, 0, 0.008);
+        barkOsc(320, 0.12, "triangle", 0.055, 180, 0.01, 0.01);
+        barkNoise(0.08, 0.02, 1400, 0, 0.008);
+      } else {
+        // Jasper: lowest, deep, chesty booming WOOF.
+        barkOsc(86, 0.38, "sawtooth", 0.055, 54, 0, 0.05);
+        barkOsc(70, 0.36, "triangle", 0.11, 48, 0.02, 0.055);
+        barkOsc(112, 0.3, "sine", 0.06, 64, 0.03, 0.05);
+        barkNoise(0.34, 0.08, 240, 0.01, 0.055);
+        barkNoise(0.2, 0.035, 160, 0.05, 0.05);
+      }
+      lastBarkPlayed = id;
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function tryBark(where) {
+    var now = (new Date()).getTime();
+    var def;
+    if (now < (barkFx.coolUntil || 0)) return false;
+    barkFx.coolUntil = now + 400;
+    barkFx.t = 0.55;
+    barkFx.life = 0.55;
+    barkFx.where = where || "play";
+    def = getDog(state && state.dogId);
+    barkFx.text = barkText(def);
+    lastBarkPlayed = null;
+    resumeAudio(function () {
+      try { playDogBark(getDog(state && state.dogId)); } catch (err) {}
+    });
+    return true;
+  }
+
+  function updateBark(dt) {
+    if (barkFx.t > 0) {
+      barkFx.t -= dt;
+      if (barkFx.t < 0) barkFx.t = 0;
+    }
+  }
+
+  function barkHopAmt() {
+    var elapsed, u;
+    if (!barkFx || barkFx.t <= 0) return 0;
+    elapsed = (barkFx.life || 0.55) - barkFx.t;
+    u = elapsed / 0.28;
+    if (u < 0) return 0;
+    if (u > 1) return 0;
+    return Math.sin(u * Math.PI) * 9;
+  }
+
+  function barkSnapshot() {
+    return {
+      active: !!(barkFx && barkFx.t > 0),
+      t: barkFx ? barkFx.t : 0,
+      text: barkFx ? barkFx.text : "",
+      where: barkFx ? barkFx.where : "",
+      played: lastBarkPlayed,
+      muted: !!(state && state.muted)
+    };
   }
 
   function sfx(kind) {
@@ -2511,10 +2680,11 @@
       facing: 1,
       pose: "wag",
       t: (nowMs() / 1000),
-      jumpY: 0,
+      jumpY: barkHopAmt(),
       hasBall: false,
       gear: previewGear()
     });
+    drawBarkBubble(c, 0, 0, def, { facing: 1, pose: "wag", jumpY: barkHopAmt(), room: "shop" });
     c.restore();
     tag = $("shopTryingOn");
     if (tag) {
@@ -3387,6 +3557,7 @@
   function update(dt) {
     if (!state || state.screen !== "play") return;
     try {
+    updateBark(dt);
     tickTimer(dt);
     if (state.screen !== "play") return;
     trackPhaseAndFailsafe(dt);
@@ -4631,18 +4802,156 @@
     }
   }
 
+  function dogLocalHit(lx, ly, def, pose) {
+    var sc = dogScale(def);
+    var athletic = !!(def && def.athletic);
+    var sit = pose === "sit";
+    var cx = athletic ? 6 * sc : 10 * sc;
+    var cy = athletic ? (sit ? -44 : -54) * sc : (sit ? -30 : -38) * sc;
+    var rx = (athletic ? 68 : 54) * sc * 1.5;
+    var ry = (athletic ? 78 : 56) * sc * 1.55;
+    var dx = lx - cx, dy = ly - cy;
+    return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1;
+  }
+
+  function hitPlayDog(wx, wy) {
+    var def, sc, athletic, phone, hop, cx, cy, rx, ry, dx, dy;
+    if (!state || !state.dog) return false;
+    def = getDog(state.dogId);
+    sc = dogScale(def);
+    athletic = !!(def && def.athletic);
+    phone = view.cssH > view.cssW * 1.05;
+    hop = barkHopAmt();
+    cx = state.dog.x + (state.dog.facing || 1) * (athletic ? 4 : 8) * sc;
+    cy = state.dog.y - (state.dog.jumpY || 0) - hop - (athletic ? 52 : 38) * sc;
+    rx = (athletic ? 78 : 62) * sc * (phone ? 1.5 : 1.2);
+    ry = (athletic ? 84 : 64) * sc * (phone ? 1.55 : 1.25);
+    dx = wx - cx;
+    dy = wy - cy;
+    return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1;
+  }
+
+  function playDogScreenPos() {
+    var def, sc, hop, x, y;
+    if (!state || !state.dog) return { x: 0, y: 0, worldX: 0, worldY: 0 };
+    def = getDog(state.dogId);
+    sc = dogScale(def);
+    hop = barkHopAmt();
+    x = state.dog.x;
+    y = state.dog.y - (state.dog.jumpY || 0) - hop - (def && def.athletic ? 52 : 38) * sc;
+    return { x: view.ox + x * view.scale, y: view.oy + y * view.scale, worldX: x, worldY: y };
+  }
+
+  function canvasEventLocal(cnv, e, touchObj) {
+    var rect, cx, cy, src;
+    if (!cnv) return { x: 0, y: 0 };
+    rect = cnv.getBoundingClientRect();
+    src = touchObj || e;
+    cx = (src && src.clientX != null) ? src.clientX - rect.left : 0;
+    cy = (src && src.clientY != null) ? src.clientY - rect.top : 0;
+    return {
+      x: cx * (rect.width ? (cnv.width / rect.width) : 1),
+      y: cy * (rect.height ? (cnv.height / rect.height) : 1)
+    };
+  }
+
+  function hitHeroDog(cx, cy) {
+    var w, h, lx, ly;
+    if (!heroCanvas) return false;
+    w = heroCanvas.width;
+    h = heroCanvas.height;
+    lx = (cx - w / 2) / 2.15;
+    ly = (cy - h * 0.82) / 2.15;
+    return dogLocalHit(lx, ly, getDog(state && state.dogId), "sit");
+  }
+
+  function hitShopDog(cx, cy) {
+    var cnv = $("shopPreview"), w, h, lx, ly;
+    if (!cnv) return false;
+    w = cnv.width;
+    h = cnv.height;
+    lx = (cx - w * 0.52) / 1.55;
+    ly = (cy - h * 0.86) / 1.55;
+    return dogLocalHit(lx, ly, getDog(state && state.dogId), "wag");
+  }
+
+  function drawBarkBubble(c, x, groundY, def, opts) {
+    var scale, athletic, sit, jumpY, facing, life, u, pop, fade, headUp, bx, by, text, tw, bw, bh, fs;
+    opts = opts || {};
+    if (!barkFx || barkFx.t <= 0) return;
+    scale = (opts.scale || 1) * ((def && def.scale) || 1);
+    athletic = !!(def && def.athletic);
+    sit = opts.pose === "sit";
+    jumpY = opts.jumpY || 0;
+    facing = opts.facing || 1;
+    life = barkFx.life || 0.55;
+    u = 1 - (barkFx.t / life);
+    if (u < 0) u = 0;
+    pop = u < 0.18 ? (u / 0.18) * 1.08 : (u > 0.85 ? 1 - (u - 0.85) / 0.4 * 0.08 : 1);
+    fade = barkFx.t < 0.12 ? barkFx.t / 0.12 : 1;
+    headUp = (athletic ? (sit ? 100 : 122) : (sit ? 72 : 82)) * scale;
+    bx = x + facing * 20 * scale;
+    text = barkFx.text || "Woof!";
+    fs = Math.round((athletic ? 22 : 18) * scale * (0.88 + pop * 0.14));
+    if (opts.room === "shop") {
+      fs = Math.round(15 * scale * (0.92 + pop * 0.1));
+      headUp = (athletic ? 28 : 52) * scale;
+      bx = x + facing * (athletic ? 24 : 18) * scale;
+    } else if (opts.room === "hero") {
+      headUp = (athletic ? (sit ? 66 : 78) : (sit ? 70 : 74)) * scale;
+      bx = x + facing * 14 * scale;
+    }
+    by = groundY - jumpY - headUp;
+    c.save();
+    c.globalAlpha = fade;
+    c.font = "800 " + fs + "px Trebuchet MS, sans-serif";
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    tw = c.measureText(text).width;
+    bw = tw + 22 * scale;
+    bh = fs + 14 * scale;
+    c.translate(bx, by);
+    c.scale(pop, pop);
+    c.fillStyle = "rgba(255,252,245,0.97)";
+    c.strokeStyle = "rgba(44,58,74,0.55)";
+    c.lineWidth = 2;
+    roundRect(c, -bw / 2, -bh, bw, bh, 12 * scale);
+    c.fill();
+    c.stroke();
+    c.beginPath();
+    c.moveTo(-6 * scale, 0);
+    c.lineTo(0, 9 * scale);
+    c.lineTo(8 * scale, 0);
+    c.closePath();
+    c.fill();
+    c.beginPath();
+    c.moveTo(-6 * scale, -0.5);
+    c.lineTo(0, 9 * scale);
+    c.lineTo(8 * scale, -0.5);
+    c.stroke();
+    c.fillStyle = athletic ? "#2C3A4A" : "#2C2418";
+    c.fillText(text, 0, -bh / 2);
+    c.restore();
+  }
+
   function drawWorld(c) {
     var park = currentPark();
     drawPark(c, park, state.time);
     drawSurprises(c);
     drawKid(c, state.time, state.phase === "aiming" && state.aim.mode === "flick" ? -state.aim.angle * 0.5 : state.kidArm);
     var def = getDog(state.dogId);
+    var barkHop = barkHopAmt();
     drawDog(c, state.dog.x, state.dog.y, def, {
       facing: state.dog.facing,
       pose: state.dog.pose,
       t: state.time,
-      jumpY: state.dog.jumpY,
+      jumpY: (state.dog.jumpY || 0) + barkHop,
       hasBall: state.dog.hasBall
+    });
+    drawBarkBubble(c, state.dog.x, state.dog.y, def, {
+      facing: state.dog.facing,
+      pose: state.dog.pose,
+      jumpY: (state.dog.jumpY || 0) + barkHop
     });
     if (state.ball.visible && !state.dog.hasBall) {
       drawBall(c, state.ball.x, state.ball.y, state.ball.spin);
@@ -4690,6 +4999,10 @@
     var c = heroCtx;
     if (!c) return;
     var w = heroCanvas.width, h = heroCanvas.height;
+    var dt, hop, def;
+    dt = heroFlock.lastTs ? Math.min(0.05, ((ts || 0) / 1000) - (heroFlock.lastTs || 0)) : 0.016;
+    if (dt < 0) dt = 0.016;
+    updateBark(dt);
     c.clearRect(0, 0, w, h);
     var t = (ts || 0) / 1000;
     var hi;
@@ -4702,10 +5015,13 @@
     for (hi = 0; hi < heroFlock.birds.length; hi++) {
       drawSkyBird(c, heroFlock.birds[hi].x, heroFlock.birds[hi].y, heroFlock.birds[hi].vx, heroFlock.birds[hi].wing, heroFlock.birds[hi].s);
     }
+    hop = barkHopAmt();
+    def = getDog(state.dogId);
     c.save();
     c.translate(w / 2, h * 0.82);
     c.scale(2.15, 2.15);
-    drawDog(c, 0, 0, getDog(state.dogId), { facing: 1, pose: "sit", t: t, scale: 1 });
+    drawDog(c, 0, 0, def, { facing: 1, pose: "sit", t: t, scale: 1, jumpY: hop });
+    if (!isShopOpen()) drawBarkBubble(c, 0, 0, def, { facing: 1, pose: "sit", jumpY: hop, room: "hero" });
     drawBall(c, 48, -8, t * 0.6, 0.9, "none");
     c.restore();
     if (isShopOpen()) drawShopPreview();
@@ -4904,7 +5220,14 @@
     return state.screen === "play" && !state.timedUp && !state.pendingResults && (state.phase === "ready" || state.phase === "aiming" || state.phase === "celebrate");
   }
 
-  function onDown(wx, wy) {
+  function onDown(wx, wy, typ) {
+    if (!state || state.screen !== "play" || state.timedUp) return;
+    if (pointer.down) return;
+    if (!acceptPointer(typ || "down")) return;
+    if (hitPlayDog(wx, wy)) {
+      tryBark("play");
+      return;
+    }
     if (!canAim()) return;
     pointer.down = true;
     pointer.sx = wx; pointer.sy = wy;
@@ -4956,7 +5279,15 @@
       if (e.button !== 0) return;
       prevent(e);
       var p = eventPos(e);
-      onDown(p.x, p.y);
+      onDown(p.x, p.y, "mousedown");
+    }, false);
+
+    canvas.addEventListener("pointerdown", function (e) {
+      if (!playing()) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      prevent(e);
+      var p = eventPos(e);
+      onDown(p.x, p.y, "pointerdown");
     }, false);
 
     window.addEventListener("mousemove", function (e) {
@@ -4973,7 +5304,7 @@
       var tch = e.changedTouches && e.changedTouches[0];
       if (!tch) return;
       var p = eventPos(e, tch);
-      onDown(p.x, p.y);
+      onDown(p.x, p.y, "touchstart");
     }, false);
 
     window.addEventListener("touchmove", function (e) {
@@ -5347,6 +5678,24 @@
     bindActivate($("resetCancel"), function () { closeResetDialog(); });
     bindActivate($("dressUpBtn"), function () { openShop(); });
     bindActivate($("shopClose"), function () { closeShop(); });
+    if (heroCanvas) {
+      heroCanvas.setAttribute("title", "Tap the pup to bark");
+      bindActivate(heroCanvas, function (e) {
+        var tch = e && e.changedTouches && e.changedTouches[0];
+        var p = canvasEventLocal(heroCanvas, e, tch);
+        if (hitHeroDog(p.x, p.y)) tryBark("hero");
+      });
+    }
+    (function bindShopBark() {
+      var prev = $("shopPreview");
+      if (!prev) return;
+      prev.setAttribute("title", "Tap the pup to bark");
+      bindActivate(prev, function (e) {
+        var tch = e && e.changedTouches && e.changedTouches[0];
+        var p = canvasEventLocal(prev, e, tch);
+        if (hitShopDog(p.x, p.y)) tryBark("shop");
+      });
+    })();
     bindActivate($("shopBuyBtn"), function () { if (shopSelected) buyShopItem(shopSelected); });
     bindActivate($("shopWearBtn"), function () {
       if (!shopSelected) return;
@@ -5472,9 +5821,13 @@
           shopSelected: shopSelected,
           previewGear: previewGear(),
           tryingOn: isTryingOn(),
-          fetchesInPark: state.fetchesInPark || 0
+          fetchesInPark: state.fetchesInPark || 0,
+          bark: barkSnapshot(),
+          dogScreen: playDogScreenPos()
         };
       },
+      tryBark: function (where) { return tryBark(where || "play"); },
+      getBark: function () { return barkSnapshot(); },
       forceSpecial: function (kind) {
         if (kind === "gold" || kind === "bouncy") {
           state.forceSpecial = kind;
