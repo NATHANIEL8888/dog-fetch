@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123m -->
+<!-- fetch-pup build 20261123n -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -282,7 +282,7 @@
     }
     .dogs {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 6px;
     }
     .parks {
@@ -424,6 +424,26 @@
     .face-ear.l { left: 4px; transform: rotate(-18deg); }
     .face-ear.r { right: 4px; transform: rotate(18deg); }
     .face-ear.prick { height: 18px; width: 10px; border-radius: 12px 12px 4px 4px; top: 0; }
+    .face-ear.semi { height: 17px; width: 9px; border-radius: 11px 11px 3px 3px; top: 0; }
+    .face-ear.semi.l { left: 6px; transform: rotate(-10deg); }
+    .face-ear.semi.r { right: 6px; transform: rotate(12deg); }
+    .face-head.gloss::after {
+      content: "";
+      position: absolute;
+      left: 4px; top: 3px;
+      width: 9px; height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.38);
+    }
+    .face-collar {
+      position: absolute;
+      left: 11px;
+      bottom: 0;
+      width: 22px;
+      height: 4px;
+      border-radius: 2px;
+      z-index: 1;
+    }
     .face-spot {
       position: absolute; width: 7px; height: 7px; border-radius: 50%;
       left: 22px; top: 16px; background: #8B5A2B;
@@ -783,7 +803,7 @@
 
     @media (max-width: 520px) {
       .pickers { grid-template-columns: 1fr; }
-      .dogs { grid-template-columns: repeat(4, 1fr); }
+      .dogs { grid-template-columns: repeat(3, 1fr); }
       .parks { grid-template-columns: repeat(3, 1fr); }
       .dog-card { min-height: 80px; padding: 6px 2px; }
       .dog-card .name { font-size: 12px; }
@@ -910,7 +930,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123m";
+  var BUILD = "20261123n";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -935,7 +955,11 @@
       eye: "#2C2418", collar: "#3CB371", tag: "#FFC83D", ears: "flop", muzzle: "#F8F4EC", spots: true },
     { id: "blue", name: "Blue", title: "Speedy pal", unlock: 420, speed: 560, jump: 190,
       body: "#7A8B9C", bodyDark: "#5A6A7A", belly: "#D5DCE3", ear: "#4A5560",
-      eye: "#1A1F28", collar: "#FFC83D", tag: "#E25535", ears: "prick", muzzle: "#D5DCE3" }
+      eye: "#1A1F28", collar: "#FFC83D", tag: "#E25535", ears: "prick", muzzle: "#D5DCE3" },
+    { id: "jasper", name: "Jasper", title: "Big athlete", unlock: 1000, speed: 590, jump: 205,
+      body: "#1C1C22", bodyDark: "#0A0A0E", belly: "#2E2E38", ear: "#141418",
+      eye: "#0A0A0C", collar: "#FF3D6A", tag: "#FFD24A", ears: "semi", muzzle: "#3A3A46",
+      scale: 1.22, athletic: true, shine: true }
   ];
 
   var PARKS = [
@@ -1092,6 +1116,11 @@
     var i;
     for (i = 0; i < DOGS.length; i++) if (DOGS[i].id === id) return DOGS[i];
     return DOGS[0];
+  }
+
+  function dogScale(def) {
+    def = def || getDog(state && state.dogId);
+    return (def && def.scale) ? def.scale : 1;
   }
 
   function getPark(id) {
@@ -1712,7 +1741,7 @@
         d.jumpY = lerp(d.jumpY, 0, clamp(dt * 10, 0, 1));
       }
     } else if (state.phase === "bounce" || state.phase === "retrieve") {
-      var standOff = (state.ball.y > GROUND_Y - 90) ? 26 : 0;
+      var standOff = (state.ball.y > GROUND_Y - 90) ? 26 * dogScale(dogDef) : 0;
       if (d.x <= state.ball.x) d.targetX = state.ball.x - standOff;
       else d.targetX = state.ball.x + standOff;
       d.pose = d.swim ? "swim" : "run";
@@ -1751,8 +1780,9 @@
     var gx = GROUND_Y - BALL_R;
     if (b.held) {
       if (state.dog.hasBall) {
-        b.x = state.dog.x + state.dog.facing * 28;
-        b.y = GROUND_Y - state.dog.jumpY - (state.dog.swim ? 18 : 36);
+        var hs = dogScale();
+        b.x = state.dog.x + state.dog.facing * 28 * hs;
+        b.y = GROUND_Y - state.dog.jumpY - (state.dog.swim ? 18 : 36) * hs;
       } else {
         b.x = 168;
         b.y = 452;
@@ -1808,8 +1838,9 @@
   function tryCatch() {
     if (state.dog.hasBall) return;
     if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return;
-    var mouthX = state.dog.x + state.dog.facing * 26;
-    var mouthY = GROUND_Y - state.dog.jumpY - 34;
+    var ms = dogScale();
+    var mouthX = state.dog.x + state.dog.facing * 26 * ms;
+    var mouthY = GROUND_Y - state.dog.jumpY - 34 * ms;
     var dist = hypot(state.ball.x - mouthX, state.ball.y - mouthY);
     var inter = state.dog.intercept;
     var park = currentPark();
@@ -1835,7 +1866,7 @@
     }
 
     var nearGround = state.ball.y > GROUND_Y - 90;
-    var closeX = Math.abs(state.dog.x - state.ball.x) < 44;
+    var closeX = Math.abs(state.dog.x - state.ball.x) < 44 * ms;
     if (state.phase === "retrieve" || (state.phase === "bounce" && nearGround)) {
       if (dist < 56 || (nearGround && closeX)) {
         if (inPond(state.ball.x, GROUND_Y, park)) doCatch("splash");
@@ -2353,7 +2384,8 @@
     var t = opts.t || 0;
     var jumpY = opts.jumpY || 0;
     var hasBall = !!opts.hasBall;
-    var scale = opts.scale || 1;
+    var scale = (opts.scale || 1) * (def.scale || 1);
+    var athletic = !!def.athletic;
     var bounce = 0;
     var run = 0;
     var tilt = 0;
@@ -2406,12 +2438,12 @@
       }
       c.fillStyle = def.bodyDark;
       c.save();
-      c.translate(px, sit ? -8 : -6);
+      c.translate(px, sit ? -8 : (athletic ? -12 : -6));
       c.rotate(swing * 0.04);
-      roundRect(c, -5, 0 - lift, 9, 22 + (sit ? -6 : 0), 4);
+      roundRect(c, athletic ? -4 : -5, 0 - lift, athletic ? 8 : 9, (athletic ? 26 : 22) + (sit ? -6 : 0), 4);
       c.fill();
       c.fillStyle = def.belly;
-      fillEllipse(c, 0, 20 - lift, 6, 3.5);
+      fillEllipse(c, 0, (athletic ? 24 : 20) - lift, athletic ? 5.5 : 6, 3.5);
       c.restore();
     }
     leg(-16, 0, true);
@@ -2420,15 +2452,26 @@
     leg(20, 0, false);
 
     c.fillStyle = def.body;
-    fillEllipse(c, 0, -28, 32, 22);
+    if (athletic) fillEllipse(c, 2, -32, 34, 25);
+    else fillEllipse(c, 0, -28, 32, 22);
     c.fillStyle = def.belly;
-    fillEllipse(c, 6, -20, 18, 12);
+    if (athletic) fillEllipse(c, 8, -22, 18, 13);
+    else fillEllipse(c, 6, -20, 18, 12);
 
     if (def.spots) {
       c.fillStyle = "#8B5A2B";
       fillEllipse(c, -8, -32, 6, 5);
       fillEllipse(c, 10, -26, 5, 4);
       fillEllipse(c, -16, -18, 4, 3.5);
+    }
+
+    if (def.shine) {
+      c.fillStyle = "rgba(255,255,255,0.22)";
+      fillEllipse(c, 10, -38, 11, 6);
+      c.fillStyle = "rgba(190,205,225,0.2)";
+      fillEllipse(c, -8, -34, 9, 5);
+      c.fillStyle = "rgba(255,255,255,0.18)";
+      fillEllipse(c, 6, -24, 7, 4);
     }
 
     c.save();
@@ -2443,8 +2486,23 @@
     c.restore();
 
     c.save();
-    c.translate(26, -40);
-    if (def.ears === "prick") {
+    c.translate(26, athletic ? -46 : -40);
+    if (def.ears === "semi") {
+      c.fillStyle = def.ear;
+      c.save();
+      c.translate(7, -15);
+      c.rotate(0.22);
+      fillEllipse(c, 0, 0, 6, 17);
+      c.fillStyle = def.muzzle;
+      fillEllipse(c, 1, 2, 2.6, 7);
+      c.restore();
+      c.fillStyle = def.ear;
+      c.save();
+      c.translate(-11, -16);
+      c.rotate(-0.16);
+      fillEllipse(c, 0, 0, 6, 16);
+      c.restore();
+    } else if (def.ears === "prick") {
       c.fillStyle = def.ear;
       fillEllipse(c, 6, -12, 7, 16);
       fillEllipse(c, -10, -14, 7, 16);
@@ -2458,38 +2516,42 @@
     c.restore();
 
     c.fillStyle = def.body;
-    fillEllipse(c, 28, -44, 20, 18);
+    fillEllipse(c, athletic ? 30 : 28, athletic ? -50 : -44, athletic ? 21 : 20, athletic ? 19 : 18);
+    if (def.shine) {
+      c.fillStyle = "rgba(255,255,255,0.24)";
+      fillEllipse(c, athletic ? 26 : 24, athletic ? -56 : -50, 6, 4);
+    }
     c.fillStyle = def.muzzle;
-    fillEllipse(c, 40, -36, 12, 9);
+    fillEllipse(c, athletic ? 43 : 40, athletic ? -41 : -36, athletic ? 13 : 12, athletic ? 10 : 9);
 
     c.fillStyle = "#2C2418";
-    fillEllipse(c, 48, -38, 4.2, 3.2);
+    fillEllipse(c, athletic ? 52 : 48, athletic ? -43 : -38, 4.2, 3.2);
     c.fillStyle = "#2C2418";
-    fillEllipse(c, 30, -50, 3.2, 3.6);
+    fillEllipse(c, athletic ? 32 : 30, athletic ? -56 : -50, 3.2, 3.6);
     c.fillStyle = "#FFFFFF";
-    fillEllipse(c, 31, -51.5, 1.3, 1.3);
+    fillEllipse(c, athletic ? 33 : 31, athletic ? -57.5 : -51.5, 1.3, 1.3);
 
     c.strokeStyle = "rgba(40,20,10,0.45)";
     c.lineWidth = 1.2;
     c.beginPath();
-    c.arc(42, -33, 5, 0.15, Math.PI - 0.15, false);
+    c.arc(athletic ? 45 : 42, athletic ? -38 : -33, 5, 0.15, Math.PI - 0.15, false);
     c.stroke();
 
     if (pose === "wag" || pose === "idle" || pose === "sit") {
       c.fillStyle = "#F07A8A";
       c.beginPath();
-      c.moveTo(46, -30);
-      c.lineTo(52, -22);
-      c.lineTo(42, -26);
+      c.moveTo(athletic ? 49 : 46, athletic ? -35 : -30);
+      c.lineTo(athletic ? 55 : 52, athletic ? -26 : -22);
+      c.lineTo(athletic ? 45 : 42, athletic ? -31 : -26);
       c.closePath();
       c.fill();
     }
 
     c.fillStyle = def.collar;
-    roundRect(c, 12, -38, 22, 6, 3);
+    roundRect(c, athletic ? 14 : 12, athletic ? -43 : -38, athletic ? 24 : 22, athletic ? 7 : 6, 3);
     c.fill();
     c.fillStyle = def.tag;
-    fillEllipse(c, 24, -30, 4, 4);
+    fillEllipse(c, athletic ? 26 : 24, athletic ? -34 : -30, athletic ? 4.5 : 4, athletic ? 4.5 : 4);
 
     if (hasBall) {
       c.restore();
@@ -2913,12 +2975,13 @@
       btn.setAttribute("data-dog", dog.id);
       if (unlocked) btn.setAttribute("aria-label", "Choose " + dog.name);
       else btn.setAttribute("aria-label", dog.name + " locked. " + dog.unlock + " total points to unlock.");
-      earCls = dog.ears === "prick" ? "face-ear prick" : "face-ear";
+      earCls = dog.ears === "prick" ? "face-ear prick" : (dog.ears === "semi" ? "face-ear semi" : "face-ear");
       face = "<span class='face' aria-hidden='true'>";
       face += "<span class='" + earCls + " l' style='background:" + dog.ear + "'></span>";
       face += "<span class='" + earCls + " r' style='background:" + dog.ear + "'></span>";
-      face += "<span class='face-head' style='background:" + dog.body + "'></span>";
+      face += "<span class='face-head" + (dog.shine ? " gloss" : "") + "' style='background:" + dog.body + "'></span>";
       if (dog.spots) face += "<span class='face-spot'></span>";
+      if (dog.shine && dog.collar) face += "<span class='face-collar' style='background:" + dog.collar + "'></span>";
       face += "</span>";
       btn.innerHTML = "<span class='card-art'>" + face +
         "<span class='lock-badge' aria-hidden='true'><span class='lock-shackle'></span><span class='lock-body'></span></span></span>" +
