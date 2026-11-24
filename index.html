@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123q -->
+<!-- fetch-pup build 20261123r -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -450,9 +450,10 @@
       border-radius: 48% 50% 46% 48%;
     }
     .face.rangy .face-head.gloss::after {
-      left: 4px; top: 4px;
-      width: 7px; height: 5px;
-      background: rgba(255,255,255,0.42);
+      left: 6px; top: 6px;
+      width: 9px; height: 2px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.14);
     }
     .face.rangy .face-muzzle {
       position: absolute;
@@ -960,7 +961,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123q";
+  var BUILD = "20261123r";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -987,8 +988,8 @@
       body: "#7A8B9C", bodyDark: "#5A6A7A", belly: "#D5DCE3", ear: "#4A5560",
       eye: "#1A1F28", collar: "#FFC83D", tag: "#E25535", ears: "prick", muzzle: "#D5DCE3" },
     { id: "jasper", name: "Jasper", title: "Big athlete", unlock: 1000, speed: 590, jump: 205,
-      body: "#1C1C22", bodyDark: "#0A0A0E", belly: "#2E2E38", ear: "#141418",
-      eye: "#0A0A0C", collar: "#FF3D6A", tag: "#FFD24A", ears: "semi", muzzle: "#3A3A46",
+      body: "#1C1C22", bodyDark: "#0A0A0E", belly: "#1C1C22", ear: "#141418",
+      eye: "#0A0A0C", collar: "#FF3D6A", tag: "#FFD24A", ears: "semi", muzzle: "#1C1C22",
       scale: 1.2, athletic: true, shine: true, mouthFwd: 54, mouthUp: 66 }
   ];
 
@@ -2682,14 +2683,17 @@
       fillEllipse(c, -20, -46 + drop, 17, 16);
       fillEllipse(c, -6, -48 + drop, 17, 16);
       fillEllipse(c, 12, -48 + drop, 21, 23);
-      c.fillStyle = def.belly;
+      c.fillStyle = def.body;
       fillEllipse(c, 11, -32 + drop, 12, 10);
 
       if (def.shine) {
-        c.fillStyle = "rgba(255,255,255,0.2)";
-        fillEllipse(c, 6, -62 + drop, 16, 3.2);
-        c.fillStyle = "rgba(200,214,230,0.14)";
-        fillEllipse(c, -8, -56 + drop, 11, 2.4);
+        c.strokeStyle = "rgba(255,255,255,0.10)";
+        c.lineWidth = 1.15;
+        c.lineCap = "round";
+        c.beginPath();
+        c.moveTo(-8, -61.5 + drop);
+        c.quadraticCurveTo(8, -65.5 + drop, 20, -62 + drop);
+        c.stroke();
       }
 
       c.save();
@@ -2739,10 +2743,13 @@
       c.restore();
 
       if (def.shine) {
-        c.fillStyle = "rgba(255,255,255,0.22)";
-        fillEllipse(c, 30, -82 + drop, 5.5, 2.6);
-        c.fillStyle = "rgba(255,255,255,0.14)";
-        fillEllipse(c, 44, -74 + drop, 6, 2);
+        c.strokeStyle = "rgba(255,255,255,0.09)";
+        c.lineWidth = 1.0;
+        c.lineCap = "round";
+        c.beginPath();
+        c.moveTo(26, -84 + drop);
+        c.quadraticCurveTo(32, -86 + drop, 38, -83 + drop);
+        c.stroke();
       }
 
       c.fillStyle = "#0A0A0C";
