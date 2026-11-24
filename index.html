@@ -1390,8 +1390,9 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ao";
-  var WORLD_W = 1200;
+  var BUILD = "20261123ap";
+  var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
+  var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
   var GROUND_Y = 528;
   /* Waiting spot ahead of the boy. +42 world ≈ 19px more gap on a 390-wide phone (halfway back from al). */
@@ -1402,7 +1403,7 @@
   }
   var THROW_MIN = 330;
   var THROW_MAX = 1078;
-  var JASPER_THROW_MUL = 1.05;
+  var JASPER_THROW_MUL = 1.10;
 
   function throwSpeed(power) {
     var mul = (state && state.dogId === "jasper") ? JASPER_THROW_MUL : 1;
@@ -5476,8 +5477,14 @@
     if (isShopOpen()) sizeShopPreview();
   }
 
+  function isTallView() {
+    return !!(view && view.cssH > view.cssW * 1.05);
+  }
+
   function cameraVisW() {
-    return 860;
+    if (isTallView()) return 860;
+    if (view && view.scale > 0 && view.cssW) return view.cssW / view.scale;
+    return VIEW_W;
   }
 
   function cameraSubjectX() {
@@ -5501,8 +5508,9 @@
   }
 
   function tickCamera(dt) {
-    var target, omega, err, needed;
-    if (!state || view.cssH <= view.cssW * 1.05) {
+    var target, omega, err, needed, maxCam;
+    maxCam = Math.max(0, WORLD_W - cameraVisW());
+    if (!state || maxCam <= 0) {
       view.camX = 0;
       view.camVel = 0;
       return;
@@ -5543,28 +5551,42 @@
   }
 
   function snapCameraToTarget() {
-    if (view.cssH > view.cssW * 1.05) {
-      view.camX = cameraTargetX();
-      view.camVel = 0;
-    } else {
+    var maxCam = Math.max(0, WORLD_W - cameraVisW());
+    if (maxCam <= 0) {
       view.camX = 0;
       view.camVel = 0;
+      return;
     }
+    view.camX = cameraTargetX();
+    view.camVel = 0;
   }
 
   function updateView() {
     var cssW = view.cssW, cssH = view.cssH;
     var tall = cssH > cssW * 1.05;
+    var visW, maxCam, baseOx;
     if (tall) {
-      var visW = cameraVisW();
+      visW = cameraVisW();
       view.scale = cssW / visW;
       if (typeof view.camX !== "number") view.camX = 0;
       view.ox = -view.camX * view.scale;
       view.oy = cssH * 0.68 - GROUND_Y * view.scale;
     } else {
-      view.scale = Math.min(cssW / WORLD_W, cssH / WORLD_H);
-      view.ox = (cssW - WORLD_W * view.scale) / 2;
+      view.scale = Math.min(cssW / VIEW_W, cssH / WORLD_H);
       view.oy = (cssH - WORLD_H * view.scale) / 2;
+      visW = cssW / view.scale;
+      baseOx = (cssW - VIEW_W * view.scale) / 2;
+      maxCam = Math.max(0, WORLD_W - visW);
+      if (maxCam <= 0) {
+        view.camX = 0;
+        view.camVel = 0;
+        view.ox = baseOx;
+      } else {
+        if (typeof view.camX !== "number") view.camX = 0;
+        if (view.camX > maxCam) view.camX = maxCam;
+        if (view.camX < 0) view.camX = 0;
+        view.ox = baseOx - view.camX * view.scale;
+      }
     }
   }
 
