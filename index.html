@@ -574,6 +574,7 @@
       .goal-shimmer { display: none; }
       .goal-spark { opacity: 0.7; transform: rotate(45deg); }
       .goal-progress-bar { transition: none; }
+      .result-best.is-new .new-best-badge { animation: none; }
     }
     .dog-card .face {
       width: 44px; height: 36px;
@@ -674,6 +675,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-wrap: wrap;
       gap: 12px;
       margin-top: 8px;
     }
@@ -687,6 +689,87 @@
       box-shadow: 0 4px 0 rgba(44, 58, 74, 0.06);
     }
     .score-chip strong { color: var(--ink); font-weight: 800; }
+    .score-chip-best,
+    .hud-chip-best,
+    .results-scores .result-best {
+      background: linear-gradient(180deg, #FFF3C2 0%, #FFD24A 48%, #F0B01A 100%);
+      border: 1px solid #E09A18;
+      color: #6B3E08;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        0 4px 0 rgba(176, 100, 16, 0.16),
+        0 0 12px rgba(255, 196, 60, 0.65);
+    }
+    .score-chip-best,
+    .hud-chip-best {
+      display: inline-flex;
+      align-items: center;
+    }
+    .score-chip-best strong,
+    .hud-chip-best strong,
+    .results-scores .result-best strong {
+      color: #2A1A08;
+      font-weight: 800;
+    }
+    .score-chip-best strong { font-size: 18px; letter-spacing: -0.03em; margin-left: 0.28em; }
+    .hud-chip-best strong { margin-left: 0.15em; }
+    .hud-chip-best span { color: #6B3E08; }
+    .hud-chip-best strong { font-size: 1.12em; }
+    .trophy-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      margin-right: 5px;
+      flex-shrink: 0;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .trophy-icon svg { display: block; width: 100%; height: 100%; }
+    .hud-chip-best .trophy-icon { width: 14px; height: 14px; margin-right: 4px; }
+    .results-scores .result-best {
+      position: relative;
+    }
+    .results-scores .result-best .trophy-icon {
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
+    }
+    .result-best-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .new-best-badge {
+      display: none;
+      margin: 8px auto 0;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #3A2208;
+      background: linear-gradient(90deg, #C86800, #FFC83D, #FFF6D0, #FFC83D, #C86800);
+      background-size: 220% 100%;
+      box-shadow: 0 0 0 1px rgba(176, 100, 16, 0.28);
+    }
+    .result-best.is-new .new-best-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      animation: newBestPop 0.5s ease-out, newBestShimmer 1.15s ease-in-out 0.15s 1;
+    }
+    @keyframes newBestPop {
+      0% { transform: scale(0.55); opacity: 0; }
+      58% { transform: scale(1.14); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    @keyframes newBestShimmer {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
 
     .btn {
       display: inline-flex;
@@ -719,7 +802,7 @@
     .btn-ghost:hover { background: var(--panel-2); }
     .btn-ghost:active { transform: translateY(1px); box-shadow: none; }
 
-    .kickoff { margin-top: 10px; }
+    .kickoff { margin-top: 14px; }
 
     .js-tip {
       margin: 16px 0 0;
@@ -1143,7 +1226,6 @@
       line-height: 1;
       margin-top: 4px;
     }
-    .results-scores .new-best strong { color: var(--coral); }
     .unlock-box {
       background: #FFF8E6;
       border-radius: 16px;
@@ -1300,7 +1382,7 @@
       </div>
       <div class="start-bottom">
       <div class="best-row">
-        <div class="score-chip">Best <strong id="bestChip">0</strong></div>
+        <div class="score-chip score-chip-best"><span class="trophy-icon" aria-hidden="true"><svg viewBox="0 0 20 20" width="16" height="16" focusable="false"><path fill="#8A4B08" d="M5 2.4h10v1.5h1.55A1.85 1.85 0 0 1 18.4 5.75v1.05a3.85 3.85 0 0 1-3.15 3.8A4.9 4.9 0 0 1 11.3 12.7v1.1h2.35v2.55H6.35V13.8H8.7v-1.1A4.9 4.9 0 0 1 4.75 10.6 3.85 3.85 0 0 1 1.6 6.8V5.75A1.85 1.85 0 0 1 3.45 3.9H5V2.4z"/><path fill="#FFE08A" d="M6.35 3.7h7.3v5c0 1.8-1.6 3.05-3.65 3.05s-3.65-1.25-3.65-3.05v-5z"/><path fill="#FFF6D0" d="M7.2 4.45h2.15v1.9H7.2z"/></svg></span>Best <strong id="bestChip">0</strong></div>
         <div class="score-chip">Total <strong id="totalChip">0</strong></div>
       </div>
 
@@ -1346,7 +1428,7 @@
       <div class="hud">
         <div class="hud-cluster">
           <div class="hud-chip" id="scoreChip"><span>Score</span> <strong id="liveScore">0</strong></div>
-          <div class="hud-chip" id="bestLive"><span>Best</span> <strong id="liveBest">0</strong></div>
+          <div class="hud-chip hud-chip-best" id="bestLive"><span class="trophy-icon" aria-hidden="true"><svg viewBox="0 0 20 20" width="16" height="16" focusable="false"><path fill="#8A4B08" d="M5 2.4h10v1.5h1.55A1.85 1.85 0 0 1 18.4 5.75v1.05a3.85 3.85 0 0 1-3.15 3.8A4.9 4.9 0 0 1 11.3 12.7v1.1h2.35v2.55H6.35V13.8H8.7v-1.1A4.9 4.9 0 0 1 4.75 10.6 3.85 3.85 0 0 1 1.6 6.8V5.75A1.85 1.85 0 0 1 3.45 3.9H5V2.4z"/><path fill="#FFE08A" d="M6.35 3.7h7.3v5c0 1.8-1.6 3.05-3.65 3.05s-3.65-1.25-3.65-3.05v-5z"/><path fill="#FFF6D0" d="M7.2 4.45h2.15v1.9H7.2z"/></svg></span><span>Best</span> <strong id="liveBest">0</strong></div>
           <div class="hud-chip hud-treats" id="treatsChip"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> <strong id="liveTreats">0</strong></div>
           <div class="combo-meter" id="comboMeter" hidden><span>Combo</span> <strong id="comboValue">x1</strong></div>
         </div>
@@ -1374,7 +1456,7 @@
         <p class="lede" id="resultLede">You and your pup had a great round.</p>
         <div class="results-scores">
           <div>This game <strong id="resultScore">0</strong></div>
-          <div id="resultBestWrap">Best <strong id="resultBest">0</strong></div>
+          <div id="resultBestWrap" class="result-best"><span class="result-best-label"><span class="trophy-icon" aria-hidden="true"><svg viewBox="0 0 20 20" width="16" height="16" focusable="false"><path fill="#8A4B08" d="M5 2.4h10v1.5h1.55A1.85 1.85 0 0 1 18.4 5.75v1.05a3.85 3.85 0 0 1-3.15 3.8A4.9 4.9 0 0 1 11.3 12.7v1.1h2.35v2.55H6.35V13.8H8.7v-1.1A4.9 4.9 0 0 1 4.75 10.6 3.85 3.85 0 0 1 1.6 6.8V5.75A1.85 1.85 0 0 1 3.45 3.9H5V2.4z"/><path fill="#FFE08A" d="M6.35 3.7h7.3v5c0 1.8-1.6 3.05-3.65 3.05s-3.65-1.25-3.65-3.05v-5z"/><path fill="#FFF6D0" d="M7.2 4.45h2.15v1.9H7.2z"/></svg></span><span>Best</span></span> <strong id="resultBest">0</strong><span class="new-best-badge" id="newBestBadge" hidden>New best!</span></div>
         </div>
         <p class="result-treats" id="resultTreatsLine"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> <span id="resultTreats">Treats +0</span></p>
         <div class="unlock-box" id="resultUnlocks" hidden>
@@ -1390,7 +1472,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ap";
+  var BUILD = "20261123aq";
   var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -5931,6 +6013,8 @@
     state.timedUp = true;
     state.timeLeft = 0;
     pointer.down = false;
+    var startBest = (typeof state.bestAtStart === "number") ? state.bestAtStart : state.best;
+    var isNewBest = state.score > 0 && state.score > startBest;
     if (state.score > state.best) state.best = state.score;
     saveNow();
     updateHud();
@@ -5939,13 +6023,20 @@
     var rtl = $("resultTreats");
     if (rtl) rtl.innerHTML = "Treats +" + String(state.roundTreats || 0);
     var wrap = $("resultBestWrap");
-    if (wrap) {
-      if (state.score > 0 && state.score >= state.best) {
-        wrap.className = "new-best";
-        wrap.innerHTML = 'New best! <strong id="resultBest">' + state.best + "</strong>";
+    var rb = $("resultBest");
+    var badge = $("newBestBadge");
+    if (rb) rb.innerHTML = String(state.best);
+    if (wrap) wrap.className = isNewBest ? "result-best is-new" : "result-best";
+    if (badge) {
+      if (isNewBest) {
+        badge.hidden = false;
+        if (badge.removeAttribute) badge.removeAttribute("hidden");
+        badge.style.animation = "none";
+        if (badge.offsetWidth) { /* reflow to restart pop/shimmer */ }
+        badge.style.animation = "";
       } else {
-        wrap.className = "";
-        wrap.innerHTML = 'Best <strong id="resultBest">' + state.best + "</strong>";
+        badge.hidden = true;
+        if (badge.setAttribute) badge.setAttribute("hidden", "hidden");
       }
     }
     var lede = $("resultLede");
@@ -6000,6 +6091,7 @@
   function startGame() {
     try {
       hideJsTip();
+      state.bestAtStart = state.best || 0;
       state.score = 0;
       state.roundTreats = 0;
       state.streak = 0;
