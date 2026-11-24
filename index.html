@@ -1483,7 +1483,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123as";
+  var BUILD = "20261123at";
   var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -2676,96 +2676,85 @@
     c.restore();
   }
 
-  function collarPath(athletic, drop) {
+  function collarRing(athletic, drop) {
     drop = drop || 0;
     if (athletic) {
-      // Short wrap at the head-neck junction, drawn over the fur.
-      return { x0: 20, y0: -76 + drop, xc: 17.5, yc: -64 + drop, x1: 28, y1: -55.5 + drop, thick: 9.5 };
+      // Tilted ring around Jasper's neck: back behind the ear, under the throat, up to the jaw.
+      return { cx: 28, cy: -65 + drop, rx: 10, ry: 14, rot: -0.42, a0: 4.50, a1: 1.08, aTag: 1.88, thick: 9.5 };
     }
-    return { x0: 13.5, y0: -52, xc: 12.5, yc: -36.5, x1: 18, y1: -24.5, thick: 9.5 };
+    return { cx: 23, cy: -34, rx: 10, ry: 13, rot: -0.32, a0: 4.48, a1: 1.02, aTag: 1.82, thick: 9.5 };
   }
 
-  function strokeCollarQuad(c, x0, y0, xc, yc, x1, y1) {
+  function collarPoint(p, a) {
+    var ca = Math.cos(p.rot), sa = Math.sin(p.rot);
+    var x = p.rx * Math.cos(a), y = p.ry * Math.sin(a);
+    return { x: p.cx + x * ca - y * sa, y: p.cy + x * sa + y * ca };
+  }
+
+  function strokeCollarArc(c, p, a0, a1) {
     c.beginPath();
-    c.moveTo(x0, y0);
-    c.quadraticCurveTo(xc, yc, x1, y1);
+    c.ellipse(p.cx, p.cy, p.rx, p.ry, p.rot, a0, a1, true);
     c.stroke();
   }
 
-  function offsetAlongNormal(x0, y0, xc, yc, x1, y1, dist) {
-    var dx = x1 - x0, dy = y1 - y0, len = Math.sqrt(dx * dx + dy * dy) || 1;
-    var nx = -dy / len * dist, ny = dx / len * dist;
-    return { x0: x0 + nx, y0: y0 + ny, xc: xc + nx, yc: yc + ny, x1: x1 + nx, y1: y1 + ny };
-  }
-
   function drawCollarStrip(c, p, colors, far) {
-    var o, hi, edgeW, sx0, sy0, sx1, sy1, midW;
+    var hi, edgeW, midW, fp;
     c.lineCap = "round";
     c.lineJoin = "round";
     edgeW = 1.5;
     if (far) {
       // A little of the far side peeks out at the back of the neck.
-      o = offsetAlongNormal(p.x0, p.y0, p.xc, p.yc, p.x1, p.y1, Math.max(3.6, p.thick * 0.38));
-      sx0 = o.x0 + (o.x1 - o.x0) * 0.02;
-      sy0 = o.y0 + (o.y1 - o.y0) * 0.02;
-      sx1 = o.x1 - (o.x1 - o.x0) * 0.42;
-      sy1 = o.y1 - (o.y1 - o.y0) * 0.42;
+      fp = { cx: p.cx - 3.2, cy: p.cy - 1.2, rx: p.rx * 0.72, ry: p.ry * 0.62, rot: p.rot };
       midW = Math.max(2.8, p.thick * 0.50);
       c.strokeStyle = colors.edge;
       c.globalAlpha = 0.92;
       c.lineWidth = midW + edgeW * 2;
-      strokeCollarQuad(c, sx0, sy0, o.xc, o.yc, sx1, sy1);
+      strokeCollarArc(c, fp, 3.7, 4.45);
       c.strokeStyle = shadeHex(colors.main, 0.78);
       c.globalAlpha = 0.95;
       c.lineWidth = midW;
-      strokeCollarQuad(c, sx0, sy0, o.xc, o.yc, sx1, sy1);
+      strokeCollarArc(c, fp, 3.7, 4.45);
       c.globalAlpha = 1;
       return;
     }
-    // Dark outline so the band pops on light fur, then the band itself.
+    // Dark outline, then the ring itself, following the underside of the neck.
     c.strokeStyle = colors.edge;
     c.lineWidth = p.thick + edgeW * 2;
-    strokeCollarQuad(c, p.x0, p.y0, p.xc, p.yc, p.x1, p.y1);
+    strokeCollarArc(c, p, p.a0, p.a1);
     c.strokeStyle = colors.main;
     c.lineWidth = p.thick;
-    strokeCollarQuad(c, p.x0, p.y0, p.xc, p.yc, p.x1, p.y1);
+    strokeCollarArc(c, p, p.a0, p.a1);
     if (colors.stripe) {
       c.strokeStyle = colors.stripe;
       c.lineWidth = p.thick * 0.58;
-      strokeCollarQuad(c, p.x0, p.y0, p.xc, p.yc, p.x1, p.y1);
+      strokeCollarArc(c, p, p.a0, p.a1);
       if (colors.stripe2) {
         c.strokeStyle = colors.stripe2;
         c.lineWidth = p.thick * 0.28;
-        strokeCollarQuad(c, p.x0, p.y0, p.xc, p.yc, p.x1, p.y1);
+        strokeCollarArc(c, p, p.a0, p.a1);
       }
     }
-    // Small highlight stripe along the upper edge of the band.
-    hi = offsetAlongNormal(p.x0, p.y0, p.xc, p.yc, p.x1, p.y1, -p.thick * 0.20);
+    // Small highlight stripe along the inner/upper edge of the band.
+    hi = { cx: p.cx, cy: p.cy, rx: Math.max(2, p.rx - p.thick * 0.20), ry: Math.max(2, p.ry - p.thick * 0.20), rot: p.rot };
     c.strokeStyle = "rgba(255,255,255,0.42)";
     c.lineWidth = Math.max(1.05, p.thick * 0.13);
     c.globalAlpha = 0.9;
-    strokeCollarQuad(
-      c,
-      hi.x0 + (hi.x1 - hi.x0) * 0.12,
-      hi.y0 + (hi.y1 - hi.y0) * 0.12,
-      hi.xc, hi.yc,
-      hi.x1 - (hi.x1 - hi.x0) * 0.30,
-      hi.y1 - (hi.y1 - hi.y0) * 0.30
-    );
+    strokeCollarArc(c, hi, p.a0 - 0.18, p.a1 + 0.14);
     c.globalAlpha = 1;
   }
 
   function drawDogCollar(c, athletic, drop, id, def, part, opts) {
-    var colors, p;
+    var colors, p, tag;
     if (collarHiddenByBandana(opts)) return;
     colors = collarColors(id, def);
-    p = collarPath(athletic, drop);
+    p = collarRing(athletic, drop);
     if (part === "back") {
       drawCollarStrip(c, p, colors, true);
     } else if (part === "band") {
       drawCollarStrip(c, p, colors, false);
     } else {
-      drawCollarCharm(c, p.x1, p.y1, colors);
+      tag = collarPoint(p, p.aTag);
+      drawCollarCharm(c, tag.x, tag.y, colors);
     }
   }
 
