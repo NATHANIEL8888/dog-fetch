@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123ab -->
+<!-- fetch-pup build 20261123ac -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1353,7 +1353,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ab";
+  var BUILD = "20261123ac";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -2181,94 +2181,72 @@
     c.restore();
   }
 
-  function fillCollarRing(c, rx, ry, inner, colors, far) {
-    var irx, iry, ox;
-    if (far) {
-      rx *= 0.92;
-      ry *= 0.9;
-      ox = -0.4;
-      c.fillStyle = shadeHex(colors.main, 0.78);
-    } else {
-      ox = 0.25;
-      c.fillStyle = colors.main;
+  function collarPath(athletic, drop) {
+    drop = drop || 0;
+    if (athletic) {
+      // Short band at the head-neck junction, not a long sash down the neck.
+      return { x0: 21, y0: -74 + drop, xc: 18, yc: -64 + drop, x1: 28, y1: -55.5 + drop, thick: 6.5 };
     }
-    irx = Math.max(1.6, rx * inner);
-    iry = Math.max(3.5, ry * inner);
+    return { x0: 15, y0: -51, xc: 12.5, yc: -36, x1: 17.5, y1: -24.5, thick: 6 };
+  }
+
+  function strokeCollarQuad(c, x0, y0, xc, yc, x1, y1) {
     c.beginPath();
-    pathEllipse(c, 0, 0, rx, ry);
-    pathEllipseRev(c, ox, 0, irx, iry);
-    c.fill("evenodd");
+    c.moveTo(x0, y0);
+    c.quadraticCurveTo(xc, yc, x1, y1);
+    c.stroke();
+  }
+
+  function offsetAlongNormal(x0, y0, xc, yc, x1, y1, dist) {
+    var dx = x1 - x0, dy = y1 - y0, len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var nx = -dy / len * dist, ny = dx / len * dist;
+    return { x0: x0 + nx, y0: y0 + ny, xc: xc + nx, yc: yc + ny, x1: x1 + nx, y1: y1 + ny };
+  }
+
+  function drawCollarStrip(c, p, colors, far) {
+    var o, edge;
+    c.lineCap = "round";
+    c.lineJoin = "round";
+    if (far) {
+      o = offsetAlongNormal(p.x0, p.y0, p.xc, p.yc, p.x1, p.y1, -2.2);
+      c.strokeStyle = shadeHex(colors.main, 0.72);
+      c.globalAlpha = 0.55;
+      c.lineWidth = Math.max(2, p.thick * 0.42);
+      // shorter sliver, mostly the mid-to-lower far edge
+      strokeCollarQuad(c, o.x0, o.y0 + (o.y1 - o.y0) * 0.22, o.xc, o.yc, o.x1, o.y1 - (o.y1 - o.y0) * 0.12);
+      c.globalAlpha = 1;
+      return;
+    }
+    c.strokeStyle = colors.main;
+    c.lineWidth = p.thick;
+    strokeCollarQuad(c, p.x0, p.y0, p.xc, p.yc, p.x1, p.y1);
+    if (colors.stripe) {
+      c.strokeStyle = colors.stripe;
+      c.lineWidth = p.thick * 0.58;
+      strokeCollarQuad(c, p.x0, p.y0, p.xc, p.yc, p.x1, p.y1);
+      if (colors.stripe2) {
+        c.strokeStyle = colors.stripe2;
+        c.lineWidth = p.thick * 0.28;
+        strokeCollarQuad(c, p.x0, p.y0, p.xc, p.yc, p.x1, p.y1);
+      }
+    }
+    edge = offsetAlongNormal(p.x0, p.y0, p.xc, p.yc, p.x1, p.y1, p.thick * 0.42);
+    c.strokeStyle = colors.edge;
+    c.lineWidth = 1.15;
+    c.globalAlpha = 0.9;
+    strokeCollarQuad(c, edge.x0, edge.y0, edge.xc, edge.yc, edge.x1, edge.y1);
+    c.globalAlpha = 1;
   }
 
   function drawDogCollar(c, athletic, drop, id, def, part) {
     var colors = collarColors(id, def);
-    var cx, cy, ang, rx, ry, inner, frx, fry;
-    drop = drop || 0;
-    // Vertical oval around the neck cross-section so the band wraps
-    // under the throat and tucks behind the head, instead of sitting
-    // as a flat bar or a sideways ring on the cheek.
-    if (athletic) {
-      cx = 22;
-      cy = -62 + drop;
-      ang = 0.34;
-      rx = 6.4;
-      ry = 12.6;
-      inner = 0.42;
-    } else {
-      cx = 19;
-      cy = -38.5;
-      ang = 0.18;
-      rx = 6.2;
-      ry = 11.6;
-      inner = 0.4;
-    }
-    c.save();
-    c.translate(cx, cy);
-    c.rotate(ang);
+    var p = collarPath(athletic, drop);
     if (part === "back") {
-      c.save();
-      c.beginPath();
-      // Top and slightly back: the far side peeking over the nape.
-      c.rect(-40, -40, 80, 42);
-      c.clip();
-      fillCollarRing(c, rx, ry, inner, colors, true);
-      c.strokeStyle = colors.edge;
-      c.lineWidth = 1;
-      c.globalAlpha = 0.8;
-      strokeEllipse(c, 0, 0, rx * 0.92, ry * 0.9);
-      c.restore();
+      drawCollarStrip(c, p, colors, true);
+      drawCollarStrip(c, p, colors, false);
     } else {
-      frx = rx * 1.1;
-      fry = ry * 1.02;
-      c.save();
-      c.beginPath();
-      // Underside and lower sides only: a U under the throat that tucks
-      // behind the head. Drawing the top would close into a flat "O".
-      c.rect(-40, -4, 80, 52);
-      c.clip();
-      fillCollarRing(c, frx, fry, inner, colors, false);
-      if (colors.stripe) {
-        c.fillStyle = colors.stripe;
-        c.beginPath();
-        pathEllipse(c, 0.2, 0, frx * 0.82, fry * 0.82);
-        pathEllipseRev(c, 0.25, 0, frx * inner * 0.95, fry * inner * 0.95);
-        c.fill("evenodd");
-        if (colors.stripe2) {
-          c.fillStyle = colors.stripe2;
-          c.beginPath();
-          pathEllipse(c, 0.2, 0, frx * 0.68, fry * 0.68);
-          pathEllipseRev(c, 0.25, 0, frx * inner * 0.9, fry * inner * 0.9);
-          c.fill("evenodd");
-        }
-      }
-      c.strokeStyle = colors.edge;
-      c.lineWidth = 1.15;
-      c.lineJoin = "round";
-      strokeEllipse(c, 0, 0, frx, fry);
-      c.restore();
-      drawCollarCharm(c, frx * 0.12, fry * 0.98, colors);
+      drawCollarCharm(c, p.x1, p.y1, colors);
     }
-    c.restore();
   }
 
   function drawShopBandana(c, x, y, athletic, id) {
@@ -2342,8 +2320,8 @@
   function drawGearBandana(c, athletic, drop, opts) {
     var gear = (opts && opts.gear) ? opts.gear : gearFromState();
     if (!gear || !gear.bandana) return;
-    if (athletic) drawShopBandana(c, 22, -49 + (drop || 0), true, gear.bandana);
-    else drawShopBandana(c, 20, -29, false, gear.bandana);
+    if (athletic) drawShopBandana(c, 24, -46 + (drop || 0), true, gear.bandana);
+    else drawShopBandana(c, 19, -22, false, gear.bandana);
   }
 
   function drawDogAccessories(c, athletic, drop) {
