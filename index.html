@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123o -->
+<!-- fetch-pup build 20261123p -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -445,34 +445,34 @@
       z-index: 1;
     }
     .face.rangy .face-head {
-      left: 7px; top: 9px;
-      width: 20px; height: 22px;
-      border-radius: 48% 52% 44% 48%;
+      left: 6px; top: 8px;
+      width: 22px; height: 23px;
+      border-radius: 48% 50% 46% 48%;
     }
     .face.rangy .face-head.gloss::after {
-      left: 3px; top: 3px;
-      width: 6px; height: 4px;
+      left: 4px; top: 4px;
+      width: 7px; height: 5px;
       background: rgba(255,255,255,0.42);
     }
     .face.rangy .face-muzzle {
       position: absolute;
-      left: 18px; top: 16px;
-      width: 17px; height: 8px;
-      border-radius: 3px 8px 8px 3px;
+      left: 16px; top: 15px;
+      width: 16px; height: 10px;
+      border-radius: 6px 10px 10px 6px;
       z-index: 1;
     }
     .face.rangy .face-ear.semi {
-      width: 6px; height: 20px;
-      border-radius: 8px 8px 2px 2px;
-      top: -3px;
+      width: 7px; height: 19px;
+      border-radius: 8px 8px 3px 3px;
+      top: -2px;
     }
-    .face.rangy .face-ear.semi.l { left: 8px; transform: rotate(-8deg); }
-    .face.rangy .face-ear.semi.r { left: auto; right: 9px; transform: rotate(10deg); }
+    .face.rangy .face-ear.semi.l { left: 7px; transform: rotate(-8deg); }
+    .face.rangy .face-ear.semi.r { left: auto; right: 8px; transform: rotate(10deg); }
     .face.rangy .face-collar {
       left: 9px;
       bottom: 1px;
-      width: 18px;
-      height: 3px;
+      width: 20px;
+      height: 4px;
     }
     .face-spot {
       position: absolute; width: 7px; height: 7px; border-radius: 50%;
@@ -960,7 +960,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123o";
+  var BUILD = "20261123p";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -989,7 +989,7 @@
     { id: "jasper", name: "Jasper", title: "Big athlete", unlock: 1000, speed: 590, jump: 205,
       body: "#1C1C22", bodyDark: "#0A0A0E", belly: "#2E2E38", ear: "#141418",
       eye: "#0A0A0C", collar: "#FF3D6A", tag: "#FFD24A", ears: "semi", muzzle: "#3A3A46",
-      scale: 1.2, athletic: true, shine: true, mouthFwd: 56, mouthUp: 66 }
+      scale: 1.2, athletic: true, shine: true, mouthFwd: 54, mouthUp: 66 }
   ];
 
   var PARKS = [
@@ -2474,7 +2474,7 @@
     c.fillStyle = "rgba(40,40,40,0.18)";
     c.save();
     c.rotate(-tilt);
-    fillEllipse(c, athletic ? 2 : 0, jumpY + bounce + 4, athletic ? 34 : 28, athletic ? 6 : 7);
+    fillEllipse(c, athletic ? 2 : 0, jumpY + bounce + 4, athletic ? 38 : 28, athletic ? 7 : 7);
     c.restore();
 
     function dogLeg(px, attachY, len, thick, phase, back) {
@@ -2502,96 +2502,124 @@
 
     if (athletic) {
       var drop = sit ? 18 : 0;
-      dogLeg(-24, -34 + drop, 50, 5.2, 0, true);
-      dogLeg(-13, -34 + drop, 50, 5.2, Math.PI, true);
-      dogLeg(12, -36 + drop, 52, 5.2, Math.PI, false);
-      dogLeg(23, -36 + drop, 52, 5.2, 0, false);
+
+      function athleticLeg(px, attachY, len, phase, back) {
+        if (sit && back) return;
+        var swing = 0, lift = 0, thighW, thighH, shinW, shinLen, pawW;
+        if (pose === "run" || pose === "return") {
+          swing = Math.sin(run + phase) * 16;
+          lift = Math.max(0, Math.cos(run + phase)) * 8;
+        } else if (pose === "jump") {
+          swing = -12; lift = 8;
+        } else if (pose === "swim") {
+          swing = Math.sin(t * 8 + phase) * 10;
+        }
+        thighW = back ? 13 : 11.5;
+        thighH = back ? 17 : 15;
+        shinW = 8;
+        shinLen = (sit ? Math.max(12, len - 16) : len) - 16;
+        pawW = 7.5;
+        c.save();
+        c.translate(px, sit ? attachY + 10 : attachY);
+        c.rotate(swing * 0.035);
+        c.fillStyle = def.body;
+        fillEllipse(c, 0, 7 - lift * 0.25, thighW, thighH);
+        c.fillStyle = def.bodyDark;
+        roundRect(c, -shinW / 2, 16 - lift, shinW, shinLen, 3.5);
+        c.fill();
+        fillEllipse(c, 2, 16 + shinLen - 1 - lift, pawW, 4.2);
+        c.restore();
+      }
+
+      athleticLeg(-22, -34 + drop, 50, 0, true);
+      athleticLeg(-10, -34 + drop, 50, Math.PI, true);
+      athleticLeg(12, -36 + drop, 52, Math.PI, false);
+      athleticLeg(23, -36 + drop, 52, 0, false);
 
       c.fillStyle = def.body;
-      fillEllipse(c, -22, -44 + drop, 12, 13);
-      fillEllipse(c, -8, -46 + drop, 10, 10);
-      fillEllipse(c, 10, -46 + drop, 15, 20);
+      fillEllipse(c, -20, -46 + drop, 17, 16);
+      fillEllipse(c, -6, -48 + drop, 17, 16);
+      fillEllipse(c, 12, -48 + drop, 21, 23);
       c.fillStyle = def.belly;
-      fillEllipse(c, 12, -32 + drop, 9, 8);
+      fillEllipse(c, 11, -32 + drop, 12, 10);
 
       if (def.shine) {
-        c.fillStyle = "rgba(255,255,255,0.22)";
-        fillEllipse(c, 8, -60 + drop, 17, 3.4);
-        c.fillStyle = "rgba(200,214,230,0.16)";
-        fillEllipse(c, -8, -54 + drop, 12, 2.5);
-        c.fillStyle = "rgba(255,255,255,0.16)";
-        fillEllipse(c, 16, -50 + drop, 8, 2.2);
+        c.fillStyle = "rgba(255,255,255,0.2)";
+        fillEllipse(c, 6, -62 + drop, 16, 3.2);
+        c.fillStyle = "rgba(200,214,230,0.14)";
+        fillEllipse(c, -8, -56 + drop, 11, 2.4);
       }
 
       c.save();
-      c.translate(-30, -46 + drop);
-      c.rotate(-0.95 + tail * 0.5);
+      c.translate(-28, -48 + drop);
+      c.rotate(-0.75 + tail * 0.45);
       c.fillStyle = def.bodyDark;
-      fillEllipse(c, -20, 0, 22, 3.1);
+      fillEllipse(c, -12, 0, 14, 5);
       c.restore();
 
       c.fillStyle = def.body;
+      c.save();
+      c.translate(20, -64 + drop);
+      c.rotate(0.34);
+      fillEllipse(c, 0, 0, 11, 17);
+      c.restore();
+
       c.save();
       c.translate(22, -60 + drop);
-      c.rotate(0.42);
-      fillEllipse(c, 0, 0, 7.5, 16);
-      c.restore();
-
-      c.save();
-      c.translate(24, -58 + drop);
       c.fillStyle = def.collar;
-      roundRect(c, -9, -4, 18, 6, 3);
+      roundRect(c, -10, -4, 21, 7, 3);
       c.fill();
       c.fillStyle = def.tag;
-      fillEllipse(c, 2, 4, 3.8, 3.8);
+      fillEllipse(c, 3, 5, 4, 4);
       c.restore();
 
       c.fillStyle = def.body;
-      fillEllipse(c, 36, -76 + drop, 13, 14);
+      fillEllipse(c, 34, -76 + drop, 16, 15);
+      fillEllipse(c, 42, -72 + drop, 10, 10);
       c.fillStyle = def.muzzle;
-      fillEllipse(c, 52, -70 + drop, 15, 6.2);
+      fillEllipse(c, 48, -70 + drop, 13, 8);
       c.fillStyle = "#1A1A1A";
-      fillEllipse(c, 66, -70 + drop, 3.1, 2.5);
+      fillEllipse(c, 60, -70 + drop, 3.2, 2.6);
 
       c.fillStyle = def.ear;
       c.save();
       c.translate(42, -88 + drop);
       c.rotate(0.2);
-      fillEllipse(c, 0, 0, 4.2, 15);
+      fillEllipse(c, 0, 0, 5, 15);
       c.fillStyle = def.muzzle;
-      fillEllipse(c, 0.6, 2, 2, 6);
+      fillEllipse(c, 0.6, 2, 2.2, 6);
       c.restore();
       c.fillStyle = def.ear;
       c.save();
-      c.translate(28, -88 + drop);
+      c.translate(27, -88 + drop);
       c.rotate(-0.16);
-      fillEllipse(c, 0, 0, 4.2, 14.5);
+      fillEllipse(c, 0, 0, 5, 14.5);
       c.restore();
 
       if (def.shine) {
         c.fillStyle = "rgba(255,255,255,0.22)";
-        fillEllipse(c, 32, -82 + drop, 5, 2.4);
+        fillEllipse(c, 30, -82 + drop, 5.5, 2.6);
         c.fillStyle = "rgba(255,255,255,0.14)";
-        fillEllipse(c, 48, -73 + drop, 6, 1.8);
+        fillEllipse(c, 44, -74 + drop, 6, 2);
       }
 
       c.fillStyle = "#0A0A0C";
-      fillEllipse(c, 36, -80 + drop, 2.6, 3);
+      fillEllipse(c, 34, -80 + drop, 2.7, 3.1);
       c.fillStyle = "#FFFFFF";
-      fillEllipse(c, 37, -81.2 + drop, 1.1, 1.1);
+      fillEllipse(c, 35, -81.3 + drop, 1.15, 1.15);
 
       c.strokeStyle = "rgba(40,20,10,0.45)";
-      c.lineWidth = 1.1;
+      c.lineWidth = 1.2;
       c.beginPath();
-      c.arc(56, -68 + drop, 4.5, 0.15, Math.PI - 0.15, false);
+      c.arc(52, -68 + drop, 5, 0.15, Math.PI - 0.15, false);
       c.stroke();
 
       if (pose === "wag" || pose === "idle" || pose === "sit") {
         c.fillStyle = "#F07A8A";
         c.beginPath();
-        c.moveTo(58, -66 + drop);
-        c.lineTo(64, -58 + drop);
-        c.lineTo(54, -64 + drop);
+        c.moveTo(54, -66 + drop);
+        c.lineTo(60, -58 + drop);
+        c.lineTo(50, -64 + drop);
         c.closePath();
         c.fill();
       }
