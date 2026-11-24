@@ -1483,7 +1483,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123at";
+  var BUILD = "20261123au";
   var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -2679,10 +2679,10 @@
   function collarRing(athletic, drop) {
     drop = drop || 0;
     if (athletic) {
-      // Tilted ring around Jasper's neck: back behind the ear, under the throat, up to the jaw.
-      return { cx: 28, cy: -65 + drop, rx: 10, ry: 14, rot: -0.42, a0: 4.50, a1: 1.08, aTag: 1.88, thick: 9.5 };
+      // Shallow smile at the base of the neck, below the jaw, tag at the throat.
+      return { athletic: true, drop: drop, cx: 31, cy: -61 + drop, rx: 15, ry: 11, rot: -0.24, a0: 4.22, a1: 1.30, aTag: 1.30, thick: 6.5 };
     }
-    return { cx: 23, cy: -34, rx: 10, ry: 13, rot: -0.32, a0: 4.48, a1: 1.02, aTag: 1.82, thick: 9.5 };
+    return { athletic: false, drop: 0, cx: 24, cy: -30, rx: 14, ry: 10, rot: -0.20, a0: 4.18, a1: 1.25, aTag: 1.25, thick: 6.5 };
   }
 
   function collarPoint(p, a) {
@@ -2697,27 +2697,45 @@
     c.stroke();
   }
 
+  function clipCollarAwayFromFace(c, p) {
+    var drop = p.drop || 0;
+    c.beginPath();
+    c.rect(-140, -180, 300, 300);
+    if (p.athletic) {
+      pathEllipse(c, 34, -76 + drop, 16.3, 15.3);
+      pathEllipse(c, 42, -72 + drop, 10.3, 10.3);
+      pathEllipse(c, 48, -70 + drop, 13.3, 8.3);
+    } else {
+      pathEllipse(c, 28, -44, 20.3, 18.3);
+      pathEllipse(c, 40, -36, 12.3, 9.3);
+    }
+    c.clip("evenodd");
+  }
+
   function drawCollarStrip(c, p, colors, far) {
     var hi, edgeW, midW, fp;
-    c.lineCap = "round";
+    c.lineCap = "butt";
     c.lineJoin = "round";
     edgeW = 1.5;
     if (far) {
-      // A little of the far side peeks out at the back of the neck.
-      fp = { cx: p.cx - 3.2, cy: p.cy - 1.2, rx: p.rx * 0.72, ry: p.ry * 0.62, rot: p.rot };
-      midW = Math.max(2.8, p.thick * 0.50);
+      // A short sliver of the far side peeks at the back of the neck.
+      fp = { cx: p.cx - 3.0, cy: p.cy + 0.4, rx: p.rx * 0.82, ry: p.ry * 0.78, rot: p.rot };
+      midW = Math.max(2.4, p.thick * 0.55);
       c.strokeStyle = colors.edge;
-      c.globalAlpha = 0.92;
+      c.globalAlpha = 0.9;
       c.lineWidth = midW + edgeW * 2;
-      strokeCollarArc(c, fp, 3.7, 4.45);
+      // Anticlockwise from the later angle down to the earlier one keeps this a short back sliver.
+      strokeCollarArc(c, fp, p.a0 + 0.06, p.a0 - 0.22);
       c.strokeStyle = shadeHex(colors.main, 0.78);
       c.globalAlpha = 0.95;
       c.lineWidth = midW;
-      strokeCollarArc(c, fp, 3.7, 4.45);
+      strokeCollarArc(c, fp, p.a0 + 0.06, p.a0 - 0.22);
       c.globalAlpha = 1;
       return;
     }
-    // Dark outline, then the ring itself, following the underside of the neck.
+    c.save();
+    clipCollarAwayFromFace(c, p);
+    // Dark outline, then a thin, even band across the base of the neck.
     c.strokeStyle = colors.edge;
     c.lineWidth = p.thick + edgeW * 2;
     strokeCollarArc(c, p, p.a0, p.a1);
@@ -2734,13 +2752,14 @@
         strokeCollarArc(c, p, p.a0, p.a1);
       }
     }
-    // Small highlight stripe along the inner/upper edge of the band.
-    hi = { cx: p.cx, cy: p.cy, rx: Math.max(2, p.rx - p.thick * 0.20), ry: Math.max(2, p.ry - p.thick * 0.20), rot: p.rot };
+    // Small highlight along the upper edge, kept short of the ends.
+    hi = { cx: p.cx, cy: p.cy, rx: Math.max(2, p.rx - p.thick * 0.22), ry: Math.max(2, p.ry - p.thick * 0.22), rot: p.rot };
     c.strokeStyle = "rgba(255,255,255,0.42)";
-    c.lineWidth = Math.max(1.05, p.thick * 0.13);
+    c.lineWidth = Math.max(1.0, p.thick * 0.16);
     c.globalAlpha = 0.9;
-    strokeCollarArc(c, hi, p.a0 - 0.18, p.a1 + 0.14);
+    strokeCollarArc(c, hi, p.a0 - 0.10, p.a1 + 0.10);
     c.globalAlpha = 1;
+    c.restore();
   }
 
   function drawDogCollar(c, athletic, drop, id, def, part, opts) {
