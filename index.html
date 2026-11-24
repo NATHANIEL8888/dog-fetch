@@ -1390,7 +1390,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123am";
+  var BUILD = "20261123an";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1840,7 +1840,7 @@
   }
 
   var barkFx = { t: 0, life: 0.55, text: "Woof!", coolUntil: 0, where: "" };
-  var jasperPuff = { t: 0, life: 0.6 };
+  var jasperPuff = { t: 0, life: 0.75 };
   var lastBarkPlayed = null;
   var lastPointerTs = 0;
   var lastPointerType = "";
@@ -1995,8 +1995,8 @@
     if (!def || def.id !== "jasper") {
       return;
     }
-    jasperPuff.t = 0.6;
-    jasperPuff.life = 0.6;
+    jasperPuff.t = 0.75;
+    jasperPuff.life = 0.75;
   }
 
   function updateJasperPuff(dt) {
@@ -2008,51 +2008,65 @@
 
   function jasperPuffProg() {
     if (!jasperPuff || jasperPuff.t <= 0) return 0;
-    return 1 - jasperPuff.t / (jasperPuff.life || 0.6);
+    return 1 - jasperPuff.t / (jasperPuff.life || 0.75);
   }
 
+  /* 0..1.12: snaps up with a slight overshoot, holds, then eases down. */
   function jasperTailPop() {
-    var p, u;
+    var p, u, snap, settle, holdEnd;
     p = jasperPuffProg();
     if (p <= 0 || p >= 1) return 0;
-    if (p < 0.16) u = p / 0.16;
-    else if (p < 0.42) u = 1;
-    else u = 1 - (p - 0.42) / 0.58;
-    if (u < 0) u = 0;
-    return u;
+    snap = 0.10;
+    settle = 0.18;
+    holdEnd = 0.55;
+    if (p < snap) {
+      u = p / snap;
+      u = 1 - (1 - u) * (1 - u);
+      return 1.14 * u;
+    }
+    if (p < settle) {
+      u = (p - snap) / (settle - snap);
+      return 1.14 - 0.14 * u;
+    }
+    if (p < holdEnd) return 1;
+    u = (p - holdEnd) / (1 - holdEnd);
+    u = u * u;
+    return 1 - u;
   }
 
   function drawJasperPuff(c, sit, drop) {
-    var p, i, delays, ox, oy, age, fade, drift, rise, x, y, s, a;
+    var p, i, delays, ox, oy, age, fade, drift, fall, x, y, s, a, life;
     p = jasperPuffProg();
     if (p <= 0) return;
-    ox = sit ? -26 : -34;
-    oy = sit ? -10 : (-42 + (drop || 0));
+    life = jasperPuff.life || 0.75;
+    /* Just under the tail root, above the hind thigh. Sit root is lower. */
+    ox = sit ? -24 : -30;
+    oy = sit ? -6 : (-36 + (drop || 0));
     delays = [0, 0.10, 0.22];
     c.save();
     for (i = 0; i < delays.length; i++) {
-      age = p - delays[i] / 0.6;
+      age = p - delays[i] / life;
       if (age <= 0 || age > 1) continue;
       fade = age < 0.12 ? (age / 0.12) : (1 - (age - 0.12) / 0.88);
       if (fade < 0) fade = 0;
-      drift = -3 - age * 28 - i * 8;
-      rise = -1 - age * 12 - i * 3;
+      drift = -2 - age * 20 - i * 6;
+      fall = 2 + age * 12 + i * 3;
       x = ox + drift;
-      y = oy + rise;
-      s = 1.15 + age * 1.1 + i * 0.22;
+      y = oy + fall;
+      s = 1.15 + age * 1.05 + i * 0.2;
       a = 0.95 * fade;
       drawCurlyPuff(c, x, y, s, a);
-      if (age < 0.6) {
+      if (age < 0.55) {
         c.strokeStyle = "rgba(150, 170, 152," + (0.55 * fade) + ")";
         c.lineWidth = 1.35;
         c.lineCap = "round";
         c.beginPath();
-        c.moveTo(x + 8 * s, y + 3);
-        c.quadraticCurveTo(x + 13 * s, y + 1, x + 17 * s, y - 3);
+        c.moveTo(ox - 1, oy + 2);
+        c.quadraticCurveTo(ox + drift * 0.4, oy + fall * 0.5, x + 6 * s, y);
         c.stroke();
         c.beginPath();
-        c.moveTo(x + 9 * s, y + 7);
-        c.quadraticCurveTo(x + 14 * s, y + 6, x + 18 * s, y + 3);
+        c.moveTo(ox, oy + 4);
+        c.quadraticCurveTo(ox + drift * 0.45, oy + fall * 0.55 + 3, x + 7 * s, y + 4);
         c.stroke();
       }
     }
@@ -4744,12 +4758,16 @@
       c.translate(sit ? -22 : -28, sit ? -16 : (-48 + drop));
       (function () {
         var pop = jasperTailPop();
+        var amt = pop > 1 ? 1 : pop;
         var baseRot = sit ? -0.55 : -0.75;
-        var upRot = sit ? -1.52 : -1.55;
-        c.rotate(baseRot + tail * 0.45 * (1 - pop * 0.75) + (upRot - baseRot) * pop);
+        /* Positive rotate (Y-down) swings the tail up; 1.52 rad is nearly vertical. */
+        var upRot = sit ? 1.48 : 1.54;
+        var rot = baseRot + (upRot - baseRot) * amt + (pop > 1 ? (pop - 1) * 1.1 : 0);
+        var wag = (1 - amt) * tail * 0.45;
+        c.rotate(rot + wag);
+        c.fillStyle = def.bodyDark;
+        fillEllipse(c, -10 - amt * 8, 0, 14 + amt * 8, 5 + amt * 1.3);
       })();
-      c.fillStyle = def.bodyDark;
-      fillEllipse(c, -12, 0, 14, 5);
       c.restore();
       drawJasperPuff(c, sit, drop);
 
