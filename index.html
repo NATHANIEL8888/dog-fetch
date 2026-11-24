@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123l -->
+<!-- fetch-pup build 20261123m -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -910,7 +910,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123l";
+  var BUILD = "20261123m";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1360,10 +1360,8 @@
   }
 
   function bonusXBounds() {
-    var minX = 400, maxX = 1040;
-    if (view && view.cssH > view.cssW * 1.05) maxX = 840;
-    if (maxX < minX + 80) maxX = minX + 80;
-    return { min: minX, max: maxX };
+    /* Stay inside the opening phone camera (visW 860, focus ~400). */
+    return { min: 400, max: 800 };
   }
 
   function bonusBlocked(x, y, park, items) {
