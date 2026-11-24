@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123x -->
+<!-- fetch-pup build 20261123y -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1309,7 +1309,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123x";
+  var BUILD = "20261123y";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1880,8 +1880,7 @@
     park = currentPark();
     type = park.id;
     if (type === "meadow") {
-      var enterX = ((typeof view.camX === "number") ? view.camX : 0) + cameraVisW() + 36;
-      state.surprise = { type: "squirrel", x: enterX, y: GROUND_Y, hasBall: false, dropped: false, beaten: false, runT: 0, active: true };
+      return;
     } else if (type === "autumn") {
       state.surprise = { type: "gust", t: 0, dir: 1, active: true, leaves: [] };
       for (i = 0; i < 14; i++) {
@@ -1916,48 +1915,7 @@
   function updateSurprise(dt) {
     var s = state.surprise, b, d, i, bug, cl, dx, dy, dist, targetX, spd, stolen;
     if (!s || !s.active) return;
-    if (s.type === "squirrel") {
-      b = state.ball;
-      d = state.dog;
-      if (s.beaten) {
-        s.x += 260 * dt;
-        if (s.x > WORLD_W + 60) s.active = false;
-        return;
-      }
-      if (s.hasBall) {
-        s.x -= 380 * dt;
-        s.runT += dt;
-        b.x = s.x;
-        b.y = GROUND_Y - 20;
-        b.vx = 0; b.vy = 0;
-        if (s.runT > 0.5 || s.x < 520) {
-          s.hasBall = false;
-          s.dropped = true;
-          b.held = false;
-          b.y = GROUND_Y - BALL_R;
-          state.phase = "retrieve";
-        }
-        return;
-      }
-      if (s.dropped) {
-        s.x -= 80 * dt;
-        if (s.x < -40) s.active = false;
-        return;
-      }
-      targetX = b.x;
-      spd = 600;
-      if (s.x > targetX + 8) s.x -= spd * dt;
-      else if (s.x < targetX - 8) s.x += spd * dt;
-      stolen = !d.hasBall && !b.held && (state.phase === "bounce" || state.phase === "retrieve" || (state.phase === "flying" && b.y > GROUND_Y - 70));
-      if (stolen && Math.abs(s.x - b.x) < 30 && b.y > GROUND_Y - 80) {
-        s.hasBall = true;
-        s.runT = 0;
-        b.held = true;
-        b.vx = 0; b.vy = 0;
-        state.phase = "retrieve";
-        showToast("Oh no!", "The squirrel stole the ball!", 1.1);
-      }
-    } else if (s.type === "gust") {
+    if (s.type === "gust") {
       s.t += dt;
       for (i = 0; i < s.leaves.length; i++) {
         s.leaves[i].x += s.leaves[i].vx * dt;
@@ -2018,16 +1976,6 @@
     }
   }
 
-  function awardSquirrelBeat() {
-    var s = state.surprise;
-    if (s && s.type === "squirrel" && s.active && !s.hasBall && !s.dropped && !s.beaten) {
-      s.beaten = true;
-      addScore(2);
-      addPopup("+2 Beat the squirrel!", state.ball.x, state.ball.y - 50, "#FFF36A");
-      showToast("Beat the squirrel!", "+2", 1.15);
-    }
-  }
-
   function awardSeagullDodge(kind) {
     var s = state.surprise;
     if (kind !== "midair" || !s || s.type !== "seagull" || !s.active || s.awarded) return;
@@ -2042,34 +1990,7 @@
   function drawSurprises(c) {
     var s = state.surprise, i, leaf, bug, cl, j, px, py;
     if (!s || !s.active) return;
-    if (s.type === "squirrel") {
-      c.save();
-      c.translate(s.x, s.y);
-      c.scale(s.hasBall || s.x < (state.ball ? state.ball.x : s.x) ? -1 : 1, 1);
-      c.scale(1.25, 1.25);
-      c.fillStyle = "rgba(40,40,40,0.18)";
-      fillEllipse(c, 0, -3, 16, 5);
-      c.fillStyle = "#C68642";
-      fillEllipse(c, 0, -16, 14, 10);
-      fillEllipse(c, 14, -22, 8, 7);
-      c.fillStyle = "#E8C090";
-      fillEllipse(c, 16, -20, 4, 3);
-      c.fillStyle = "#5A3A22";
-      fillEllipse(c, 17, -24, 1.6, 1.6);
-      c.fillStyle = "#C68642";
-      c.save();
-      c.translate(-10, -22);
-      c.rotate(-0.8);
-      fillEllipse(c, 0, 0, 5, 10);
-      c.restore();
-      c.fillStyle = "#8B5A2B";
-      c.beginPath();
-      c.moveTo(-12, -16);
-      c.quadraticCurveTo(-28, -36, -16, -8);
-      c.quadraticCurveTo(-10, -10, -12, -16);
-      c.fill();
-      c.restore();
-    } else if (s.type === "gust") {
+    if (s.type === "gust") {
       for (i = 0; i < s.leaves.length; i++) {
         leaf = s.leaves[i];
         c.save();
@@ -2131,7 +2052,6 @@
   function drawHeldBallLabel(c) {
     var label, b;
     if (!state || !state.ball || !state.ball.held || state.dog.hasBall) return;
-    if (state.surprise && state.surprise.hasBall) return;
     if (state.phase !== "ready" && state.phase !== "aiming" && state.phase !== "celebrate") return;
     b = state.ball;
     if (!b.special) return;
@@ -2445,6 +2365,7 @@
       catchKind: "",
       pendingUnlocks: [],
       flowers: [],
+      skyBirds: { flock: [], wait: 2 },
       treats: (typeof save.treats === "number" ? save.treats : 0),
       treatsGranted: save.treatsGranted !== false,
       ownedItems: save.ownedItems ? save.ownedItems.slice(0) : [],
@@ -2866,7 +2787,6 @@
     } else {
       showToast(msg, sub, 1.15);
     }
-    awardSquirrelBeat();
     awardSeagullDodge(kind);
     updateHud();
     if (!silent) {}
@@ -2990,9 +2910,6 @@
         var holdDef = getDog(state.dogId);
         b.x = state.dog.x + state.dog.facing * dogCarryFwd(holdDef);
         b.y = GROUND_Y - state.dog.jumpY - dogCarryUp(holdDef, state.dog.swim);
-      } else if (state.surprise && state.surprise.hasBall) {
-        b.x = state.surprise.x;
-        b.y = GROUND_Y - 20;
       } else {
         b.x = 168;
         b.y = 452;
@@ -3058,7 +2975,6 @@
 
   function tryCatch() {
     if (state.dog.hasBall) return;
-    if (state.surprise && state.surprise.hasBall) return;
     if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return;
     var ms = dogScale();
     var mouthX = state.dog.x + state.dog.facing * dogMouthFwd();
@@ -3260,6 +3176,7 @@
     updateBall(dt);
     updateDog(dt);
     updateSurprise(dt);
+    updateSkyBirds(dt);
     maybeGoldTrail();
     if (!state.ball.held) collectBonuses();
     else collectBonuses();
@@ -3412,6 +3329,107 @@
     }
   }
 
+
+  function resetSkyBirds() {
+    if (!state) return;
+    state.skyBirds = { flock: [], wait: rand(1.2, 4) };
+  }
+
+  function spawnSkyFlock(dirHint) {
+    var dir, n, i, baseY, speed, startX, cam, vw;
+    if (!state.skyBirds) resetSkyBirds();
+    dir = dirHint === 1 || dirHint === -1 ? dirHint : (Math.random() < 0.5 ? 1 : -1);
+    n = 1 + Math.floor(Math.random() * 3);
+    baseY = rand(56, 168);
+    speed = rand(170, 250);
+    cam = 0;
+    vw = WORLD_W;
+    if (view && view.cssH > view.cssW * 1.05) {
+      cam = typeof view.camX === "number" ? view.camX : 0;
+      vw = cameraVisW();
+    }
+    startX = dir > 0 ? cam - 50 : cam + vw + 50;
+    state.skyBirds.flock = [];
+    for (i = 0; i < n; i++) {
+      state.skyBirds.flock.push({
+        x: startX - dir * i * 32,
+        y: baseY + rand(-16, 16),
+        vx: dir * (speed + rand(-24, 24)),
+        wing: rand(0, Math.PI * 2),
+        s: rand(1.25, 1.6)
+      });
+    }
+  }
+
+  function updateSkyBirds(dt) {
+    var i, b, alive, inView;
+    if (!state.skyBirds) resetSkyBirds();
+    if (state.skyBirds.flock.length) {
+      alive = [];
+      for (i = 0; i < state.skyBirds.flock.length; i++) {
+        b = state.skyBirds.flock[i];
+        b.x += b.vx * dt;
+        b.y += Math.sin((state.time || 0) * 2 + b.wing) * 10 * dt;
+        b.wing += dt * 14;
+        inView = (b.vx > 0 && b.x < WORLD_W + 70) || (b.vx < 0 && b.x > -70);
+        if (inView) alive.push(b);
+      }
+      state.skyBirds.flock = alive;
+      if (!alive.length) state.skyBirds.wait = rand(8, 15);
+    } else {
+      state.skyBirds.wait -= dt;
+      if (state.skyBirds.wait <= 0) spawnSkyFlock();
+    }
+  }
+
+  function drawSkyBird(c, x, y, vx, wing, s) {
+    var flap = Math.sin(wing) * 0.72;
+    s = s || 1;
+    c.save();
+    c.translate(x, y);
+    c.scale((vx < 0 ? -1 : 1) * s, s);
+    c.fillStyle = "#5B6B82";
+    fillEllipse(c, 0, 0, 10, 5.2);
+    c.fillStyle = "#E8EEF6";
+    fillEllipse(c, 1.2, 1.4, 6, 2.6);
+    c.fillStyle = "#5B6B82";
+    fillEllipse(c, 8.5, -1.6, 4.2, 3.6);
+    c.fillStyle = "#E8A030";
+    c.beginPath();
+    c.moveTo(12, -1.2);
+    c.lineTo(17, 0);
+    c.lineTo(12, 1.2);
+    c.closePath();
+    c.fill();
+    c.fillStyle = "#FFFFFF";
+    fillEllipse(c, 9.4, -2.4, 1.3, 1.3);
+    c.fillStyle = "#1A1A1A";
+    fillEllipse(c, 9.8, -2.4, 0.6, 0.6);
+    c.fillStyle = "#3E4A5C";
+    c.beginPath();
+    c.moveTo(-8, 0);
+    c.lineTo(-16, -5);
+    c.lineTo(-13, 0);
+    c.lineTo(-16, 4);
+    c.closePath();
+    c.fill();
+    c.fillStyle = "#6E7E96";
+    c.save();
+    c.rotate(flap);
+    fillEllipse(c, -1, -6.4, 8, 4);
+    c.restore();
+    c.restore();
+  }
+
+  function drawSkyBirds(c) {
+    var i, b;
+    if (!state || !state.skyBirds || !state.skyBirds.flock) return;
+    for (i = 0; i < state.skyBirds.flock.length; i++) {
+      b = state.skyBirds.flock[i];
+      drawSkyBird(c, b.x, b.y, b.vx, b.wing, b.s);
+    }
+  }
+
   function drawPark(c, park, t) {
     var g = c.createLinearGradient(0, 0, 0, GROUND_Y);
     g.addColorStop(0, park.skyTop);
@@ -3430,6 +3448,7 @@
     for (i = 0; i < state.clouds.length; i++) {
       drawCloud(c, state.clouds[i].x, state.clouds[i].y, state.clouds[i].s);
     }
+    drawSkyBirds(c);
 
     if (park.leaves) {
       c.fillStyle = "rgba(210, 90, 30, 0.45)";
@@ -4255,6 +4274,34 @@
     }
   }
 
+  var heroFlock = { birds: [], wait: 2, lastTs: 0 };
+  function updateHeroBirds(t, w, h) {
+    var dt, i, b, n, dir, alive, startX;
+    dt = heroFlock.lastTs ? Math.min(0.05, t - heroFlock.lastTs) : 0.016;
+    heroFlock.lastTs = t;
+    if (!heroFlock.birds.length) {
+      heroFlock.wait -= dt;
+      if (heroFlock.wait <= 0) {
+        dir = Math.random() < 0.5 ? 1 : -1;
+        n = 1 + Math.floor(Math.random() * 2);
+        startX = dir > 0 ? -20 : w + 20;
+        heroFlock.birds = [];
+        for (i = 0; i < n; i++) {
+          heroFlock.birds.push({ x: startX - dir * i * 22, y: rand(16, h * 0.38), vx: dir * rand(40, 70), wing: rand(0, 6), s: 0.55 });
+        }
+      }
+    } else {
+      alive = [];
+      for (i = 0; i < heroFlock.birds.length; i++) {
+        b = heroFlock.birds[i];
+        b.x += b.vx * dt;
+        b.wing += dt * 14;
+        if ((b.vx > 0 && b.x < w + 24) || (b.vx < 0 && b.x > -24)) alive.push(b);
+      }
+      heroFlock.birds = alive;
+      if (!alive.length) heroFlock.wait = rand(8, 15);
+    }
+  }
   function loopHero(ts) {
     if (state.screen !== "start") return;
     var c = heroCtx;
@@ -4262,11 +4309,16 @@
     var w = heroCanvas.width, h = heroCanvas.height;
     c.clearRect(0, 0, w, h);
     var t = (ts || 0) / 1000;
+    var hi;
     var g = c.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, "rgba(185, 230, 255, 0)");
     g.addColorStop(1, "rgba(185, 230, 255, 0.35)");
     c.fillStyle = g;
     c.fillRect(0, 0, w, h);
+    updateHeroBirds(t, w, h);
+    for (hi = 0; hi < heroFlock.birds.length; hi++) {
+      drawSkyBird(c, heroFlock.birds[hi].x, heroFlock.birds[hi].y, heroFlock.birds[hi].vx, heroFlock.birds[hi].wing, heroFlock.birds[hi].s);
+    }
     c.save();
     c.translate(w / 2, h * 0.82);
     c.scale(2.15, 2.15);
@@ -4785,6 +4837,7 @@
       state.lastSpecial = null;
       state.popups = [];
       state.particles = [];
+      resetSkyBirds();
       placeReady();
       snapCameraToTarget();
       updateHud();
@@ -5011,7 +5064,16 @@
           lastSpecial: state.lastSpecial,
           surprise: state.surprise && state.surprise.type,
           surpriseActive: !!(state.surprise && state.surprise.active),
-          squirrelHasBall: !!(state.surprise && state.surprise.hasBall),
+          skyBirds: state.skyBirds && state.skyBirds.flock ? state.skyBirds.flock.length : 0,
+          skyBirdList: (function () {
+            var out = [], i, b;
+            if (!state.skyBirds || !state.skyBirds.flock) return out;
+            for (i = 0; i < state.skyBirds.flock.length; i++) {
+              b = state.skyBirds.flock[i];
+              out.push({ x: b.x, y: b.y });
+            }
+            return out;
+          })(),
           flipT: state.flipT || 0,
           ownedItems: state.ownedItems ? state.ownedItems.slice(0) : [],
           equipped: state.equipped ? { hat: state.equipped.hat, bandana: state.equipped.bandana, collar: state.equipped.collar } : { hat: null, bandana: null, collar: null },
@@ -5033,6 +5095,7 @@
           state.lastSpecial = null;
         }
       },
+      spawnSkyBirds: function () { spawnSkyFlock(); },
       forceSurprise: function (on) {
         state.forceSurprise = !!on;
         state.forceSurpriseAlways = !!on;
