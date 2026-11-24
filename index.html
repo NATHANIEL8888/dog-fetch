@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123z -->
+<!-- fetch-pup build 20261123aa -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -866,6 +866,7 @@
       flex-shrink: 0;
     }
     .shop-preview-wrap {
+      position: relative;
       background: linear-gradient(#B9E6FF, #FFF6C8 70%, #8FCB6E);
       margin: 0 14px 10px;
       border-radius: 16px;
@@ -875,6 +876,23 @@
       border: 2px solid rgba(44,58,74,0.08);
     }
     #shopPreview { width: 100%; height: 100%; display: block; }
+    .shop-trying {
+      display: none;
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(44, 58, 74, 0.86);
+      color: #fff;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      border-radius: 999px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .shop-trying.is-on { display: block; }
     .shop-body {
       flex: 1;
       min-height: 0;
@@ -1267,7 +1285,7 @@
         </div>
         <div class="shop-treats"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> <span>Treats: <strong id="shopTreats">0</strong></span></div>
         <p class="shop-copy">Collect bones to earn Treats. Buying outfits does not use up your Total points or unlocks.</p>
-        <div class="shop-preview-wrap"><canvas id="shopPreview" width="480" height="150" aria-hidden="true"></canvas></div>
+        <div class="shop-preview-wrap"><canvas id="shopPreview" width="480" height="150" aria-hidden="true"></canvas><span id="shopTryingOn" class="shop-trying" aria-hidden="true">Trying on</span></div>
         <div class="shop-body" id="shopBody"></div>
         <div class="shop-actions">
           <button class="btn" id="shopBuyBtn" type="button">Buy</button>
@@ -1335,7 +1353,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123z";
+  var BUILD = "20261123aa";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -2289,15 +2307,21 @@
     drawShopPreview();
   }
 
+  function isTryingOn() {
+    var item = shopItemById(shopSelected);
+    return !!(item && !ownsItem(item.id));
+  }
+
   function previewGear() {
     var gear = gearFromState(), item;
     item = shopItemById(shopSelected);
-    if (item) gear[item.slot] = item.id;
+    // Owned items are only drawn when equipped. For-sale items may be tried on.
+    if (item && !ownsItem(item.id)) gear[item.slot] = item.id;
     return gear;
   }
 
   function drawShopPreview() {
-    var canvas = $("shopPreview"), c, def, w, h;
+    var canvas = $("shopPreview"), c, def, w, h, tag;
     if (!canvas || !canvas.getContext) return;
     c = canvas.getContext("2d");
     w = canvas.width; h = canvas.height;
@@ -2315,6 +2339,11 @@
       gear: previewGear()
     });
     c.restore();
+    tag = $("shopTryingOn");
+    if (tag) {
+      if (isTryingOn()) tag.className = "shop-trying is-on";
+      else tag.className = "shop-trying";
+    }
   }
 
   function openShop() {
@@ -5135,6 +5164,9 @@
           flipT: state.flipT || 0,
           ownedItems: state.ownedItems ? state.ownedItems.slice(0) : [],
           equipped: state.equipped ? { hat: state.equipped.hat, bandana: state.equipped.bandana, collar: state.equipped.collar } : { hat: null, bandana: null, collar: null },
+          shopSelected: shopSelected,
+          previewGear: previewGear(),
+          tryingOn: isTryingOn(),
           fetchesInPark: state.fetchesInPark || 0
         };
       },
