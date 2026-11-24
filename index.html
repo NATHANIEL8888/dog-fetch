@@ -1390,10 +1390,16 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ak";
+  var BUILD = "20261123al";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
+  /* Waiting spot ahead of the boy. +84 world ≈ 38px more gap on a 390-wide phone. */
+  var DOG_HOME_X = 334;
+
+  function dogHomeX() {
+    return DOG_HOME_X;
+  }
   var BONUS_SCALE = 1.75;
   var STAR_R = 16 * BONUS_SCALE;
   var BONE_PICK = 28 * BONUS_SCALE;
@@ -2943,7 +2949,7 @@
       time: 0,
       flightT: 0,
       ball: { x: 168, y: 452, vx: 0, vy: 0, spin: 0, visible: true, held: true, special: null, bounces: 0, maxBounces: 0 },
-      dog: { x: 250, y: GROUND_Y, facing: 1, pose: "idle", jumpY: 0, hasBall: false, swim: false, targetX: 250, intercept: null },
+      dog: { x: dogHomeX(), y: GROUND_Y, facing: 1, pose: "idle", jumpY: 0, hasBall: false, swim: false, targetX: dogHomeX(), intercept: null },
       kidArm: 0.2,
       aim: { active: false, mode: "none", power: 0, angle: 0.85, holdT: 0, pulse: 0 },
       bonuses: [],
@@ -2993,14 +2999,14 @@
     state.ball.vy = 0;
     state.ball.held = true;
     state.ball.visible = true;
-    state.dog.x = 250;
+    state.dog.x = dogHomeX();
     state.dog.y = GROUND_Y;
     state.dog.facing = 1;
     state.dog.pose = "idle";
     state.dog.jumpY = 0;
     state.dog.hasBall = false;
     state.dog.swim = false;
-    state.dog.targetX = 250;
+    state.dog.targetX = dogHomeX();
     state.dog.intercept = null;
     state.kidArm = 0.25;
     state.aim.active = false;
@@ -3434,9 +3440,9 @@
       if (state.phase === "celebrate") {
         d.pose = "wag";
         d.facing = 1;
-        d.targetX = 250;
-        if (Math.abs(d.x - 250) > 0.4) d.x = lerp(d.x, 250, clamp(dt * 8, 0, 1));
-        else d.x = 250;
+        d.targetX = dogHomeX();
+        if (Math.abs(d.x - dogHomeX()) > 0.4) d.x = lerp(d.x, dogHomeX(), clamp(dt * 8, 0, 1));
+        else d.x = dogHomeX();
       }
       d.jumpY = lerp(d.jumpY, 0, clamp(dt * 8, 0, 1));
       return;
@@ -3473,7 +3479,7 @@
         d.pose = "swim";
       }
     } else if (state.phase === "return") {
-      d.targetX = 250;
+      d.targetX = dogHomeX();
       d.facing = -1;
       d.swim = inPond(d.x, GROUND_Y, currentPark());
       if (state.flipT > 0) {
@@ -3621,7 +3627,7 @@
 
   function finishReturn(dt) {
     if (state.phase !== "return") return;
-    if (Math.abs(state.dog.x - 250) < 8 && state.dog.jumpY < 8) {
+    if (Math.abs(state.dog.x - dogHomeX()) < 8 && state.dog.jumpY < 8) {
       state.phase = "celebrate";
       state.celebrateT = 0.7;
       state.dog.pose = "wag";
@@ -3692,7 +3698,7 @@
       state.aim.active = false;
       state.aim.mode = "none";
       if (isInvalidPos()) {
-        state.dog.x = 250;
+        state.dog.x = dogHomeX();
         state.dog.y = GROUND_Y;
         state.dog.jumpY = 0;
         state.ball.x = 168;
@@ -5203,17 +5209,21 @@
   }
 
   function hitPlayDog(wx, wy) {
-    var def, sc, athletic, phone, hop, cx, cy, rx, ry, dx, dy;
+    var def, sc, athletic, facing, hop, mid, pad, cx, cy, rx, ry, dx, dy;
     if (!state || !state.dog) return false;
     def = getDog(state.dogId);
     sc = dogScale(def);
     athletic = !!(def && def.athletic);
-    phone = view.cssH > view.cssW * 1.05;
+    facing = state.dog.facing || 1;
     hop = barkHopAmt();
-    cx = state.dog.x + (state.dog.facing || 1) * (athletic ? 4 : 8) * sc;
-    cy = state.dog.y - (state.dog.jumpY || 0) - hop - (athletic ? 52 : 38) * sc;
-    rx = (athletic ? 78 : 62) * sc * (phone ? 1.5 : 1.2);
-    ry = (athletic ? 84 : 64) * sc * (phone ? 1.55 : 1.25);
+    /* Only the front half (head, chest, front legs) barks; rump and tail throw. */
+    mid = state.dog.x;
+    pad = (athletic ? 10 : 8) * sc;
+    if (facing * (wx - mid) < -pad) return false;
+    cx = state.dog.x + facing * (athletic ? 24 : 20) * sc;
+    cy = state.dog.y - (state.dog.jumpY || 0) - hop - (athletic ? 48 : 34) * sc;
+    rx = (athletic ? 46 : 38) * sc;
+    ry = (athletic ? 58 : 46) * sc;
     dx = wx - cx;
     dy = wy - cy;
     return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1;
