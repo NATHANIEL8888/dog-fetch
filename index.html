@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123r -->
+<!-- fetch-pup build 20261123s -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -961,7 +961,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123r";
+  var BUILD = "20261123s";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -973,21 +973,24 @@
   var GRAVITY = 1550;
   var SAVE_KEY = "fetchPupSave_v2";
   var ROUND_TIME = 45;
+  var UNLOCK_GEN = 2;
+  var PREV_DOG_UNLOCK = { sunny: 0, cocoa: 80, speckles: 220, blue: 420, jasper: 1000 };
+  var PREV_PARK_UNLOCK = { meadow: 0, autumn: 70, beach: 180, garden: 320, sunset: 550 };
 
   var DOGS = [
     { id: "sunny", name: "Sunny", title: "Golden pal", unlock: 0, speed: 470, jump: 195,
       body: "#E2A64A", bodyDark: "#C48430", belly: "#F6E0B0", ear: "#C48430",
       eye: "#2C2418", collar: "#E25535", tag: "#FFC83D", ears: "flop", muzzle: "#F3D7A0" },
-    { id: "cocoa", name: "Cocoa", title: "Chocolate lab", unlock: 80, speed: 530, jump: 175,
+    { id: "cocoa", name: "Cocoa", title: "Chocolate lab", unlock: 120, speed: 530, jump: 175,
       body: "#6B3E26", bodyDark: "#4E2A18", belly: "#8A5A3C", ear: "#4E2A18",
       eye: "#1A120C", collar: "#3B9AED", tag: "#FFC83D", ears: "flop", muzzle: "#8A5A3C" },
-    { id: "speckles", name: "Speckles", title: "Spotty pal", unlock: 220, speed: 490, jump: 230,
+    { id: "speckles", name: "Speckles", title: "Spotty pal", unlock: 330, speed: 490, jump: 230,
       body: "#F4EFE6", bodyDark: "#DED4C4", belly: "#FFFFFF", ear: "#8B5A2B",
       eye: "#2C2418", collar: "#3CB371", tag: "#FFC83D", ears: "flop", muzzle: "#F8F4EC", spots: true },
-    { id: "blue", name: "Blue", title: "Speedy pal", unlock: 420, speed: 560, jump: 190,
+    { id: "blue", name: "Blue", title: "Speedy pal", unlock: 630, speed: 560, jump: 190,
       body: "#7A8B9C", bodyDark: "#5A6A7A", belly: "#D5DCE3", ear: "#4A5560",
       eye: "#1A1F28", collar: "#FFC83D", tag: "#E25535", ears: "prick", muzzle: "#D5DCE3" },
-    { id: "jasper", name: "Jasper", title: "Big athlete", unlock: 1000, speed: 590, jump: 205,
+    { id: "jasper", name: "Jasper", title: "Big athlete", unlock: 1500, speed: 590, jump: 205,
       body: "#1C1C22", bodyDark: "#0A0A0E", belly: "#1C1C22", ear: "#141418",
       eye: "#0A0A0C", collar: "#FF3D6A", tag: "#FFD24A", ears: "semi", muzzle: "#1C1C22",
       scale: 1.2, athletic: true, shine: true, mouthFwd: 54, mouthUp: 66 }
@@ -1004,7 +1007,7 @@
       bushes: [{ x: 740, y: GROUND_Y, s: 1 }],
       trees: [{ x: 430, h: 180, kind: "round" }, { x: 1080, h: 210, kind: "round" }]
     },
-    { id: "autumn", name: "Autumn Park", short: "Autumn", unlock: 70, swatch: "#C49A32",
+    { id: "autumn", name: "Autumn Park", short: "Autumn", unlock: 105, swatch: "#C49A32",
       skyTop: "#6EA4D4", skyMid: "#FFD8B0", skyBot: "#FFE9CC",
       sun: "#FFB347", sunX: 160, sunY: 130, sunR: 48,
       grassFar: "#D2B24A", grassMid: "#C49A32", grassNear: "#B8860B",
@@ -1014,7 +1017,7 @@
       bushes: [{ x: 520, y: GROUND_Y, s: 1.1 }],
       trees: [{ x: 300, h: 190, kind: "autumn" }, { x: 640, h: 150, kind: "autumn" }, { x: 1100, h: 200, kind: "autumn" }]
     },
-    { id: "beach", name: "Sandy Beach", short: "Beach", unlock: 180, swatch: "#4CA9E0",
+    { id: "beach", name: "Sandy Beach", short: "Beach", unlock: 270, swatch: "#4CA9E0",
       skyTop: "#4CA9E0", skyMid: "#C5ECFF", skyBot: "#FFF4DC",
       sun: "#FFE566", sunX: 1040, sunY: 90, sunR: 58,
       grassFar: "#F3D39A", grassMid: "#EBC07A", grassNear: "#E0B266",
@@ -1024,7 +1027,7 @@
       bushes: [{ x: 600, y: GROUND_Y, s: 0.85, palm: true }],
       trees: [{ x: 260, h: 200, kind: "palm" }, { x: 420, h: 160, kind: "palm" }]
     },
-    { id: "garden", name: "Flower Garden", short: "Garden", unlock: 320, swatch: "#E07AB5",
+    { id: "garden", name: "Flower Garden", short: "Garden", unlock: 480, swatch: "#E07AB5",
       skyTop: "#8EC9FF", skyMid: "#FFE4F0", skyBot: "#FFF6EA",
       sun: "#FFD36A", sunX: 200, sunY: 100, sunR: 44,
       grassFar: "#8ED98E", grassMid: "#62C46A", grassNear: "#45B352",
@@ -1034,7 +1037,7 @@
       bushes: [{ x: 580, y: GROUND_Y, s: 0.9 }, { x: 720, y: GROUND_Y, s: 1.05 }],
       trees: [{ x: 380, h: 170, kind: "round" }, { x: 1120, h: 160, kind: "round" }]
     },
-    { id: "sunset", name: "Sunset Hill", short: "Sunset", unlock: 550, swatch: "#E85D4C",
+    { id: "sunset", name: "Sunset Hill", short: "Sunset", unlock: 825, swatch: "#E85D4C",
       skyTop: "#E85D4C", skyMid: "#F7A072", skyBot: "#FFD6A0",
       sun: "#FFDD66", sunX: 980, sunY: 160, sunR: 72,
       grassFar: "#4A7A45", grassMid: "#3C6B3A", grassNear: "#2F5A30",
@@ -1066,7 +1069,8 @@
 
   function loadSave() {
     var raw = storageGet(SAVE_KEY);
-    var data = { best: 0, totalPoints: 0, unlocked: ["sunny"], unlockedParks: ["meadow"], dog: "sunny", park: "meadow", muted: false };
+    var data = { best: 0, totalPoints: 0, unlocked: ["sunny"], unlockedParks: ["meadow"], dog: "sunny", park: "meadow", muted: false, unlockGen: UNLOCK_GEN };
+    var migrated = false;
     if (raw) {
       try {
         var parsed = JSON.parse(raw);
@@ -1078,12 +1082,32 @@
           if (typeof parsed.dog === "string") data.dog = parsed.dog;
           if (typeof parsed.park === "string") data.park = parsed.park;
           if (typeof parsed.muted === "boolean") data.muted = parsed.muted;
+          if (typeof parsed.unlockGen === "number" && parsed.unlockGen >= 0) data.unlockGen = Math.floor(parsed.unlockGen);
+          else data.unlockGen = 0;
         }
       } catch (err) {}
     }
     if (!isUnlockedId(data.unlocked, "sunny")) data.unlocked.push("sunny");
     if (!isUnlockedId(data.unlockedParks, "meadow")) data.unlockedParks.push("meadow");
-    var i, item;
+    var i, item, prev;
+    if (data.unlockGen < UNLOCK_GEN) {
+      for (i = 0; i < DOGS.length; i++) {
+        item = DOGS[i];
+        prev = PREV_DOG_UNLOCK[item.id];
+        if (typeof prev === "number" && data.totalPoints >= prev && !isUnlockedId(data.unlocked, item.id)) {
+          data.unlocked.push(item.id);
+        }
+      }
+      for (i = 0; i < PARKS.length; i++) {
+        item = PARKS[i];
+        prev = PREV_PARK_UNLOCK[item.id];
+        if (typeof prev === "number" && data.totalPoints >= prev && !isUnlockedId(data.unlockedParks, item.id)) {
+          data.unlockedParks.push(item.id);
+        }
+      }
+      data.unlockGen = UNLOCK_GEN;
+      migrated = true;
+    }
     for (i = 0; i < DOGS.length; i++) {
       item = DOGS[i];
       if (data.totalPoints >= item.unlock && !isUnlockedId(data.unlocked, item.id)) data.unlocked.push(item.id);
@@ -1094,6 +1118,18 @@
     }
     if (!isUnlockedId(data.unlocked, data.dog)) data.dog = "sunny";
     if (!isUnlockedId(data.unlockedParks, data.park)) data.park = "meadow";
+    if (migrated) {
+      persistSave({
+        best: data.best,
+        totalPoints: data.totalPoints,
+        unlocked: data.unlocked,
+        unlockedParks: data.unlockedParks,
+        dog: data.dog,
+        park: data.park,
+        muted: data.muted,
+        unlockGen: data.unlockGen
+      });
+    }
     return data;
   }
 
@@ -1103,16 +1139,21 @@
     return false;
   }
 
+  function persistSave(payload) {
+    storageSet(SAVE_KEY, JSON.stringify(payload));
+  }
+
   function saveNow() {
-    storageSet(SAVE_KEY, JSON.stringify({
+    persistSave({
       best: state.best,
       totalPoints: state.totalPoints,
       unlocked: state.unlocked,
       unlockedParks: state.unlockedParks,
       dog: state.dogId,
       park: state.parkId,
-      muted: state.muted
-    }));
+      muted: state.muted,
+      unlockGen: state.unlockGen || UNLOCK_GEN
+    });
   }
 
   function hideJsTip() {
@@ -1370,6 +1411,7 @@
       unlocked: save.unlocked ? save.unlocked.slice(0) : ["sunny"],
       unlockedParks: save.unlockedParks ? save.unlockedParks.slice(0) : ["meadow"],
       totalPoints: save.totalPoints || 0,
+      unlockGen: (typeof save.unlockGen === "number" ? save.unlockGen : UNLOCK_GEN),
       muted: !!save.muted,
       timeLeft: ROUND_TIME,
       timedUp: false,
@@ -3507,6 +3549,7 @@
       state.totalPoints = 0;
       state.unlocked = ["sunny"];
       state.unlockedParks = ["meadow"];
+      state.unlockGen = UNLOCK_GEN;
       state.dogId = "sunny";
       state.parkId = "meadow";
       state.sessionUnlocks = [];
