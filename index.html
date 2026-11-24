@@ -1390,7 +1390,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ai";
+  var BUILD = "20261123aj";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -4778,39 +4778,65 @@
       if (hind) fillShapedLeg(c, hind.joints, hind.paw, far, opts);
     }
 
-    function leg(px, phase, back) {
-      var swing = 0, lift = 0, far;
-      if (sit && back) return;
+    function regularFrontChain(hx, phase) {
+      var a = run + phase, lift = 0, shA = -0.10, armA = 0.04, pastA = 0.22;
+      var p0, p1, p2, p3, p4, p5, paw, topY, midY;
       if (pose === "run" || pose === "return") {
-        swing = Math.sin(run + phase) * 16;
-        lift = Math.max(0, Math.cos(run + phase)) * 8;
+        shA = -0.08 + Math.sin(a) * 0.38;
+        armA = 0.05 + Math.sin(a) * 0.10;
+        pastA = 0.18 + Math.sin(a) * 0.16 + Math.max(0, Math.cos(a)) * 0.14;
+        lift = Math.max(0, Math.cos(a)) * 5;
       } else if (pose === "jump") {
-        swing = -12; lift = 8;
+        shA = 0.36;
+        armA = 0.18;
+        pastA = 0.42;
+        lift = 7;
       } else if (pose === "swim") {
-        swing = Math.sin(t * 8 + phase) * 10;
+        shA = 0.06 + Math.sin(t * 8 + phase) * 0.46;
+        armA = 0.10 + Math.cos(t * 8 + phase) * 0.22;
+        pastA = 0.18 + Math.sin(t * 8 + phase) * 0.22;
+        lift = 2 + Math.max(0, Math.cos(t * 8 + phase)) * 3;
+      } else if (sit) {
+        shA = -0.04;
+        armA = 0.02;
+        pastA = 0.12;
       }
-      if (back) {
-        far = px < -20;
-        c.fillStyle = far ? def.bodyDark : def.body;
-        c.save();
-        c.translate(px + swing * 0.12, -14);
-        c.rotate(swing * 0.03);
-        fillEllipse(c, 0, 0, far ? 11 : 12, 15);
-        c.restore();
-      }
-      c.fillStyle = def.bodyDark;
-      c.save();
-      c.translate(px, sit ? -8 : (back ? -8 : -6));
-      c.rotate(swing * 0.04);
-      roundRect(c, -5, 0 - lift, 9, (back && !sit ? 20 : 22) + (sit ? -6 : 0), 4);
-      c.fill();
-      c.fillStyle = def.belly;
-      fillEllipse(c, 0, (back && !sit ? 18 : 20) - lift, 6, 3.5);
-      c.restore();
+      topY = sit ? -32 : -38;
+      midY = (sit ? -16 : -20) + lift * 0.1;
+      p0 = { x: hx, y: topY, r: 7.2 };
+      p1 = { x: hx - 0.4, y: midY, r: 7.6 };
+      p2 = jointStep(p1.x, p1.y, shA, sit ? 6 : 7.5, 6.6);
+      p3 = jointStep(p2.x, p2.y, armA, sit ? 6.5 : 7.5, 5.8);
+      p4 = jointStep(p3.x, p3.y, armA, sit ? 5 : 6, 5.2);
+      p5 = jointStep(p4.x, p4.y, pastA, sit ? 6 : 7, 4.5);
+      paw = {
+        x: p5.x + Math.sin(pastA) * 2.2,
+        y: p5.y + Math.cos(pastA) * 2.0,
+        rx: 5.6,
+        ry: 3.3
+      };
+      if (pose !== "jump" && pose !== "swim") plantChain([p0, p1, p2, p3, p4, p5], paw, 14.5);
+      return { joints: [p0, p1, p2, p3, p4, p5], paw: paw };
+    }
+
+    function drawRegularFront(side) {
+      var far, fore, opts;
+      far = side === "far";
+      fore = regularFrontChain(far ? 11 : 20, far ? Math.PI : 0);
+      opts = {
+        farFill: def.bodyDark,
+        farPaw: def.bodyDark,
+        nearFill: def.body,
+        nearPaw: def.belly,
+        noEdge: far,
+        noHighlight: true,
+        edgeStyle: "rgba(0,0,0,0.12)",
+        edgeWidth: 1.2
+      };
+      if (fore) fillShapedLeg(c, fore.joints, fore.paw, far, opts);
     }
     drawRegularHind("far");
-    leg(12, Math.PI, false);
-    leg(20, 0, false);
+    drawRegularFront("far");
 
     c.fillStyle = def.body;
     fillEllipse(c, 0, -28, 32, 22);
@@ -4841,6 +4867,7 @@
     c.restore();
 
     drawRegularHind("near");
+    drawRegularFront("near");
 
     drawDogCollar(c, false, 0, activeCollarId(opts), def, "back");
 
