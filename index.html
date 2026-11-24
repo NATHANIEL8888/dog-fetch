@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123p -->
+<!-- fetch-pup build 20261123q -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -960,7 +960,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123p";
+  var BUILD = "20261123q";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -2503,38 +2503,180 @@
     if (athletic) {
       var drop = sit ? 18 : 0;
 
-      function athleticLeg(px, attachY, len, phase, back) {
-        if (sit && back) return;
-        var swing = 0, lift = 0, thighW, thighH, shinW, shinLen, pawW;
-        if (pose === "run" || pose === "return") {
-          swing = Math.sin(run + phase) * 16;
-          lift = Math.max(0, Math.cos(run + phase)) * 8;
-        } else if (pose === "jump") {
-          swing = -12; lift = 8;
-        } else if (pose === "swim") {
-          swing = Math.sin(t * 8 + phase) * 10;
-        }
-        thighW = back ? 13 : 11.5;
-        thighH = back ? 17 : 15;
-        shinW = 8;
-        shinLen = (sit ? Math.max(12, len - 16) : len) - 16;
-        pawW = 7.5;
-        c.save();
-        c.translate(px, sit ? attachY + 10 : attachY);
-        c.rotate(swing * 0.035);
-        c.fillStyle = def.body;
-        fillEllipse(c, 0, 7 - lift * 0.25, thighW, thighH);
-        c.fillStyle = def.bodyDark;
-        roundRect(c, -shinW / 2, 16 - lift, shinW, shinLen, 3.5);
-        c.fill();
-        fillEllipse(c, 2, 16 + shinLen - 1 - lift, pawW, 4.2);
-        c.restore();
+      function jointStep(x, y, ang, len, r) {
+        return { x: x + Math.sin(ang) * len, y: y + Math.cos(ang) * len, r: r };
       }
 
-      athleticLeg(-22, -34 + drop, 50, 0, true);
-      athleticLeg(-10, -34 + drop, 50, Math.PI, true);
-      athleticLeg(12, -36 + drop, 52, Math.PI, false);
-      athleticLeg(23, -36 + drop, 52, 0, false);
+      function limbPerp(joints, i) {
+        var dx, dy, len, p = joints[i];
+        if (i === 0) {
+          dx = joints[1].x - p.x;
+          dy = joints[1].y - p.y;
+        } else if (i === joints.length - 1) {
+          dx = p.x - joints[i - 1].x;
+          dy = p.y - joints[i - 1].y;
+        } else {
+          dx = joints[i + 1].x - joints[i - 1].x;
+          dy = joints[i + 1].y - joints[i - 1].y;
+        }
+        len = Math.sqrt(dx * dx + dy * dy) || 1;
+        return { x: -dy / len, y: dx / len };
+      }
+
+      function smoothOutline(c, pts, start) {
+        var i, mx, my;
+        if (start) c.moveTo(pts[0].x, pts[0].y);
+        else c.lineTo(pts[0].x, pts[0].y);
+        if (pts.length === 1) return;
+        if (pts.length === 2) {
+          c.lineTo(pts[1].x, pts[1].y);
+          return;
+        }
+        c.lineTo((pts[0].x + pts[1].x) * 0.5, (pts[0].y + pts[1].y) * 0.5);
+        for (i = 1; i < pts.length - 1; i++) {
+          mx = (pts[i].x + pts[i + 1].x) * 0.5;
+          my = (pts[i].y + pts[i + 1].y) * 0.5;
+          c.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+        }
+        c.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+      }
+
+      function plantChain(joints, paw, maxY) {
+        var d, i;
+        if (paw.y <= maxY) return;
+        d = paw.y - maxY;
+        for (i = 1; i < joints.length; i++) joints[i].y -= d;
+        paw.y -= d;
+      }
+
+      function fillShapedLeg(c, joints, paw, far) {
+        var i, n = joints.length, pr, p, left = [], right = [], backEdge, fillCol;
+        for (i = 0; i < n; i++) {
+          pr = limbPerp(joints, i);
+          p = joints[i];
+          left.push({ x: p.x + pr.x * p.r, y: p.y + pr.y * p.r });
+          right.push({ x: p.x - pr.x * p.r, y: p.y - pr.y * p.r });
+        }
+        backEdge = right.slice().reverse();
+        fillCol = far ? "#08080C" : def.body;
+        c.fillStyle = fillCol;
+        c.strokeStyle = fillCol;
+        c.lineWidth = 1.2;
+        c.lineJoin = "round";
+        c.beginPath();
+        smoothOutline(c, left, true);
+        smoothOutline(c, backEdge, false);
+        c.closePath();
+        c.fill();
+        c.stroke();
+
+        if (!far) {
+          c.strokeStyle = "rgba(210,214,230,0.34)";
+          c.lineWidth = 1.9;
+          c.lineCap = "round";
+          c.lineJoin = "round";
+          c.beginPath();
+          smoothOutline(c, right, true);
+          c.stroke();
+        }
+
+        c.fillStyle = far ? "#050508" : def.bodyDark;
+        fillEllipse(c, paw.x, paw.y, paw.rx, paw.ry);
+        if (!far) {
+          c.fillStyle = "rgba(210,214,230,0.16)";
+          fillEllipse(c, paw.x + 1.0, paw.y - 0.3, paw.rx * 0.5, paw.ry * 0.45);
+        }
+      }
+
+      function rearLegChain(hx, phase) {
+        var a = run + phase, lift = 0, thighA = 0.24, gaskinA = -0.50, pastA = 0.16;
+        var p0, p1, p2, p3, p4, p5, p6, paw;
+        if (sit) return null;
+        if (pose === "run" || pose === "return") {
+          thighA = 0.20 + Math.sin(a) * 0.52;
+          gaskinA = -0.52 - Math.max(0, Math.cos(a)) * 0.42 - Math.max(0, -Math.sin(a)) * 0.10;
+          pastA = 0.18 + Math.sin(a) * 0.16 - Math.max(0, Math.cos(a)) * 0.10;
+          lift = Math.max(0, Math.cos(a)) * 6;
+        } else if (pose === "jump") {
+          thighA = 0.68;
+          gaskinA = -1.22;
+          pastA = 0.48;
+          lift = 7;
+        } else if (pose === "swim") {
+          thighA = 0.18 + Math.sin(t * 8 + phase) * 0.55;
+          gaskinA = -0.42 + Math.cos(t * 8 + phase) * 0.32;
+          pastA = 0.16 + Math.sin(t * 8 + phase) * 0.22;
+          lift = 2 + Math.max(0, Math.cos(t * 8 + phase)) * 3;
+        }
+        p0 = { x: hx, y: -50 + drop, r: 5.4 };
+        p1 = { x: hx - 1.5, y: -33 + drop + lift * 0.12, r: 6.2 };
+        p2 = jointStep(p1.x, p1.y, thighA, 15, 5.3);
+        p3 = jointStep(p2.x, p2.y, thighA, 10, 4.3);
+        p4 = jointStep(p3.x, p3.y, gaskinA, 9, 3.6);
+        p5 = jointStep(p4.x, p4.y, gaskinA, 8, 3.1);
+        p6 = jointStep(p5.x, p5.y, pastA, 10.5, 2.55);
+        paw = {
+          x: p6.x + Math.sin(pastA) * 2.4,
+          y: p6.y + Math.cos(pastA) * 2.2,
+          rx: 4.3,
+          ry: 2.35
+        };
+        if (pose !== "jump" && pose !== "swim") plantChain([p0, p1, p2, p3, p4, p5, p6], paw, 16.2);
+        return { joints: [p0, p1, p2, p3, p4, p5, p6], paw: paw };
+      }
+
+      function frontLegChain(hx, phase) {
+        var a = run + phase, lift = 0, shA = -0.12, armA = 0.04, pastA = 0.32;
+        var p0, p1, p2, p3, p4, p5, paw, topY, midY;
+        if (pose === "run" || pose === "return") {
+          shA = -0.08 + Math.sin(a) * 0.42;
+          armA = 0.05 + Math.sin(a) * 0.10;
+          pastA = 0.20 + Math.sin(a) * 0.18 + Math.max(0, Math.cos(a)) * 0.16;
+          lift = Math.max(0, Math.cos(a)) * 6;
+        } else if (pose === "jump") {
+          shA = 0.42;
+          armA = 0.22;
+          pastA = 0.50;
+          lift = 8;
+        } else if (pose === "swim") {
+          shA = 0.06 + Math.sin(t * 8 + phase) * 0.50;
+          armA = 0.10 + Math.cos(t * 8 + phase) * 0.25;
+          pastA = 0.20 + Math.sin(t * 8 + phase) * 0.25;
+          lift = 2 + Math.max(0, Math.cos(t * 8 + phase)) * 3;
+        } else if (sit) {
+          shA = -0.04;
+          armA = 0.02;
+          pastA = 0.12;
+        }
+        topY = (sit ? -30 : -50) + drop;
+        midY = (sit ? -14 : -26) + drop + lift * 0.1;
+        p0 = { x: hx, y: topY, r: 5.2 };
+        p1 = { x: hx - 0.5, y: midY, r: 5.1 };
+        p2 = jointStep(p1.x, p1.y, shA, sit ? 7 : 12, 4.3);
+        p3 = jointStep(p2.x, p2.y, armA, sit ? 8 : 12, 3.7);
+        p4 = jointStep(p3.x, p3.y, armA, sit ? 6 : 9, 3.1);
+        p5 = jointStep(p4.x, p4.y, pastA, sit ? 7 : 9.5, 2.5);
+        paw = {
+          x: p5.x + Math.sin(pastA) * 2.4,
+          y: p5.y + Math.cos(pastA) * 2.2,
+          rx: 4.3,
+          ry: 2.35
+        };
+        if (pose !== "jump" && pose !== "swim") plantChain([p0, p1, p2, p3, p4, p5], paw, 16.2);
+        return { joints: [p0, p1, p2, p3, p4, p5], paw: paw };
+      }
+
+      (function drawAthleticLegs() {
+        var farHind = rearLegChain(-10, Math.PI);
+        var farFore = frontLegChain(12, Math.PI);
+        var nearHind = rearLegChain(-22, 0);
+        var nearFore = frontLegChain(23, 0);
+        if (farHind) fillShapedLeg(c, farHind.joints, farHind.paw, true);
+        if (farFore) fillShapedLeg(c, farFore.joints, farFore.paw, true);
+        if (nearHind) fillShapedLeg(c, nearHind.joints, nearHind.paw, false);
+        if (nearFore) fillShapedLeg(c, nearFore.joints, nearFore.paw, false);
+      })();
+
 
       c.fillStyle = def.body;
       fillEllipse(c, -20, -46 + drop, 17, 16);
