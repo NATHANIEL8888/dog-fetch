@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123y -->
+<!-- fetch-pup build 20261123z -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -772,6 +772,30 @@
     .treat-count strong { font-size: 18px; }
     .treat-icon, .treat-icon svg { width: 22px; height: 16px; display: block; }
 
+    .hud-treats {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      font-size: 13px;
+      background: rgba(255,248,220,0.95);
+      border: 1px solid #E0A520;
+    }
+    .hud-treats .treat-icon,
+    .hud-treats .treat-icon svg { width: 18px; height: 13px; }
+    .hud-treats strong { font-size: 15px; color: #6A3A08; }
+    .result-treats {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin: -4px 0 14px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #6A3A08;
+    }
+    .result-treats .treat-icon,
+    .result-treats .treat-icon svg { width: 22px; height: 16px; }
     .combo-meter {
       background: rgba(255,248,220,0.95);
       border: 2px solid #E0A520;
@@ -1215,7 +1239,7 @@
           <li>Grab <span class="howto-bonus" aria-hidden="true"><svg viewBox="0 0 24 16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> bones and <span class="howto-bonus" aria-hidden="true"><svg viewBox="0 0 18 18"><path d="M9 1.2l2.15 5.15L16.8 7.1l-4.2 3.72L13.8 16.8 9 13.95 4.2 16.8l1.2-5.98L1.2 7.1l5.65-.75z" fill="#FFD24A" stroke="#E07000" stroke-width="1.6" stroke-linejoin="round"/></svg></span> stars. Unlock new parks and pups with your total points!</li>
           <li>Sometimes the next ball is special: a golden ball doubles the catch, and a bouncy ball keeps hopping.</li>
           <li>String mid-air catches for combos. A big combo makes your pup flip!</li>
-          <li>You earn Treats when you score. Spend them in Dress Up to fancy up your pup. Treats never spend your Total points.</li>
+          <li>Collect bones to earn Treats. Spend them in Dress Up to fancy up your pup. Treats never spend your Total points.</li>
         </ul>
       </div>
       </div>
@@ -1242,7 +1266,7 @@
           <button class="shop-close" id="shopClose" type="button" aria-label="Close shop">×</button>
         </div>
         <div class="shop-treats"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> <span>Treats: <strong id="shopTreats">0</strong></span></div>
-        <p class="shop-copy">Spend Treats to dress your pup. Buying outfits does not use up your Total points or unlocks.</p>
+        <p class="shop-copy">Collect bones to earn Treats. Buying outfits does not use up your Total points or unlocks.</p>
         <div class="shop-preview-wrap"><canvas id="shopPreview" width="480" height="150" aria-hidden="true"></canvas></div>
         <div class="shop-body" id="shopBody"></div>
         <div class="shop-actions">
@@ -1268,6 +1292,7 @@
         <div class="hud-cluster">
           <div class="hud-chip" id="scoreChip"><span>Score</span> <strong id="liveScore">0</strong></div>
           <div class="hud-chip" id="bestLive"><span>Best</span> <strong id="liveBest">0</strong></div>
+          <div class="hud-chip hud-treats" id="treatsChip"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> <strong id="liveTreats">0</strong></div>
           <div class="combo-meter" id="comboMeter" hidden><span>Combo</span> <strong id="comboValue">x1</strong></div>
         </div>
         <div class="hud-center">
@@ -1296,6 +1321,7 @@
           <div>This game <strong id="resultScore">0</strong></div>
           <div id="resultBestWrap">Best <strong id="resultBest">0</strong></div>
         </div>
+        <p class="result-treats" id="resultTreatsLine"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> <span id="resultTreats">Treats +0</span></p>
         <div class="unlock-box" id="resultUnlocks" hidden>
           <h2>New unlocks</h2>
           <ul id="resultUnlockList"></ul>
@@ -1309,7 +1335,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123y";
+  var BUILD = "20261123z";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1784,18 +1810,18 @@
   }
 
   var SHOP_ITEMS = [
-    { id: "hat-party", slot: "hat", name: "Party Hat", price: 35 },
-    { id: "hat-beanie", slot: "hat", name: "Cozy Beanie", price: 55 },
-    { id: "hat-cowboy", slot: "hat", name: "Cowboy Hat", price: 90 },
-    { id: "hat-shades", slot: "hat", name: "Cool Shades", price: 150 },
-    { id: "bandana-red", slot: "bandana", name: "Red Bandana", price: 30 },
-    { id: "bandana-blue", slot: "bandana", name: "Blue Bandana", price: 45 },
-    { id: "bandana-star", slot: "bandana", name: "Starry Bandana", price: 85 },
-    { id: "bandana-picnic", slot: "bandana", name: "Picnic Bandana", price: 130 },
-    { id: "collar-sky", slot: "collar", name: "Sky Collar", price: 30 },
-    { id: "collar-gold", slot: "collar", name: "Gold Collar", price: 75 },
-    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 120 },
-    { id: "collar-gem", slot: "collar", name: "Gem Collar", price: 200 }
+    { id: "hat-party", slot: "hat", name: "Party Hat", price: 16 },
+    { id: "hat-beanie", slot: "hat", name: "Cozy Beanie", price: 24 },
+    { id: "hat-cowboy", slot: "hat", name: "Cowboy Hat", price: 40 },
+    { id: "hat-shades", slot: "hat", name: "Cool Shades", price: 58 },
+    { id: "bandana-red", slot: "bandana", name: "Red Bandana", price: 12 },
+    { id: "bandana-blue", slot: "bandana", name: "Blue Bandana", price: 20 },
+    { id: "bandana-star", slot: "bandana", name: "Starry Bandana", price: 36 },
+    { id: "bandana-picnic", slot: "bandana", name: "Picnic Bandana", price: 52 },
+    { id: "collar-sky", slot: "collar", name: "Sky Collar", price: 12 },
+    { id: "collar-gold", slot: "collar", name: "Gold Collar", price: 32 },
+    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 48 },
+    { id: "collar-gem", slot: "collar", name: "Gem Collar", price: 64 }
   ];
   var shopSelected = null;
   var shopPreviewAnim = 0;
@@ -2371,6 +2397,7 @@
       ownedItems: save.ownedItems ? save.ownedItems.slice(0) : [],
       equipped: save.equipped ? { hat: save.equipped.hat || null, bandana: save.equipped.bandana || null, collar: save.equipped.collar || null } : { hat: null, bandana: null, collar: null },
       combo: 0,
+      roundTreats: 0,
       lastSpecial: null,
       forceSpecial: null,
       forceSpecialOnce: false,
@@ -2494,8 +2521,8 @@
     state.bonuses = items;
   }
 
-  function addPopup(text, x, y, color) {
-    state.popups.push({ text: text, x: x, y: y, t: 0, color: color || "#FFFFFF" });
+  function addPopup(text, x, y, color, kind) {
+    state.popups.push({ text: text, x: x, y: y, t: 0, color: color || "#FFFFFF", kind: kind || "" });
   }
 
   function addBurst(x, y, color, n) {
@@ -2560,6 +2587,7 @@
     var tot = $("totalChip"); if (tot) tot.innerHTML = String(state.totalPoints || 0);
     var tn = $("totalNear"); if (tn) tn.innerHTML = String(state.totalPoints || 0);
     var tr = $("treatsNear"); if (tr) tr.innerHTML = String(state.treats || 0);
+    var lt = $("liveTreats"); if (lt) lt.innerHTML = String(state.treats || 0);
     var p = $("parkLabel"); if (p) p.innerHTML = currentPark().name;
     var cm = $("comboMeter"); var cv = $("comboValue");
     if (cm) {
@@ -2602,10 +2630,17 @@
   function addScore(n) {
     state.score += n;
     state.totalPoints += n;
-    state.treats = (state.treats || 0) + n;
     if (state.score > state.best) state.best = state.score;
     updateHud();
     checkUnlocks();
+    saveNow();
+  }
+
+  function addTreats(n) {
+    if (!(n > 0)) return;
+    state.treats = (state.treats || 0) + n;
+    state.roundTreats = (state.roundTreats || 0) + n;
+    updateHud();
     saveNow();
   }
 
@@ -2808,8 +2843,8 @@
           addPopup("+2 star!", b.x, py - 20, "#FFE566");
           addBurst(b.x, py, "#FFE566", 14);
         } else {
-          addScore(1);
-          addPopup("+1 bone!", b.x, py - 20, "#F4D19B");
+          addTreats(1);
+          addPopup("+1 treat!", b.x, py - 20, "#FFF4D0", "treat");
           addBurst(b.x, py, "#E0A54B", 10);
         }
         sfx("bonus");
@@ -4242,8 +4277,27 @@
       c.fillStyle = p.color;
       c.strokeStyle = "rgba(44,58,74,0.35)";
       c.lineWidth = 3;
-      c.strokeText(p.text, p.x, p.y);
-      c.fillText(p.text, p.x, p.y);
+      if (p.kind === "treat") {
+        var tw = c.measureText(p.text).width;
+        var ix = p.x - tw / 2 - 16;
+        c.save();
+        c.translate(ix, p.y - 6);
+        c.rotate(-0.3);
+        c.fillStyle = "#5A3418";
+        paintBoneShape(c, 0.5);
+        c.fill();
+        c.fillStyle = "#FFFFFF";
+        paintBoneShape(c, 0.42);
+        c.fill();
+        c.restore();
+        c.strokeStyle = "rgba(90,52,24,0.45)";
+        c.fillStyle = p.color;
+        c.strokeText(p.text, p.x + 10, p.y);
+        c.fillText(p.text, p.x + 10, p.y);
+      } else {
+        c.strokeText(p.text, p.x, p.y);
+        c.fillText(p.text, p.x, p.y);
+      }
       c.globalAlpha = 1;
     }
   }
@@ -4760,6 +4814,8 @@
     updateHud();
     var sc = $("resultScore");
     if (sc) sc.innerHTML = String(state.score);
+    var rtl = $("resultTreats");
+    if (rtl) rtl.innerHTML = "Treats +" + String(state.roundTreats || 0);
     var wrap = $("resultBestWrap");
     if (wrap) {
       if (state.score > 0 && state.score >= state.best) {
@@ -4823,6 +4879,7 @@
     try {
       hideJsTip();
       state.score = 0;
+      state.roundTreats = 0;
       state.streak = 0;
       state.fetchesInPark = 0;
       state.timeLeft = ROUND_TIME;
@@ -5059,6 +5116,7 @@
             return out;
           })(),
           treats: state.treats || 0,
+          roundTreats: state.roundTreats || 0,
           combo: state.combo || 0,
           special: state.ball && state.ball.special,
           lastSpecial: state.lastSpecial,
