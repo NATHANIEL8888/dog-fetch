@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123k -->
+<!-- fetch-pup build 20261123l -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -262,6 +262,16 @@
       border-radius: 50%;
       background: var(--sun);
       box-shadow: 0 0 0 3px rgba(255, 200, 61, 0.35);
+    }
+    .howto-bonus {
+      display: inline-block;
+      vertical-align: -3px;
+      margin: 0 1px;
+    }
+    .howto-bonus svg {
+      display: block;
+      width: 20px;
+      height: 16px;
     }
 
     .pickers {
@@ -824,7 +834,7 @@
         <ul class="how-list">
           <li>Drag or flick the ball to aim and throw.</li>
           <li>Or press and hold to power up, then let go.</li>
-          <li>Grab bones and stars. Unlock new parks and pups with your total points!</li>
+          <li>Grab <span class="howto-bonus" aria-hidden="true"><svg viewBox="0 0 24 16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> bones and <span class="howto-bonus" aria-hidden="true"><svg viewBox="0 0 18 18"><path d="M9 1.2l2.15 5.15L16.8 7.1l-4.2 3.72L13.8 16.8 9 13.95 4.2 16.8l1.2-5.98L1.2 7.1l5.65-.75z" fill="#FFD24A" stroke="#E07000" stroke-width="1.6" stroke-linejoin="round"/></svg></span> stars. Unlock new parks and pups with your total points!</li>
         </ul>
       </div>
       </div>
@@ -900,10 +910,14 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123k";
+  var BUILD = "20261123l";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
+  var BONUS_SCALE = 1.75;
+  var STAR_R = 16 * BONUS_SCALE;
+  var BONE_PICK = 28 * BONUS_SCALE;
+  var DOG_PICK = 36 * BONUS_SCALE;
   var BALL_R = 14;
   var GRAVITY = 1550;
   var SAVE_KEY = "fetchPupSave_v2";
@@ -1337,21 +1351,73 @@
     if (hint) hint.style.display = "block";
   }
 
+  function hudSafeWorldY() {
+    var y;
+    if (!view || !view.scale) return 220;
+    y = (170 - view.oy) / view.scale;
+    if (y !== y || y < 200) y = 200;
+    return y;
+  }
+
+  function bonusXBounds() {
+    var minX = 400, maxX = 1040;
+    if (view && view.cssH > view.cssW * 1.05) maxX = 840;
+    if (maxX < minX + 80) maxX = minX + 80;
+    return { min: minX, max: maxX };
+  }
+
+  function bonusBlocked(x, y, park, items) {
+    var i, t, b, s, j;
+    if (inPond(x, GROUND_Y, park)) return true;
+    if (y < hudSafeWorldY() + 24) return true;
+    if (park.trees) {
+      for (i = 0; i < park.trees.length; i++) {
+        t = park.trees[i];
+        if (hypot(x - t.x, y - (GROUND_Y - t.h * 0.58)) < 62) return true;
+      }
+    }
+    if (park.bushes) {
+      for (i = 0; i < park.bushes.length; i++) {
+        b = park.bushes[i];
+        s = b.s || 1;
+        if (hypot(x - b.x, y - (b.y - 22 * s)) < 50 * s) return true;
+      }
+    }
+    if (items) {
+      for (j = 0; j < items.length; j++) {
+        if (hypot(items[j].x - x, items[j].y - y) < 110) return true;
+      }
+    }
+    return false;
+  }
+
   function spawnBonuses() {
     var park = currentPark();
     var items = [];
     var n = 2 + (state.totalPoints % 2);
-    var i, kind, x, y, tries, ok, j;
+    var i, kind, x, y, tries, ok, bounds, minY, maxY;
+    bounds = bonusXBounds();
     for (i = 0; i < n; i++) {
-      kind = (i === 0 && Math.random() < 0.55) || Math.random() < 0.35 ? "star" : "bone";
+      if (i === 0) kind = "star";
+      else if (i === 1) kind = "bone";
+      else kind = Math.random() < 0.35 ? "star" : "bone";
       ok = false;
-      for (tries = 0; tries < 12 && !ok; tries++) {
-        x = rand(420, 1040);
-        y = kind === "star" ? rand(230, 390) : rand(GROUND_Y - 70, GROUND_Y - 22);
-        if (inPond(x, GROUND_Y, park)) continue;
+      minY = kind === "star" ? Math.max(230, hudSafeWorldY() + 28) : GROUND_Y - 78;
+      maxY = kind === "star" ? 390 : GROUND_Y - 28;
+      if (maxY <= minY) maxY = minY + 20;
+      for (tries = 0; tries < 24 && !ok; tries++) {
+        x = rand(bounds.min, bounds.max);
+        y = rand(minY, maxY);
+        if (bonusBlocked(x, y, park, items)) continue;
         ok = true;
-        for (j = 0; j < items.length; j++) {
-          if (hypot(items[j].x - x, items[j].y - y) < 70) ok = false;
+      }
+      if (!ok) {
+        for (tries = 0; tries < 16 && !ok; tries++) {
+          x = rand(bounds.min, bounds.max);
+          y = rand(minY, maxY);
+          if (inPond(x, GROUND_Y, park)) continue;
+          if (y < hudSafeWorldY() + 16) continue;
+          ok = true;
         }
       }
       if (ok) items.push({ type: kind, x: x, y: y, got: false, bob: rand(0, Math.PI * 2) });
@@ -1593,10 +1659,10 @@
     for (i = 0; i < state.bonuses.length; i++) {
       b = state.bonuses[i];
       if (b.got) continue;
-      py = b.y + Math.sin(state.time * 3 + b.bob) * 5;
+      py = b.y + Math.sin(state.time * 3.2 + b.bob) * 7;
       hit = false;
-      if (!state.ball.held && hypot(state.ball.x - b.x, state.ball.y - py) < 28) hit = true;
-      if (hypot(state.dog.x - b.x, (GROUND_Y - state.dog.jumpY) - 30 - py) < 36) hit = true;
+      if (!state.ball.held && hypot(state.ball.x - b.x, state.ball.y - py) < BONE_PICK) hit = true;
+      if (hypot(state.dog.x - b.x, (GROUND_Y - state.dog.jumpY) - 30 - py) < DOG_PICK) hit = true;
       if (hit) {
         b.got = true;
         if (b.type === "star") {
@@ -2192,23 +2258,30 @@
     strokeEllipse(c, x, y, r, r);
   }
 
-  function drawBone(c, x, y, s) {
-    s = s || 1;
-    c.save();
-    c.translate(x, y);
-    c.rotate(-0.3);
-    c.fillStyle = "#F4E6C4";
+  function paintBoneShape(c, s) {
     fillEllipse(c, -12 * s, -5 * s, 7 * s, 6 * s);
     fillEllipse(c, -12 * s, 5 * s, 7 * s, 6 * s);
     fillEllipse(c, 12 * s, -5 * s, 7 * s, 6 * s);
     fillEllipse(c, 12 * s, 5 * s, 7 * s, 6 * s);
     c.fillRect(-12 * s, -4.5 * s, 24 * s, 9 * s);
+  }
+
+  function drawBone(c, x, y, s) {
+    s = s || BONUS_SCALE;
+    c.save();
+    c.translate(x, y);
+    c.rotate(-0.3);
+    c.fillStyle = "#5A3418";
+    paintBoneShape(c, s * 1.18);
+    c.fillStyle = "#FFFFFF";
+    paintBoneShape(c, s);
+    c.fillStyle = "rgba(255,255,255,0.9)";
+    fillEllipse(c, -6 * s, -2.2 * s, 5 * s, 2.4 * s);
     c.restore();
   }
 
-  function drawStar(c, x, y, r, color) {
+  function starPath(c, x, y, r) {
     var i, a, rr, px, py;
-    c.fillStyle = color || "#FFE566";
     c.beginPath();
     for (i = 0; i < 10; i++) {
       a = -Math.PI / 2 + i * Math.PI / 5;
@@ -2219,7 +2292,20 @@
       else c.lineTo(px, py);
     }
     c.closePath();
+  }
+
+  function drawStar(c, x, y, r, color) {
+    r = r || STAR_R;
+    starPath(c, x, y, r);
+    c.fillStyle = color || "#FFD24A";
+    c.strokeStyle = "#E07000";
+    c.lineWidth = Math.max(3, r * 0.12);
+    c.lineJoin = "round";
+    c.lineCap = "round";
     c.fill();
+    c.stroke();
+    c.fillStyle = "rgba(255,255,255,0.7)";
+    fillEllipse(c, x - r * 0.12, y - r * 0.22, r * 0.22, r * 0.16);
   }
 
   function drawKid(c, t, arm, throwing) {
@@ -2471,15 +2557,31 @@
   }
 
   function drawBonuses(c) {
-    var i, b, py;
+    var i, b, py, pulse, glow, s;
     for (i = 0; i < state.bonuses.length; i++) {
       b = state.bonuses[i];
       if (b.got) continue;
-      py = b.y + Math.sin(state.time * 3 + b.bob) * 5;
-      c.fillStyle = "rgba(40,40,40,0.15)";
-      fillEllipse(c, b.x, GROUND_Y - 4, 10, 4);
-      if (b.type === "star") drawStar(c, b.x, py, 16);
-      else drawBone(c, b.x, py, 1);
+      py = b.y + Math.sin(state.time * 3.2 + b.bob) * 7;
+      pulse = 1 + Math.sin(state.time * 3.4 + b.bob) * 0.09;
+      glow = 0.38 + Math.sin(state.time * 5.2 + b.bob * 1.3) * 0.2;
+      s = BONUS_SCALE * pulse;
+      c.fillStyle = "rgba(30,20,10,0.4)";
+      fillEllipse(c, b.x + 2, GROUND_Y - 2, 24 * s, 9 * s);
+      c.save();
+      c.globalAlpha = glow;
+      if (b.type === "star") {
+        c.fillStyle = "rgba(255, 220, 80, 0.95)";
+        fillEllipse(c, b.x, py, STAR_R * pulse * 1.55, STAR_R * pulse * 1.55);
+        starPath(c, b.x, py, STAR_R * pulse * 1.28);
+        c.fillStyle = "rgba(255, 210, 60, 0.85)";
+        c.fill();
+      } else {
+        c.fillStyle = "rgba(255,255,255,0.85)";
+        fillEllipse(c, b.x, py, 30 * s, 20 * s);
+      }
+      c.restore();
+      if (b.type === "star") drawStar(c, b.x, py, STAR_R * pulse);
+      else drawBone(c, b.x, py, s);
     }
   }
 
@@ -2512,7 +2614,6 @@
   function drawWorld(c) {
     var park = currentPark();
     drawPark(c, park, state.time);
-    drawBonuses(c);
     drawKid(c, state.time, state.phase === "aiming" && state.aim.mode === "flick" ? -state.aim.angle * 0.5 : state.kidArm);
     var def = getDog(state.dogId);
     drawDog(c, state.dog.x, state.dog.y, def, {
@@ -2525,6 +2626,7 @@
     if (state.ball.visible && !state.dog.hasBall) {
       drawBall(c, state.ball.x, state.ball.y, state.ball.spin);
     }
+    drawBonuses(c);
     drawAim(c);
     drawParticles(c);
     if (state.phase === "parkchange") {
@@ -3160,11 +3262,57 @@
           jumpY: state.dog.jumpY,
           pose: state.dog.pose,
           intercept: state.dog.intercept,
-          muted: state.muted
+          muted: state.muted,
+          view: { scale: view.scale, ox: view.ox, oy: view.oy, cssW: view.cssW, cssH: view.cssH },
+          bonuses: (function () {
+            var out = [], i, b, py;
+            for (i = 0; i < state.bonuses.length; i++) {
+              b = state.bonuses[i];
+              py = b.y + Math.sin(state.time * 3.2 + b.bob) * 7;
+              out.push({ type: b.type, x: b.x, y: b.y, py: py, got: !!b.got });
+            }
+            return out;
+          })()
         };
       },
       setMuted: setMuted,
       toggleMute: toggleMute,
+      setParkId: function (id) {
+        var i;
+        for (i = 0; i < PARKS.length; i++) {
+          if (PARKS[i].id === id) {
+            state.parkId = id;
+            seedFlowers();
+            spawnBonuses();
+            updateHud();
+            if (state.screen === "play") render();
+            return true;
+          }
+        }
+        return false;
+      },
+      tryPickup: function (kind) {
+        var i, b, held, bx, by, py;
+        for (i = 0; i < state.bonuses.length; i++) {
+          b = state.bonuses[i];
+          if (b.got) continue;
+          if (kind && b.type !== kind) continue;
+          py = b.y + Math.sin(state.time * 3.2 + b.bob) * 7;
+          held = state.ball.held;
+          bx = state.ball.x;
+          by = state.ball.y;
+          state.ball.held = false;
+          state.ball.visible = true;
+          state.ball.x = b.x;
+          state.ball.y = py;
+          collectBonuses();
+          state.ball.held = held;
+          state.ball.x = bx;
+          state.ball.y = by;
+          return !!b.got;
+        }
+        return false;
+      },
       setSpeed: function (n) { speedMul = n > 0 ? n : 1; },
       setTimeLeft: function (n) {
         state.timeLeft = n;
