@@ -1483,7 +1483,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123au";
+  var BUILD = "20261123av";
   var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -2679,8 +2679,9 @@
   function collarRing(athletic, drop) {
     drop = drop || 0;
     if (athletic) {
-      // Shallow smile at the base of the neck, below the jaw, tag at the throat.
-      return { athletic: true, drop: drop, cx: 31, cy: -61 + drop, rx: 15, ry: 11, rot: -0.24, a0: 4.22, a1: 1.30, aTag: 1.30, thick: 6.5 };
+      // Level, gently curved band just below the jaw. Back stays at throat-latch
+      // height on the neck outline and does not climb the nape.
+      return { athletic: true, drop: drop, cx: 32, cy: -67 + drop, rx: 11, ry: 11, rot: -0.08, a0: 2.72, a1: 1.08, aTag: 1.08, thick: 6.5 };
     }
     return { athletic: false, drop: 0, cx: 24, cy: -30, rx: 14, ry: 10, rot: -0.20, a0: 4.18, a1: 1.25, aTag: 1.25, thick: 6.5 };
   }
@@ -2699,16 +2700,12 @@
 
   function clipCollarAwayFromFace(c, p) {
     var drop = p.drop || 0;
+    // Jasper's band already sits below the jaw, so a head clip would notch it.
+    if (p.athletic) return;
     c.beginPath();
     c.rect(-140, -180, 300, 300);
-    if (p.athletic) {
-      pathEllipse(c, 34, -76 + drop, 16.3, 15.3);
-      pathEllipse(c, 42, -72 + drop, 10.3, 10.3);
-      pathEllipse(c, 48, -70 + drop, 13.3, 8.3);
-    } else {
-      pathEllipse(c, 28, -44, 20.3, 18.3);
-      pathEllipse(c, 40, -36, 12.3, 9.3);
-    }
+    pathEllipse(c, 28, -44, 20.3, 18.3);
+    pathEllipse(c, 40, -36, 12.3, 9.3);
     c.clip("evenodd");
   }
 
@@ -2718,6 +2715,9 @@
     c.lineJoin = "round";
     edgeW = 1.5;
     if (far) {
+      // Jasper's flatter band already meets the neck outline; a far peek
+      // would show as a stray sliver under the jaw.
+      if (p.athletic) return;
       // A short sliver of the far side peeks at the back of the neck.
       fp = { cx: p.cx - 3.0, cy: p.cy + 0.4, rx: p.rx * 0.82, ry: p.ry * 0.78, rot: p.rot };
       midW = Math.max(2.4, p.thick * 0.55);
