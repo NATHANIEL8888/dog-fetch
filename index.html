@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123t -->
+<!-- fetch-pup build 20261123u -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1015,8 +1015,8 @@
 
       <p class="total-points">Total points: <strong id="totalNear">0</strong></p>
       <div class="goal-progress" id="goalProgress">
-        <p class="goal-progress-label" id="goalProgressLabel">Goal: Jasper, 1500 pts</p>
-        <div class="goal-progress-track" id="goalTrack" role="progressbar" aria-valuemin="0" aria-valuemax="1500" aria-valuenow="0" aria-label="Progress toward Jasper">
+        <p class="goal-progress-label" id="goalProgressLabel">Goal: Mystery Pup, 1500 pts</p>
+        <div class="goal-progress-track" id="goalTrack" role="progressbar" aria-valuemin="0" aria-valuemax="1500" aria-valuenow="0" aria-label="Progress toward the mystery goal pup">
           <span class="goal-progress-bar" id="goalBar"></span>
         </div>
       </div>
@@ -1114,7 +1114,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123t";
+  var BUILD = "20261123u";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1596,7 +1596,8 @@
     };
   }
 
-  function placeReady() {
+  function placeReady(opts) {
+    opts = opts || {};
     if (state.timedUp || state.pendingResults) {
       if (state.screen === "play") showResults();
       return;
@@ -1623,7 +1624,7 @@
     state.aim.mode = "none";
     state.aim.power = 0;
     state.aim.holdT = 0;
-    spawnBonuses();
+    if (!opts.skipBonuses) spawnBonuses();
     var hint = $("hint");
     if (hint) hint.style.display = "block";
   }
@@ -1663,6 +1664,9 @@
         if (hypot(items[j].x - x, items[j].y - y) < 110) return true;
       }
     }
+    if (state && state.dog) {
+      if (hypot(x - state.dog.x, y - (GROUND_Y - (state.dog.jumpY || 0) - 30)) < Math.max(110, DOG_PICK + 40)) return true;
+    }
     return false;
   }
 
@@ -1692,6 +1696,7 @@
           y = rand(minY, maxY);
           if (inPond(x, GROUND_Y, park)) continue;
           if (y < hudSafeWorldY() + 16) continue;
+          if (state && state.dog && hypot(x - state.dog.x, y - (GROUND_Y - (state.dog.jumpY || 0) - 30)) < Math.max(110, DOG_PICK + 40)) continue;
           ok = true;
         }
       }
@@ -1784,13 +1789,14 @@
     var label = $("goalProgressLabel");
     var track = $("goalTrack");
     if (bar) bar.style.width = pct + "%";
+    var gotJasper = isUnlockedId(state.unlocked, "jasper");
     if (label) {
-      label.innerHTML = (pts >= need) ? "Goal reached: Jasper!" : ("Goal: Jasper, " + need + " pts");
+      label.innerHTML = gotJasper ? "Goal reached: Jasper!" : ("Goal: Mystery Pup, " + need + " pts");
     }
     if (track) {
       track.setAttribute("aria-valuemax", String(need));
       track.setAttribute("aria-valuenow", String(Math.min(pts, need)));
-      track.setAttribute("aria-label", pts >= need ? "Jasper unlocked" : ("Progress toward Jasper, " + pts + " of " + need + " points"));
+      track.setAttribute("aria-label", gotJasper ? "Jasper unlocked" : ("Progress toward the mystery goal pup, " + pts + " of " + need + " points"));
     }
   }
 
@@ -2160,6 +2166,7 @@
       state.ball.held = true;
       state.ball.x = 168;
       state.ball.y = 452;
+      spawnBonuses();
     }
   }
 
@@ -2170,7 +2177,7 @@
       if (state.screen === "play") showResults();
       return;
     }
-    placeReady();
+    placeReady({ skipBonuses: true });
   }
 
   function seedFlowers() {
@@ -3522,7 +3529,7 @@
       btn.className = "dog-card" + (state.dogId === dog.id ? " selected" : "") + (unlocked ? "" : " locked") + (isGoal ? " goal" : "");
       btn.setAttribute("data-dog", dog.id);
       if (unlocked) btn.setAttribute("aria-label", isGoal ? "Choose " + dog.name + ", the goal prize" : "Choose " + dog.name);
-      else btn.setAttribute("aria-label", isGoal ? dog.name + " is the goal. Locked. " + dog.unlock + " total points to unlock." : dog.name + " locked. " + dog.unlock + " total points to unlock.");
+      else btn.setAttribute("aria-label", isGoal ? "Mystery Pup is the goal. Locked. " + dog.unlock + " total points to unlock." : "Mystery pup locked. " + dog.unlock + " total points to unlock.");
       earCls = dog.ears === "prick" ? "face-ear prick" : (dog.ears === "semi" ? "face-ear semi" : "face-ear");
       face = "<span class='face" + (dog.athletic ? " rangy" : "") + "' aria-hidden='true'>";
       face += "<span class='" + earCls + " l' style='background:" + dog.ear + "'></span>";
@@ -3540,7 +3547,7 @@
       (function (id, can, name, pts, goal) {
         bindActivate(btn, function () {
           if (!can) {
-            setPickerNote((goal ? "Goal! " : "") + name + " unlocks at " + pts + " total points.");
+            setPickerNote((goal ? "Goal! Mystery Pup unlocks at " : "??? unlocks at ") + pts + " total points.");
             return;
           }
           setPickerNote("");
@@ -3567,7 +3574,7 @@
       btn.className = "dog-card" + (state.parkId === park.id ? " selected" : "") + (unlocked ? "" : " locked");
       btn.setAttribute("data-park", park.id);
       if (unlocked) btn.setAttribute("aria-label", "Choose " + park.name);
-      else btn.setAttribute("aria-label", park.name + " locked. " + park.unlock + " total points to unlock.");
+      else btn.setAttribute("aria-label", "Mystery park locked. " + park.unlock + " total points to unlock.");
       btn.innerHTML = "<span class='card-art'><span class='park-swatch' style='background:" + park.swatch + "' aria-hidden='true'></span>" +
         "<span class='lock-badge' aria-hidden='true'><span class='lock-shackle'></span><span class='lock-body'></span></span></span>" +
         "<span class='name'>" + (unlocked ? park.short : "???") + "</span>" +
@@ -3575,7 +3582,7 @@
       (function (id, can, name, pts) {
         bindActivate(btn, function () {
           if (!can) {
-            setPickerNote(name + " unlocks at " + pts + " total points.");
+            setPickerNote("??? unlocks at " + pts + " total points.");
             return;
           }
           setPickerNote("");
