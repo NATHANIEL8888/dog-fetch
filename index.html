@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123v -->
+<!-- fetch-pup build 20261123w -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1114,7 +1114,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123v";
+  var BUILD = "20261123w";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1638,7 +1638,7 @@
   }
 
   function bonusXBounds() {
-    /* Stay inside the opening phone camera (visW 860, focus ~400). */
+    /* Home phone view is camX 0, visW 860 (world 0–860). Keep pickups on that screen. */
     return { min: 400, max: 800 };
   }
 
@@ -3302,32 +3302,67 @@
     updateView();
   }
 
-  function cameraFollowsAction() {
-    return !!(state && state.ball && state.phase !== "ready" && state.phase !== "aiming" && state.phase !== "celebrate" && state.phase !== "parkchange");
+  function cameraVisW() {
+    return 860;
+  }
+
+  function cameraSubjectX() {
+    var phase, x;
+    if (!state) return 0;
+    phase = state.phase;
+    if (phase === "ready" || phase === "aiming" || phase === "celebrate" || phase === "parkchange" || phase === "done") return 0;
+    x = 0;
+    if (state.ball && state.ball.held !== true) x = Math.max(x, state.ball.x);
+    if (state.dog) x = Math.max(x, state.dog.x);
+    return x;
   }
 
   function cameraTargetX() {
-    var visW = 860;
-    var focus = 400;
-    if (cameraFollowsAction()) {
-      focus = state.ball.x;
-      if (state.dog) focus = (state.ball.x + state.dog.x) / 2;
-    }
-    return clamp(focus - visW * 0.38, 0, Math.max(0, WORLD_W - visW));
+    var visW = cameraVisW();
+    var margin = visW * 0.15;
+    var subject = cameraSubjectX();
+    var needed = subject - (visW - margin);
+    if (needed < 0) needed = 0;
+    return clamp(needed, 0, Math.max(0, WORLD_W - visW));
   }
 
   function tickCamera(dt) {
-    if (!state || view.cssH <= view.cssW * 1.05) return;
-    var target = cameraTargetX();
-    if (typeof view.camX !== "number") view.camX = target;
+    var target, omega, err, needed;
+    if (!state || view.cssH <= view.cssW * 1.05) {
+      view.camX = 0;
+      view.camVel = 0;
+      return;
+    }
+    needed = cameraTargetX();
+    target = needed;
+    if (typeof view.camX !== "number") view.camX = 0;
     if (typeof view.camVel !== "number") view.camVel = 0;
-    // Always ease: omega 16 keeps up with a throw, omega 10 returns home in ~0.5s.
-    // Never snap, including the ready-to-follow handoff at the start of a throw.
-    var omega = cameraFollowsAction() ? 16 : 10;
-    var err = target - view.camX;
+    // Stay put at home when the subject is already on screen.
+    if (target === 0 && view.camX === 0 && Math.abs(view.camVel) < 0.0001) {
+      view.camVel = 0;
+      return;
+    }
+    // Push right quickly enough to keep the subject inside the 15% margin;
+    // ease home more gently once there is slack.
+    omega = target > view.camX ? 28 : 10;
+    err = target - view.camX;
     view.camVel += (omega * omega * err - 2 * omega * view.camVel) * dt;
     view.camX += view.camVel * dt;
-    if (Math.abs(err) < 0.3 && Math.abs(view.camVel) < 1.5) {
+    // Do not let the subject slip past the right margin.
+    if (view.camX < needed) {
+      view.camX = needed;
+      if (view.camVel < 0) view.camVel = 0;
+    }
+    if (view.camX < 0) {
+      view.camX = 0;
+      if (view.camVel < 0) view.camVel = 0;
+    }
+    var maxCam = Math.max(0, WORLD_W - cameraVisW());
+    if (view.camX > maxCam) {
+      view.camX = maxCam;
+      if (view.camVel > 0) view.camVel = 0;
+    }
+    if (Math.abs(target - view.camX) < 0.3 && Math.abs(view.camVel) < 1.5) {
       view.camX = target;
       view.camVel = 0;
     }
@@ -3337,6 +3372,9 @@
     if (view.cssH > view.cssW * 1.05) {
       view.camX = cameraTargetX();
       view.camVel = 0;
+    } else {
+      view.camX = 0;
+      view.camVel = 0;
     }
   }
 
@@ -3344,9 +3382,9 @@
     var cssW = view.cssW, cssH = view.cssH;
     var tall = cssH > cssW * 1.05;
     if (tall) {
-      var visW = 860;
+      var visW = cameraVisW();
       view.scale = cssW / visW;
-      if (typeof view.camX !== "number") view.camX = cameraTargetX();
+      if (typeof view.camX !== "number") view.camX = 0;
       view.ox = -view.camX * view.scale;
       view.oy = cssH * 0.68 - GROUND_Y * view.scale;
     } else {
