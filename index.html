@@ -1390,7 +1390,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ae";
+  var BUILD = "20261123af";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -4359,6 +4359,18 @@
         }
       }
 
+      function sitAthleticHaunch(hx, far) {
+        c.fillStyle = far ? "#08080C" : def.body;
+        fillEllipse(c, hx, -6, far ? 16 : 18, 22);
+        c.fillStyle = far ? "#050508" : def.bodyDark;
+        fillEllipse(c, hx + 4, 10, 7, 5.5);
+        fillEllipse(c, hx + 6, 16.2, 5.4, 2.6);
+        if (!far) {
+          c.fillStyle = "rgba(210,214,230,0.16)";
+          fillEllipse(c, hx + 7, 15.8, 2.6, 1.2);
+        }
+      }
+
       function rearLegChain(hx, phase) {
         var a = run + phase, lift = 0, thighA = 0.24, gaskinA = -0.50, pastA = 0.16;
         var p0, p1, p2, p3, p4, p5, p6, paw;
@@ -4438,10 +4450,20 @@
       }
 
       (function drawAthleticLegs() {
-        var farHind = rearLegChain(-10, Math.PI);
-        var farFore = frontLegChain(12, Math.PI);
-        var nearHind = rearLegChain(-22, 0);
-        var nearFore = frontLegChain(23, 0);
+        var farHind, farFore, nearHind, nearFore;
+        if (sit) {
+          sitAthleticHaunch(-22, true);
+          sitAthleticHaunch(-12, false);
+          farFore = frontLegChain(12, Math.PI);
+          nearFore = frontLegChain(23, 0);
+          if (farFore) fillShapedLeg(c, farFore.joints, farFore.paw, true);
+          if (nearFore) fillShapedLeg(c, nearFore.joints, nearFore.paw, false);
+          return;
+        }
+        farHind = rearLegChain(-10, Math.PI);
+        farFore = frontLegChain(12, Math.PI);
+        nearHind = rearLegChain(-22, 0);
+        nearFore = frontLegChain(23, 0);
         if (farHind) fillShapedLeg(c, farHind.joints, farHind.paw, true);
         if (farFore) fillShapedLeg(c, farFore.joints, farFore.paw, true);
         if (nearHind) fillShapedLeg(c, nearHind.joints, nearHind.paw, false);
@@ -4549,9 +4571,18 @@
       return;
     }
 
+    function sitHind(px, far) {
+      c.fillStyle = far ? def.bodyDark : def.body;
+      fillEllipse(c, px, -12, far ? 12 : 14, 18);
+      c.fillStyle = def.bodyDark;
+      fillEllipse(c, px + 3, 4, 6, 6);
+      c.fillStyle = def.belly;
+      fillEllipse(c, px + 5, 11.5, 6.2, 3.4);
+    }
+
     function leg(px, phase, back) {
+      var swing = 0, lift = 0, far;
       if (sit && back) return;
-      var swing = 0, lift = 0;
       if (pose === "run" || pose === "return") {
         swing = Math.sin(run + phase) * 16;
         lift = Math.max(0, Math.cos(run + phase)) * 8;
@@ -4560,20 +4591,36 @@
       } else if (pose === "swim") {
         swing = Math.sin(t * 8 + phase) * 10;
       }
+      if (back) {
+        far = px < -20;
+        c.fillStyle = far ? def.bodyDark : def.body;
+        c.save();
+        c.translate(px + swing * 0.12, -14);
+        c.rotate(swing * 0.03);
+        fillEllipse(c, 0, 0, far ? 11 : 12, 15);
+        c.restore();
+      }
       c.fillStyle = def.bodyDark;
       c.save();
-      c.translate(px, sit ? -8 : -6);
+      c.translate(px, sit ? -8 : (back ? -8 : -6));
       c.rotate(swing * 0.04);
-      roundRect(c, -5, 0 - lift, 9, 22 + (sit ? -6 : 0), 4);
+      roundRect(c, -5, 0 - lift, 9, (back && !sit ? 20 : 22) + (sit ? -6 : 0), 4);
       c.fill();
       c.fillStyle = def.belly;
-      fillEllipse(c, 0, 20 - lift, 6, 3.5);
+      fillEllipse(c, 0, (back && !sit ? 18 : 20) - lift, 6, 3.5);
       c.restore();
     }
-    leg(-16, 0, true);
-    leg(12, Math.PI, false);
-    leg(-8, Math.PI, true);
-    leg(20, 0, false);
+    if (sit) {
+      sitHind(-26, true);
+      sitHind(-16, false);
+      leg(12, Math.PI, false);
+      leg(20, 0, false);
+    } else {
+      leg(-30, 0, true);
+      leg(12, Math.PI, false);
+      leg(-18, Math.PI, true);
+      leg(20, 0, false);
+    }
 
     c.fillStyle = def.body;
     fillEllipse(c, 0, -28, 32, 22);
