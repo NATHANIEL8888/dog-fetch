@@ -1390,7 +1390,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123an";
+  var BUILD = "20261123ao";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -1399,6 +1399,14 @@
 
   function dogHomeX() {
     return DOG_HOME_X;
+  }
+  var THROW_MIN = 330;
+  var THROW_MAX = 1078;
+  var JASPER_THROW_MUL = 1.05;
+
+  function throwSpeed(power) {
+    var mul = (state && state.dogId === "jasper") ? JASPER_THROW_MUL : 1;
+    return lerp(THROW_MIN * mul, THROW_MAX * mul, power);
   }
   var BONUS_SCALE = 1.75;
   var STAR_R = 16 * BONUS_SCALE;
@@ -3268,7 +3276,7 @@
     if (state.timedUp || state.pendingResults || state.screen !== "play") return;
     power = clamp(power, 0.12, 1);
     angle = clamp(angle, 0.12, Math.PI - 0.12);
-    var speed = lerp(330, 1078, power);
+    var speed = throwSpeed(power);
     state.ball.x = 168;
     state.ball.y = 452;
     state.ball.vx = Math.cos(angle) * speed;
@@ -5102,7 +5110,7 @@
     c.lineTo(x2, y2);
     c.stroke();
 
-    var pred = predictPath(ox, oy, Math.cos(ang) * lerp(330, 1078, pow), -Math.sin(ang) * lerp(330, 1078, pow));
+    var pred = predictPath(ox, oy, Math.cos(ang) * throwSpeed(pow), -Math.sin(ang) * throwSpeed(pow));
     c.strokeStyle = "rgba(255,255,255,0.45)";
     c.lineWidth = 2;
     c.beginPath();
@@ -6193,6 +6201,23 @@
       start: startGame,
       goHome: goHome,
       simulateThrow: simulateThrow,
+      throwRange: function () {
+        var mul = (state && state.dogId === "jasper") ? JASPER_THROW_MUL : 1;
+        return { min: THROW_MIN * mul, max: THROW_MAX * mul, mul: mul, dog: state && state.dogId };
+      },
+      predictThrow: function (angle, power) {
+        if (typeof angle !== "number") angle = 0.72;
+        if (typeof power !== "number") power = 1;
+        power = clamp(power, 0.12, 1);
+        angle = clamp(angle, 0.12, Math.PI - 0.12);
+        var speed = throwSpeed(power);
+        var pred = predictPath(168, 452, Math.cos(angle) * speed, -Math.sin(angle) * speed);
+        return {
+          speed: speed, angle: angle, power: power,
+          x: pred.x, y: pred.y, t: pred.t,
+          water: pred.water, bush: pred.bush
+        };
+      },
       getScore: function () { return state.score; },
       getBest: function () { return state.best; },
       getState: function () {
