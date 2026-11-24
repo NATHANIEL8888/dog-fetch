@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- fetch-pup build 20261123aa -->
+<!-- fetch-pup build 20261123ab -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1353,7 +1353,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123aa";
+  var BUILD = "20261123ab";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -2119,38 +2119,154 @@
     };
   }
 
-  function drawShopCollar(c, x, y, athletic, id) {
-    var w = athletic ? 21 : 22, h = athletic ? 7 : 6;
+  function collarColors(id, def) {
+    if (id === "collar-gold") {
+      return { main: "#E2B84F", edge: "#8A6A22", tag: "#FFF3A8", kind: "disc", stripe: null, stripe2: null };
+    }
+    if (id === "collar-rainbow") {
+      return { main: "#FF5A7A", edge: "#8A2840", tag: "#F8E04A", kind: "disc", stripe: "#5AD0FF", stripe2: "#F8E04A" };
+    }
+    if (id === "collar-gem") {
+      return { main: "#5B3A8C", edge: "#2E1A4C", tag: "#7EE8FF", kind: "gem", stripe: null, stripe2: null };
+    }
+    if (id === "collar-sky") {
+      return { main: "#3B9AED", edge: "#1E5F9A", tag: "#FFF4C8", kind: "disc", stripe: null, stripe2: null };
+    }
+    return {
+      main: def.collar,
+      edge: shadeHex(def.collar, 0.55),
+      tag: def.tag,
+      kind: "disc",
+      stripe: null,
+      stripe2: null
+    };
+  }
+
+  function activeCollarId(opts) {
+    var gear = (opts && opts.gear) ? opts.gear : gearFromState();
+    return (gear && gear.collar) ? gear.collar : null;
+  }
+
+  function drawCollarCharm(c, x, y, colors) {
     c.save();
     c.translate(x, y);
-    if (id === "collar-gold") {
-      c.fillStyle = "#E2B84F";
-      roundRect(c, athletic ? -10 : -10, athletic ? -4 : 0, w, h, 3); c.fill();
-      c.fillStyle = "#FFF3A8";
-      fillEllipse(c, athletic ? 3 : 2, athletic ? 5 : 8, 4, 4);
-    } else if (id === "collar-rainbow") {
-      c.fillStyle = "#FF5A7A";
-      roundRect(c, athletic ? -10 : -10, athletic ? -4 : 0, w, h, 3); c.fill();
-      c.fillStyle = "#5AD0FF";
-      roundRect(c, athletic ? -10 : -10, athletic ? -2 : 2, w, h * 0.45, 2); c.fill();
-      c.fillStyle = "#F8E04A";
-      fillEllipse(c, athletic ? 3 : 2, athletic ? 5 : 8, 3.5, 3.5);
-    } else if (id === "collar-gem") {
-      c.fillStyle = "#5B3A8C";
-      roundRect(c, athletic ? -10 : -10, athletic ? -4 : 0, w, h, 3); c.fill();
-      c.fillStyle = "#7EE8FF";
+    if (colors.kind === "gem") {
+      c.fillStyle = colors.tag;
+      c.strokeStyle = shadeHex(colors.tag, 0.65);
+      c.lineWidth = 0.8;
       c.beginPath();
-      c.moveTo(athletic ? 3 : 2, athletic ? 1 : 5);
-      c.lineTo(athletic ? 8 : 7, athletic ? 6 : 10);
-      c.lineTo(athletic ? 3 : 2, athletic ? 10 : 14);
-      c.lineTo(athletic ? -2 : -3, athletic ? 6 : 10);
+      c.moveTo(0, -1);
+      c.lineTo(4.2, 4);
+      c.lineTo(0, 9.2);
+      c.lineTo(-4.2, 4);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      c.fillStyle = "rgba(255,255,255,0.55)";
+      c.beginPath();
+      c.moveTo(-1.1, 2);
+      c.lineTo(1.1, 3.4);
+      c.lineTo(-0.2, 5.2);
       c.closePath();
       c.fill();
     } else {
-      c.fillStyle = "#3B9AED";
-      roundRect(c, athletic ? -10 : -10, athletic ? -4 : 0, w, h, 3); c.fill();
-      c.fillStyle = "#FFF4C8";
-      fillEllipse(c, athletic ? 3 : 2, athletic ? 5 : 8, 4, 4);
+      c.fillStyle = colors.tag;
+      fillEllipse(c, 0, 4, 4, 4);
+      c.strokeStyle = shadeHex(colors.tag, 0.62);
+      c.lineWidth = 0.9;
+      strokeEllipse(c, 0, 4, 4, 4);
+      c.fillStyle = "rgba(255,255,255,0.45)";
+      fillEllipse(c, -1.1, 2.8, 1.3, 1.1);
+    }
+    c.restore();
+  }
+
+  function fillCollarRing(c, rx, ry, inner, colors, far) {
+    var irx, iry, ox;
+    if (far) {
+      rx *= 0.92;
+      ry *= 0.9;
+      ox = -0.4;
+      c.fillStyle = shadeHex(colors.main, 0.78);
+    } else {
+      ox = 0.25;
+      c.fillStyle = colors.main;
+    }
+    irx = Math.max(1.6, rx * inner);
+    iry = Math.max(3.5, ry * inner);
+    c.beginPath();
+    pathEllipse(c, 0, 0, rx, ry);
+    pathEllipseRev(c, ox, 0, irx, iry);
+    c.fill("evenodd");
+  }
+
+  function drawDogCollar(c, athletic, drop, id, def, part) {
+    var colors = collarColors(id, def);
+    var cx, cy, ang, rx, ry, inner, frx, fry;
+    drop = drop || 0;
+    // Vertical oval around the neck cross-section so the band wraps
+    // under the throat and tucks behind the head, instead of sitting
+    // as a flat bar or a sideways ring on the cheek.
+    if (athletic) {
+      cx = 22;
+      cy = -62 + drop;
+      ang = 0.34;
+      rx = 6.4;
+      ry = 12.6;
+      inner = 0.42;
+    } else {
+      cx = 19;
+      cy = -38.5;
+      ang = 0.18;
+      rx = 6.2;
+      ry = 11.6;
+      inner = 0.4;
+    }
+    c.save();
+    c.translate(cx, cy);
+    c.rotate(ang);
+    if (part === "back") {
+      c.save();
+      c.beginPath();
+      // Top and slightly back: the far side peeking over the nape.
+      c.rect(-40, -40, 80, 42);
+      c.clip();
+      fillCollarRing(c, rx, ry, inner, colors, true);
+      c.strokeStyle = colors.edge;
+      c.lineWidth = 1;
+      c.globalAlpha = 0.8;
+      strokeEllipse(c, 0, 0, rx * 0.92, ry * 0.9);
+      c.restore();
+    } else {
+      frx = rx * 1.1;
+      fry = ry * 1.02;
+      c.save();
+      c.beginPath();
+      // Underside and lower sides only: a U under the throat that tucks
+      // behind the head. Drawing the top would close into a flat "O".
+      c.rect(-40, -4, 80, 52);
+      c.clip();
+      fillCollarRing(c, frx, fry, inner, colors, false);
+      if (colors.stripe) {
+        c.fillStyle = colors.stripe;
+        c.beginPath();
+        pathEllipse(c, 0.2, 0, frx * 0.82, fry * 0.82);
+        pathEllipseRev(c, 0.25, 0, frx * inner * 0.95, fry * inner * 0.95);
+        c.fill("evenodd");
+        if (colors.stripe2) {
+          c.fillStyle = colors.stripe2;
+          c.beginPath();
+          pathEllipse(c, 0.2, 0, frx * 0.68, fry * 0.68);
+          pathEllipseRev(c, 0.25, 0, frx * inner * 0.9, fry * inner * 0.9);
+          c.fill("evenodd");
+        }
+      }
+      c.strokeStyle = colors.edge;
+      c.lineWidth = 1.15;
+      c.lineJoin = "round";
+      strokeEllipse(c, 0, 0, frx, fry);
+      c.restore();
+      drawCollarCharm(c, frx * 0.12, fry * 0.98, colors);
     }
     c.restore();
   }
@@ -2223,19 +2339,18 @@
     c.restore();
   }
 
+  function drawGearBandana(c, athletic, drop, opts) {
+    var gear = (opts && opts.gear) ? opts.gear : gearFromState();
+    if (!gear || !gear.bandana) return;
+    if (athletic) drawShopBandana(c, 22, -49 + (drop || 0), true, gear.bandana);
+    else drawShopBandana(c, 20, -29, false, gear.bandana);
+  }
+
   function drawDogAccessories(c, athletic, drop) {
     var gear, id;
     drop = drop || 0;
     gear = (arguments.length > 3 && arguments[3]) ? arguments[3] : gearFromState();
     if (!gear) return;
-    if (gear.collar) {
-      if (athletic) drawShopCollar(c, 22, -60 + drop, true, gear.collar);
-      else drawShopCollar(c, 22, -38, false, gear.collar);
-    }
-    if (gear.bandana) {
-      if (athletic) drawShopBandana(c, 22, -56 + drop, true, gear.bandana);
-      else drawShopBandana(c, 22, -36, false, gear.bandana);
-    }
     if (gear.hat) drawShopHat(c, athletic, drop, gear.hat);
   }
 
@@ -3275,6 +3390,29 @@
     c.bezierCurveTo(x - rx, y - oy, x - ox, y - ry, x, y - ry);
     c.closePath();
   }
+  function pathEllipseRev(c, x, y, rx, ry) {
+    var k = 0.5522848;
+    var ox = rx * k, oy = ry * k;
+    c.moveTo(x, y - ry);
+    c.bezierCurveTo(x - ox, y - ry, x - rx, y - oy, x - rx, y);
+    c.bezierCurveTo(x - rx, y + oy, x - ox, y + ry, x, y + ry);
+    c.bezierCurveTo(x + ox, y + ry, x + rx, y + oy, x + rx, y);
+    c.bezierCurveTo(x + rx, y - oy, x + ox, y - ry, x, y - ry);
+    c.closePath();
+  }
+  function shadeHex(hex, factor) {
+    var raw, n, r, g, b, to;
+    if (!hex || hex.charAt(0) !== "#") return "rgba(40,20,10,0.55)";
+    raw = hex.slice(1);
+    if (raw.length === 3) raw = raw.charAt(0) + raw.charAt(0) + raw.charAt(1) + raw.charAt(1) + raw.charAt(2) + raw.charAt(2);
+    n = parseInt(raw, 16);
+    if (isNaN(n)) return "rgba(40,20,10,0.55)";
+    r = Math.max(0, Math.min(255, Math.round(((n >> 16) & 255) * factor)));
+    g = Math.max(0, Math.min(255, Math.round(((n >> 8) & 255) * factor)));
+    b = Math.max(0, Math.min(255, Math.round((n & 255) * factor)));
+    to = function (v) { var s = v.toString(16); return s.length < 2 ? "0" + s : s; };
+    return "#" + to(r) + to(g) + to(b);
+  }
   function fillEllipse(c, x, y, rx, ry) {
     c.beginPath();
     pathEllipse(c, x, y, rx, ry);
@@ -4020,14 +4158,7 @@
       fillEllipse(c, 0, 0, 11, 17);
       c.restore();
 
-      c.save();
-      c.translate(22, -60 + drop);
-      c.fillStyle = def.collar;
-      roundRect(c, -10, -4, 21, 7, 3);
-      c.fill();
-      c.fillStyle = def.tag;
-      fillEllipse(c, 3, 5, 4, 4);
-      c.restore();
+      drawDogCollar(c, true, drop, activeCollarId(opts), def, "back");
 
       c.fillStyle = def.body;
       fillEllipse(c, 34, -76 + drop, 16, 15);
@@ -4083,6 +4214,8 @@
         c.fill();
       }
 
+      drawGearBandana(c, true, drop, opts);
+      drawDogCollar(c, true, drop, activeCollarId(opts), def, "front");
       drawDogAccessories(c, true, drop, opts.gear);
 
       if (hasBall) {
@@ -4143,6 +4276,8 @@
     }
     c.restore();
 
+    drawDogCollar(c, false, 0, activeCollarId(opts), def, "back");
+
     c.save();
     c.translate(26, -40);
     if (def.ears === "prick") {
@@ -4186,12 +4321,8 @@
       c.fill();
     }
 
-    c.fillStyle = def.collar;
-    roundRect(c, 12, -38, 22, 6, 3);
-    c.fill();
-    c.fillStyle = def.tag;
-    fillEllipse(c, 24, -30, 4, 4);
-
+    drawGearBandana(c, false, 0, opts);
+    drawDogCollar(c, false, 0, activeCollarId(opts), def, "front");
     drawDogAccessories(c, false, 0, opts.gear);
 
     if (hasBall) {
