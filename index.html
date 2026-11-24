@@ -1390,7 +1390,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123af";
+  var BUILD = "20261123ag";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
@@ -4320,8 +4320,9 @@
         paw.y -= d;
       }
 
-      function fillShapedLeg(c, joints, paw, far) {
+      function fillShapedLeg(c, joints, paw, far, opts) {
         var i, n = joints.length, pr, p, left = [], right = [], backEdge, fillCol;
+        opts = opts || {};
         for (i = 0; i < n; i++) {
           pr = limbPerp(joints, i);
           p = joints[i];
@@ -4341,7 +4342,7 @@
         c.fill();
         c.stroke();
 
-        if (!far) {
+        if (!far && !opts.noEdge) {
           c.strokeStyle = "rgba(210,214,230,0.34)";
           c.lineWidth = 1.9;
           c.lineCap = "round";
@@ -4359,16 +4360,43 @@
         }
       }
 
-      function sitAthleticHaunch(hx, far) {
-        c.fillStyle = far ? "#08080C" : def.body;
-        fillEllipse(c, hx, -6, far ? 16 : 18, 22);
-        c.fillStyle = far ? "#050508" : def.bodyDark;
-        fillEllipse(c, hx + 4, 10, 7, 5.5);
-        fillEllipse(c, hx + 6, 16.2, 5.4, 2.6);
-        if (!far) {
-          c.fillStyle = "rgba(210,214,230,0.16)";
-          fillEllipse(c, hx + 7, 15.8, 2.6, 1.2);
+      function sitRearChain(hx, far) {
+        var ox = far ? -8 : 0;
+        var hipX = hx + ox;
+        var p0, p1, p2, p3, p4, p5, p6, paw;
+        var thighA = 0.42;
+        var gaskinA = -1.12;
+        var pastA = 1.22;
+        p0 = { x: hipX, y: -18, r: 6.4 };
+        p1 = { x: hipX + 2, y: -7, r: 8.2 };
+        p2 = jointStep(p1.x, p1.y, thighA, 10, 5.8);
+        p3 = jointStep(p2.x, p2.y, thighA * 0.4, 7, 4.1);
+        p4 = jointStep(p3.x, p3.y, gaskinA, 8, 3.4);
+        p5 = jointStep(p4.x, p4.y, gaskinA, 6.4, 3.1);
+        p6 = jointStep(p5.x, p5.y, pastA, 8.6, 2.55);
+        paw = {
+          x: p6.x + Math.sin(pastA) * 2.4,
+          y: p6.y + Math.cos(pastA) * 2.2,
+          rx: 4.4,
+          ry: 2.35
+        };
+        plantChain([p0, p1, p2, p3, p4, p5, p6], paw, 16.2);
+        return { joints: [p0, p1, p2, p3, p4, p5, p6], paw: paw };
+      }
+
+      function strokeSitThigh(leg) {
+        var joints = leg.joints, pts = [], i, pr;
+        for (i = 0; i < 4; i++) {
+          pr = limbPerp(joints, i);
+          pts.push({ x: joints[i].x - pr.x * joints[i].r, y: joints[i].y - pr.y * joints[i].r });
         }
+        c.strokeStyle = "rgba(210,214,230,0.20)";
+        c.lineWidth = 1.25;
+        c.lineCap = "round";
+        c.lineJoin = "round";
+        c.beginPath();
+        smoothOutline(c, pts, true);
+        c.stroke();
       }
 
       function rearLegChain(hx, phase) {
@@ -4449,51 +4477,77 @@
         return { joints: [p0, p1, p2, p3, p4, p5], paw: paw };
       }
 
-      (function drawAthleticLegs() {
-        var farHind, farFore, nearHind, nearFore;
+      function drawAthleticLegSet(side) {
+        var hind, fore, far;
+        far = side === "far";
         if (sit) {
-          sitAthleticHaunch(-22, true);
-          sitAthleticHaunch(-12, false);
-          farFore = frontLegChain(12, Math.PI);
-          nearFore = frontLegChain(23, 0);
-          if (farFore) fillShapedLeg(c, farFore.joints, farFore.paw, true);
-          if (nearFore) fillShapedLeg(c, nearFore.joints, nearFore.paw, false);
-          return;
+          hind = sitRearChain(-14, far);
+          fore = frontLegChain(far ? 12 : 23, far ? Math.PI : 0);
+          if (hind) fillShapedLeg(c, hind.joints, hind.paw, far, { noEdge: true });
+          if (fore) fillShapedLeg(c, fore.joints, fore.paw, far);
+          if (!far && hind) strokeSitThigh(hind);
+        } else if (far) {
+          hind = rearLegChain(-10, Math.PI);
+          fore = frontLegChain(12, Math.PI);
+          if (hind) fillShapedLeg(c, hind.joints, hind.paw, true);
+          if (fore) fillShapedLeg(c, fore.joints, fore.paw, true);
+        } else {
+          hind = rearLegChain(-22, 0);
+          fore = frontLegChain(23, 0);
+          if (hind) fillShapedLeg(c, hind.joints, hind.paw, false);
+          if (fore) fillShapedLeg(c, fore.joints, fore.paw, false);
         }
-        farHind = rearLegChain(-10, Math.PI);
-        farFore = frontLegChain(12, Math.PI);
-        nearHind = rearLegChain(-22, 0);
-        nearFore = frontLegChain(23, 0);
-        if (farHind) fillShapedLeg(c, farHind.joints, farHind.paw, true);
-        if (farFore) fillShapedLeg(c, farFore.joints, farFore.paw, true);
-        if (nearHind) fillShapedLeg(c, nearHind.joints, nearHind.paw, false);
-        if (nearFore) fillShapedLeg(c, nearFore.joints, nearFore.paw, false);
-      })();
+      }
+
+      drawAthleticLegSet("far");
+      if (!sit) drawAthleticLegSet("near");
 
 
       c.fillStyle = def.body;
-      fillEllipse(c, -20, -46 + drop, 17, 16);
-      fillEllipse(c, -6, -48 + drop, 17, 16);
-      fillEllipse(c, 12, -48 + drop, 21, 23);
-      c.fillStyle = def.body;
-      fillEllipse(c, 11, -32 + drop, 12, 10);
+      if (sit) {
+        c.beginPath();
+        c.moveTo(-20, -5);
+        c.quadraticCurveTo(-26, -8, -24, -16);
+        c.quadraticCurveTo(-16, -28, 0, -44);
+        c.quadraticCurveTo(10, -54, 22, -52);
+        c.quadraticCurveTo(32, -46, 31, -28);
+        c.quadraticCurveTo(30, -12, 22, -8);
+        c.quadraticCurveTo(10, -6, 2, -12);
+        c.quadraticCurveTo(-8, -16, -20, -5);
+        c.closePath();
+        c.fill();
+        fillEllipse(c, 14, -30, 17, 19);
+        fillEllipse(c, 11, -16, 10, 8);
+      } else {
+        fillEllipse(c, -20, -46 + drop, 17, 16);
+        fillEllipse(c, -6, -48 + drop, 17, 16);
+        fillEllipse(c, 12, -48 + drop, 21, 23);
+        fillEllipse(c, 11, -32 + drop, 12, 10);
+      }
 
       if (def.shine) {
         c.strokeStyle = "rgba(255,255,255,0.10)";
         c.lineWidth = 1.15;
         c.lineCap = "round";
         c.beginPath();
-        c.moveTo(-8, -61.5 + drop);
-        c.quadraticCurveTo(8, -65.5 + drop, 20, -62 + drop);
+        if (sit) {
+          c.moveTo(2, -44);
+          c.quadraticCurveTo(12, -52, 22, -48);
+        } else {
+          c.moveTo(-8, -61.5 + drop);
+          c.quadraticCurveTo(8, -65.5 + drop, 20, -62 + drop);
+        }
         c.stroke();
       }
 
       c.save();
-      c.translate(-28, -48 + drop);
-      c.rotate(-0.75 + tail * 0.45);
+      c.translate(sit ? -22 : -28, sit ? -16 : (-48 + drop));
+      c.rotate((sit ? -0.55 : -0.75) + tail * 0.45);
       c.fillStyle = def.bodyDark;
       fillEllipse(c, -12, 0, 14, 5);
       c.restore();
+
+      if (sit) drawAthleticLegSet("near");
 
       c.fillStyle = def.body;
       c.save();
