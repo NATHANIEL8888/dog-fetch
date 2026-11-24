@@ -1483,7 +1483,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123aq";
+  var BUILD = "20261123ar";
   var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -3124,6 +3124,7 @@
     state.dog.swim = false;
     state.dog.targetX = dogHomeX();
     state.dog.intercept = null;
+    resetRetrieveWatch();
     state.kidArm = 0.25;
     state.aim.active = false;
     state.aim.mode = "none";
@@ -3387,6 +3388,7 @@
     var hint = $("hint");
     if (hint) hint.style.display = "none";
     hideToast();
+    resetRetrieveWatch();
     var dog = getDog(state.dogId);
     var pred = predictPath(state.ball.x, state.ball.y, state.ball.vx, state.ball.vy);
     state.dog.intercept = pickIntercept(pred, state.dog.x, dog.speed, dog.jump);
@@ -3658,7 +3660,9 @@
       if (inPond(b.x, GROUND_Y, park)) {
         b.y = gx + 8;
         b.vx *= 0.4;
+        if (Math.abs(b.vx) < 18) b.vx = 0;
         b.vy = 0;
+        b.x = clamp(b.x, 90, WORLD_W - 48);
         if (state.phase === "flying" || state.phase === "bounce") {
           var firstSplash = state.phase === "flying";
           state.phase = "retrieve";
@@ -3693,6 +3697,7 @@
           b.vy = 0;
           b.vx *= 0.85;
           if (Math.abs(b.vx) < 18) b.vx = 0;
+          if (Math.abs(b.vx) < 18) b.x = clamp(b.x, 90, WORLD_W - 48);
           if (state.phase === "flying") state.phase = "bounce";
           if (state.phase === "bounce" && Math.abs(b.vx) < 18) state.phase = "retrieve";
         }
@@ -3731,9 +3736,14 @@
     }
 
     var nearGround = state.ball.y > GROUND_Y - 90;
-    var closeX = Math.abs(state.dog.x - state.ball.x) < 44 * ms;
+    // Jasper's mouth sits high and far forward, so a standing 3D distance
+    // never reaches a ground or water ball. Use horizontal reach instead,
+    // as if the pup ducks to grab it.
+    var reachX = Math.max(52 * ms, dogMouthFwd() + 20);
+    var mouthCloseX = Math.abs(state.ball.x - mouthX) < Math.max(40, 34 * ms);
+    var closeX = Math.abs(state.dog.x - state.ball.x) < reachX;
     if (state.phase === "retrieve" || (state.phase === "bounce" && nearGround)) {
-      if (dist < 56 || (nearGround && closeX)) {
+      if (dist < 56 || (nearGround && (closeX || mouthCloseX))) {
         if (inPond(state.ball.x, GROUND_Y, park)) doCatch("splash");
         else if (inBush(state.ball.x, state.ball.y, park)) doCatch("bush");
         else doCatch("normal");
@@ -3801,6 +3811,60 @@
     state.popups = next;
   }
 
+  function resetRetrieveWatch() {
+    if (!state) return;
+    state.groundWait = 0;
+    state.stallT = 0;
+    state.stallX = 0;
+  }
+
+  function forcePickup() {
+    var park, kind;
+    if (!state || !state.ball || state.ball.held || state.dog.hasBall) return false;
+    if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return false;
+    park = currentPark();
+    if (Math.abs(state.dog.x - state.ball.x) > 80) {
+      state.dog.x = state.ball.x - (state.dog.facing || 1) * Math.min(dogMouthFwd(), 40);
+      state.dog.x = clamp(state.dog.x, 80, WORLD_W - 40);
+      state.dog.jumpY = 0;
+    }
+    if (inPond(state.ball.x, GROUND_Y, park)) kind = "splash";
+    else if (inBush(state.ball.x, state.ball.y, park)) kind = "bush";
+    else kind = "normal";
+    doCatch(kind);
+    resetRetrieveWatch();
+    return true;
+  }
+
+  function watchRetrieve(dt) {
+    var nearGround, settled, dx;
+    if (!state || !state.dog || !state.ball || state.dog.hasBall || state.ball.held) {
+      resetRetrieveWatch();
+      return;
+    }
+    if (state.phase !== "retrieve" && state.phase !== "bounce" && state.phase !== "flying") {
+      resetRetrieveWatch();
+      return;
+    }
+    nearGround = state.ball.y > GROUND_Y - 90;
+    settled = nearGround && Math.abs(state.ball.vy || 0) < 80 && Math.abs(state.ball.vx || 0) < 50;
+    if ((state.phase === "retrieve" || state.phase === "bounce") && settled) {
+      state.groundWait = (state.groundWait || 0) + dt;
+    } else {
+      state.groundWait = 0;
+    }
+    if (!state.stallX) state.stallX = state.dog.x;
+    if (Math.abs(state.dog.x - state.stallX) < 5) state.stallT = (state.stallT || 0) + dt;
+    else {
+      state.stallX = state.dog.x;
+      state.stallT = 0;
+    }
+    dx = Math.abs(state.dog.x - state.ball.x);
+    if (settled && (state.groundWait > 1.5 || (state.stallT > 1.5 && dx < 200))) {
+      forcePickup();
+    }
+  }
+
   function isInvalidPos() {
     return !isFinite(state.dog.x) || !isFinite(state.dog.y) || !isFinite(state.dog.jumpY) ||
       !isFinite(state.ball.x) || !isFinite(state.ball.y) || !isFinite(state.ball.vx) || !isFinite(state.ball.vy) ||
@@ -3829,6 +3893,9 @@
         return;
       }
       if (state.screen === "play") {
+        if (!state.ball.held && (state.phase === "retrieve" || state.phase === "bounce" || state.phase === "flying")) {
+          if (forcePickup()) return;
+        }
         state.combo = 0;
         state.flipT = 0;
         clearSurprise();
@@ -3909,6 +3976,7 @@
     if (!state.ball.held) collectBonuses();
     else collectBonuses();
     tryCatch();
+    watchRetrieve(dt);
     finishReturn(dt);
     updateParticles(dt);
 
