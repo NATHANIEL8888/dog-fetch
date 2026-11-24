@@ -455,6 +455,28 @@
       border-color: #6A7078;
       color: #F4F4F4;
     }
+    .unlock-wait {
+      display: block;
+      width: calc(100% - 6px);
+      margin: 5px 3px 0;
+      min-height: 30px;
+      padding: 4px 6px;
+      border-radius: 999px;
+      border: 2px dashed #B8BDC4;
+      background: #EEF0F3;
+      color: #5A616A;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.15;
+      text-align: center;
+      pointer-events: none;
+      box-sizing: border-box;
+    }
+    .dog-card.goal .unlock-wait {
+      background: rgba(255, 255, 255, 0.62);
+      border-color: #C8B06A;
+      color: #5A4A20;
+    }
     .total-points {
       text-align: center;
       font-size: 15px;
@@ -1532,7 +1554,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ay";
+  var BUILD = "20261123az";
   var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -3451,7 +3473,7 @@
     var track = $("goalTrack");
     if (bar) bar.style.width = pct + "%";
     var gotJasper = isUnlockedId(state.unlocked, "jasper");
-    var canBuy = !gotJasper && treats >= need;
+    var canBuy = !gotJasper && isNextUnlockable("dog", "jasper") && treats >= need;
     if (label) {
       if (gotJasper) label.innerHTML = "Goal reached: Jasper!";
       else if (canBuy) label.innerHTML = "You can afford Jasper!";
@@ -3500,6 +3522,57 @@
     return null;
   }
 
+  function paidUnlockItems(items) {
+    var out = [], i;
+    for (i = 0; i < items.length; i++) if (items[i].unlock > 0) out.push(items[i]);
+    return out;
+  }
+
+  function unlockCatalog(kind) {
+    return kind === "park" ? PARKS : DOGS;
+  }
+
+  function unlockOwnedList(kind) {
+    return kind === "park" ? state.unlockedParks : state.unlocked;
+  }
+
+  function unlockItemLabel(item, kind) {
+    if (!item) return "";
+    if (kind === "park") return item.short || item.name;
+    return item.name;
+  }
+
+  function nextUnlockableItem(kind) {
+    var items = paidUnlockItems(unlockCatalog(kind));
+    var list = unlockOwnedList(kind);
+    var i;
+    for (i = 0; i < items.length; i++) {
+      if (!isUnlockedId(list, items[i].id)) return items[i];
+    }
+    return null;
+  }
+
+  function isNextUnlockable(kind, id) {
+    var next = nextUnlockableItem(kind);
+    return !!(next && next.id === id);
+  }
+
+  // Nearest still-locked predecessor in price order. Used for "Unlock X first".
+  function unlockGateItem(kind, id) {
+    var items = paidUnlockItems(unlockCatalog(kind));
+    var list = unlockOwnedList(kind);
+    var i, found = -1;
+    if (isUnlockedId(list, id) || isNextUnlockable(kind, id)) return null;
+    for (i = 0; i < items.length; i++) {
+      if (items[i].id === id) { found = i; break; }
+    }
+    if (found < 0) return null;
+    for (i = found - 1; i >= 0; i--) {
+      if (!isUnlockedId(list, items[i].id)) return items[i];
+    }
+    return nextUnlockableItem(kind);
+  }
+
   var pendingUnlock = null;
   var unlockYesReadyAt = 0;
 
@@ -3529,10 +3602,15 @@
 
   function requestUnlock(kind, id) {
     var item = kind === "park" ? findParkById(id) : findDogById(id);
-    var list, have, need;
+    var list, have, need, gate;
     if (!item || !(item.unlock > 0)) return false;
     list = kind === "park" ? state.unlockedParks : state.unlocked;
     if (isUnlockedId(list, item.id)) return false;
+    if (!isNextUnlockable(kind, item.id)) {
+      gate = unlockGateItem(kind, item.id);
+      if (gate) setPickerNote("Unlock " + unlockItemLabel(gate, kind) + " first.");
+      return false;
+    }
     have = walletTreats();
     need = item.unlock;
     if (have < need) {
@@ -3550,7 +3628,7 @@
     if ((new Date()).getTime() < unlockYesReadyAt) return false;
     pend = pendingUnlock;
     list = pend.kind === "park" ? state.unlockedParks : state.unlocked;
-    if (isUnlockedId(list, pend.id)) {
+    if (isUnlockedId(list, pend.id) || !isNextUnlockable(pend.kind, pend.id)) {
       closeUnlockDialog();
       return false;
     }
@@ -3578,13 +3656,13 @@
     start = (typeof state.treatsAtStart === "number") ? state.treatsAtStart : treats;
     for (i = 0; i < DOGS.length; i++) {
       item = DOGS[i];
-      if (item.unlock > 0 && !isUnlockedId(state.unlocked, item.id) && treats >= item.unlock && start < item.unlock) {
+      if (item.unlock > 0 && isNextUnlockable("dog", item.id) && treats >= item.unlock && start < item.unlock) {
         out.push({ kind: "dog", name: item.name });
       }
     }
     for (i = 0; i < PARKS.length; i++) {
       item = PARKS[i];
-      if (item.unlock > 0 && !isUnlockedId(state.unlockedParks, item.id) && treats >= item.unlock && start < item.unlock) {
+      if (item.unlock > 0 && isNextUnlockable("park", item.id) && treats >= item.unlock && start < item.unlock) {
         out.push({ kind: "park", name: item.name });
       }
     }
@@ -6229,6 +6307,32 @@
     }, false);
   }
 
+  function appendUnlockControls(card, kind, item, have) {
+    var unlockBtn, wait, gate, canAfford, label;
+    if (!card || !item || !(item.unlock > 0)) return;
+    if (isNextUnlockable(kind, item.id)) {
+      canAfford = have >= item.unlock;
+      unlockBtn = document.createElement("button");
+      unlockBtn.type = "button";
+      unlockBtn.className = "unlock-btn";
+      unlockBtn.setAttribute("data-unlock", item.id);
+      unlockBtn.setAttribute("data-unlock-kind", kind);
+      unlockBtn.innerHTML = unlockButtonLabel(item.unlock, have);
+      if (!canAfford) unlockBtn.disabled = true;
+      unlockBtn.setAttribute("aria-label", canAfford ? ("Unlock " + item.name + " for " + item.unlock + " Treats") : ("Need " + (item.unlock - have) + " more Treats to unlock " + item.name));
+      bindUnlockButton(unlockBtn, kind, item.id, canAfford);
+      card.appendChild(unlockBtn);
+      return;
+    }
+    gate = unlockGateItem(kind, item.id);
+    label = gate ? ("Unlock " + unlockItemLabel(gate, kind) + " first") : "Locked";
+    wait = document.createElement("span");
+    wait.className = "unlock-wait";
+    wait.setAttribute("data-unlock-wait", item.id);
+    wait.innerHTML = label;
+    card.appendChild(wait);
+  }
+
   function renderDogPicker() {
     var root = $("dogPicker");
     if (!root) return;
@@ -6244,7 +6348,11 @@
       card.className = "dog-card" + (state.dogId === dog.id ? " selected" : "") + (unlocked ? "" : " locked") + (isGoal ? " goal" : "");
       card.setAttribute("data-dog", dog.id);
       if (unlocked) card.setAttribute("aria-label", isGoal ? "Choose " + dog.name + ", the goal prize" : "Choose " + dog.name);
-      else card.setAttribute("aria-label", isGoal ? "Mystery Pup is the goal. Locked. " + dog.unlock + " Treats to unlock." : "Mystery pup locked. " + dog.unlock + " Treats to unlock.");
+      else {
+        var dogGate = isNextUnlockable("dog", dog.id) ? null : unlockGateItem("dog", dog.id);
+        if (dogGate) card.setAttribute("aria-label", (isGoal ? "Mystery Pup is the goal. Locked. Unlock " : "Mystery pup locked. Unlock ") + unlockItemLabel(dogGate, "dog") + " first.");
+        else card.setAttribute("aria-label", isGoal ? "Mystery Pup is the goal. Locked. " + dog.unlock + " Treats to unlock." : "Mystery pup locked. " + dog.unlock + " Treats to unlock.");
+      }
       earCls = dog.ears === "prick" ? "face-ear prick" : (dog.ears === "semi" ? "face-ear semi" : "face-ear");
       face = "<span class='face" + (dog.athletic ? " rangy" : "") + "' aria-hidden='true'>";
       face += "<span class='" + earCls + " l' style='background:" + dog.ear + "'></span>";
@@ -6263,16 +6371,7 @@
         "<span class='name'>" + (unlocked ? dog.name : "???") + "</span>" +
         "<span class='meta" + (unlocked ? "" : " pts-needed") + "'>" + meta + "</span>";
       if (!unlocked && dog.unlock > 0) {
-        unlockBtn = document.createElement("button");
-        unlockBtn.type = "button";
-        unlockBtn.className = "unlock-btn";
-        unlockBtn.setAttribute("data-unlock", dog.id);
-        unlockBtn.setAttribute("data-unlock-kind", "dog");
-        unlockBtn.innerHTML = unlockButtonLabel(dog.unlock, have);
-        if (!canAfford) unlockBtn.disabled = true;
-        unlockBtn.setAttribute("aria-label", canAfford ? ("Unlock " + dog.name + " for " + dog.unlock + " Treats") : ("Need " + (dog.unlock - have) + " more Treats to unlock " + dog.name));
-        bindUnlockButton(unlockBtn, "dog", dog.id, canAfford);
-        card.appendChild(unlockBtn);
+        appendUnlockControls(card, "dog", dog, have);
       }
       if (unlocked) {
         (function (id) {
@@ -6303,7 +6402,11 @@
       card.className = "dog-card" + (state.parkId === park.id ? " selected" : "") + (unlocked ? "" : " locked");
       card.setAttribute("data-park", park.id);
       if (unlocked) card.setAttribute("aria-label", "Choose " + park.name);
-      else card.setAttribute("aria-label", "Mystery park locked. " + park.unlock + " Treats to unlock.");
+      else {
+        var parkGate = isNextUnlockable("park", park.id) ? null : unlockGateItem("park", park.id);
+        if (parkGate) card.setAttribute("aria-label", "Mystery park locked. Unlock " + unlockItemLabel(parkGate, "park") + " first.");
+        else card.setAttribute("aria-label", "Mystery park locked. " + park.unlock + " Treats to unlock.");
+      }
       canAfford = !unlocked && have >= park.unlock;
       meta = unlocked ? park.name : (park.unlock + " Treats");
       card.innerHTML = "<span class='card-art'><span class='park-swatch' style='background:" + park.swatch + "' aria-hidden='true'></span>" +
@@ -6311,16 +6414,7 @@
         "<span class='name'>" + (unlocked ? park.short : "???") + "</span>" +
         "<span class='meta" + (unlocked ? "" : " pts-needed") + "'>" + meta + "</span>";
       if (!unlocked && park.unlock > 0) {
-        unlockBtn = document.createElement("button");
-        unlockBtn.type = "button";
-        unlockBtn.className = "unlock-btn";
-        unlockBtn.setAttribute("data-unlock", park.id);
-        unlockBtn.setAttribute("data-unlock-kind", "park");
-        unlockBtn.innerHTML = unlockButtonLabel(park.unlock, have);
-        if (!canAfford) unlockBtn.disabled = true;
-        unlockBtn.setAttribute("aria-label", canAfford ? ("Unlock " + park.name + " for " + park.unlock + " Treats") : ("Need " + (park.unlock - have) + " more Treats to unlock " + park.name));
-        bindUnlockButton(unlockBtn, "park", park.id, canAfford);
-        card.appendChild(unlockBtn);
+        appendUnlockControls(card, "park", park, have);
       }
       if (unlocked) {
         (function (id) {
