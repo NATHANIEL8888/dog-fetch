@@ -1483,7 +1483,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123aw";
+  var BUILD = "20261123ax";
   var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -2793,48 +2793,71 @@
 
   function clipBandanaAwayFromFace(c, athletic, drop) {
     drop = drop || 0;
+    // Keep the kerchief off the muzzle and eye, but let it sit on the side
+    // of the neck and the lower cheek so it stays clearly visible.
     c.beginPath();
     c.rect(-140, -180, 300, 300);
     if (athletic) {
-      pathEllipse(c, 34, -76 + drop, 16.3, 15.3);
-      pathEllipse(c, 42, -72 + drop, 10.3, 10.3);
-      pathEllipse(c, 48, -70 + drop, 13.3, 8.3);
+      pathEllipse(c, 48, -70 + drop, 13.2, 8.2);
+      pathEllipse(c, 38, -82 + drop, 8.0, 8.0);
     } else {
-      pathEllipse(c, 28, -44, 20.3, 18.3);
-      pathEllipse(c, 40, -36, 12.3, 9.3);
+      pathEllipse(c, 40, -36, 12.2, 9.2);
+      pathEllipse(c, 48, -38, 5.0, 4.0);
     }
     c.clip("evenodd");
+  }
+
+  function collarTopPoint(p, a) {
+    var mid = collarPoint(p, a);
+    var dx = p.cx - mid.x, dy = p.cy - mid.y;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    // Toward the ring center is the jaw-side (top) edge of the visible band.
+    // Leave a couple of pixels under the collar so the band can overlap the base.
+    var lift = p.thick * 0.5 - 1.8;
+    return { x: mid.x + dx / len * lift, y: mid.y + dy / len * lift };
   }
 
   function drawShopBandana(c, x, y, athletic, id, tilt) {
     var colors = { "bandana-red": "#E4453A", "bandana-blue": "#2F6FE0", "bandana-star": "#4B3A8C", "bandana-picnic": "#F4F0E6" };
     var fill = colors[id] || "#E4453A";
-    var s = athletic ? 1.10 : 1.12;
+    var outline = (id === "bandana-picnic") ? "#8A5A3A" : "#F4EBD8";
+    var s = athletic ? 1.10 : 1.08;
     c.save();
     c.translate(x, y);
     c.rotate(tilt || 0);
     c.scale(s, s);
-    c.fillStyle = fill;
-    c.strokeStyle = shadeHex(fill, 0.55);
-    c.lineWidth = 1.0;
     c.lineJoin = "round";
+    c.lineCap = "round";
+    // Folded triangle facing the viewer: base on the collar, apex up the neck.
     c.beginPath();
-    // Compact kerchief on the side of the neck: fold along the top, point hanging down.
-    c.moveTo(-7.5, 0);
-    c.lineTo(8.5, 1.2);
-    c.lineTo(4.6, 11.5);
-    c.lineTo(-2.8, 7.6);
+    c.moveTo(-9.0, 1.8);
+    c.lineTo(8.6, 2.0);
+    c.lineTo(-1.4, -11.2);
     c.closePath();
+    c.fillStyle = fill;
     c.fill();
+    c.strokeStyle = outline;
+    c.lineWidth = 1.45;
+    c.stroke();
+    c.strokeStyle = shadeHex(fill, id === "bandana-picnic" ? 0.72 : 0.80);
+    c.lineWidth = 0.85;
+    c.beginPath();
+    c.moveTo(-4.6, 1.2);
+    c.lineTo(-1.4, -9.4);
+    c.lineTo(4.4, 1.3);
     c.stroke();
     if (id === "bandana-star") {
       c.fillStyle = "#FFD24A";
-      fillEllipse(c, 1.6, 3.2, 1.8, 1.8);
-      fillEllipse(c, -3.0, 2.2, 1.3, 1.3);
+      fillEllipse(c, -1.2, -5.0, 1.7, 1.7);
+      fillEllipse(c, -4.4, -1.8, 1.25, 1.25);
+      fillEllipse(c, 2.6, -2.0, 1.25, 1.25);
     } else if (id === "bandana-picnic") {
       c.strokeStyle = "#E4453A";
-      c.lineWidth = 1.2;
-      c.beginPath(); c.moveTo(-5, 2.2); c.lineTo(6.5, 3.2); c.moveTo(-3.5, 5.4); c.lineTo(5.2, 6.2); c.stroke();
+      c.lineWidth = 1.15;
+      c.beginPath();
+      c.moveTo(-6.2, -0.2); c.lineTo(0.0, -7.4);
+      c.moveTo(-3.8, 1.0); c.lineTo(3.6, -5.0);
+      c.stroke();
     }
     c.restore();
   }
@@ -2885,20 +2908,21 @@
 
   function drawGearBandana(c, athletic, drop, opts) {
     var gear = (opts && opts.gear) ? opts.gear : gearFromState();
-    var p, back;
+    var p, anchor;
     drop = drop || 0;
     if (!gear || !gear.bandana) return;
     p = collarRing(athletic, drop);
     c.save();
     clipBandanaAwayFromFace(c, athletic, drop);
-    // Sit the fold on the visible side of the neck, just above the collar's top edge.
+    // Sit the folded triangle fully above the collar's top edge, on the
+    // visible side of the neck. The collar may cover only the bottom pixels.
     if (athletic) {
-      back = collarPoint(p, 1.92);
-      // On the side of the neck, just above the collar; only the top edge may tuck under the jaw.
-      drawShopBandana(c, back.x - 2.4, back.y - 5.2, true, gear.bandana, 0.18);
+      anchor = collarTopPoint(p, 2.48);
+      drawShopBandana(c, anchor.x - 1.0, anchor.y + 0.4, true, gear.bandana, -0.42);
     } else {
-      back = collarPoint(p, 2.12);
-      drawShopBandana(c, back.x + 1.8, back.y - 8.2, false, gear.bandana, 0.10);
+      // Sit fully above the collar's top edge, on the visible side of the neck.
+      anchor = collarTopPoint(p, 2.12);
+      drawShopBandana(c, anchor.x - 0.2, anchor.y - 6.4, false, gear.bandana, -0.20);
     }
     c.restore();
   }
@@ -5334,9 +5358,9 @@
       c.fill();
     }
 
-    drawGearBandana(c, false, 0, opts);
     drawDogCollar(c, false, 0, activeCollarId(opts), def, "band", opts);
     drawRegularFarEar(c, def);
+    drawGearBandana(c, false, 0, opts);
     drawDogCollar(c, false, 0, activeCollarId(opts), def, "front", opts);
     drawDogAccessories(c, false, 0, opts.gear);
 
