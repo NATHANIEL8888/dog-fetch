@@ -1390,12 +1390,12 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123al";
+  var BUILD = "20261123am";
   var WORLD_W = 1200;
   var WORLD_H = 680;
   var GROUND_Y = 528;
-  /* Waiting spot ahead of the boy. +84 world ≈ 38px more gap on a 390-wide phone. */
-  var DOG_HOME_X = 334;
+  /* Waiting spot ahead of the boy. +42 world ≈ 19px more gap on a 390-wide phone (halfway back from al). */
+  var DOG_HOME_X = 292;
 
   function dogHomeX() {
     return DOG_HOME_X;
@@ -3254,7 +3254,7 @@
     if (state.timedUp || state.pendingResults || state.screen !== "play") return;
     power = clamp(power, 0.12, 1);
     angle = clamp(angle, 0.12, Math.PI - 0.12);
-    var speed = lerp(300, 980, power);
+    var speed = lerp(330, 1078, power);
     state.ball.x = 168;
     state.ball.y = 452;
     state.ball.vx = Math.cos(angle) * speed;
@@ -5084,7 +5084,7 @@
     c.lineTo(x2, y2);
     c.stroke();
 
-    var pred = predictPath(ox, oy, Math.cos(ang) * lerp(300, 980, pow), -Math.sin(ang) * lerp(300, 980, pow));
+    var pred = predictPath(ox, oy, Math.cos(ang) * lerp(330, 1078, pow), -Math.sin(ang) * lerp(330, 1078, pow));
     c.strokeStyle = "rgba(255,255,255,0.45)";
     c.lineWidth = 2;
     c.beginPath();
