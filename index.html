@@ -1555,10 +1555,40 @@
   "use strict";
 
   var BUILD = "20261127bc";
-  var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
+  var WORLD_W = 2000; // room for a full-power throw to roll up the far hill and back
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
   var GROUND_Y = 528;
+  var HILL_START = 1260;
+  var HILL_LENGTH = 440;
+  var HILL_HEIGHT = 90;
+
+  function parkHasHill(park) {
+    park = park || (typeof currentPark === "function" ? currentPark() : null);
+    if (park && park.oceanEnd) return false;
+    return true;
+  }
+
+  function hillRise(x) {
+    if (!parkHasHill()) return 0;
+    if (!(x > HILL_START)) return 0;
+    var u = (x - HILL_START) / HILL_LENGTH;
+    if (u >= 1) return HILL_HEIGHT;
+    if (u <= 0) return 0;
+    u = u * u * (3 - 2 * u);
+    return HILL_HEIGHT * u;
+  }
+
+  function hillSlope(x) {
+    if (!parkHasHill()) return 0;
+    var u = (x - HILL_START) / HILL_LENGTH;
+    if (u <= 0 || u >= 1) return 0;
+    return HILL_HEIGHT * (6 * u * (1 - u)) / HILL_LENGTH;
+  }
+
+  function groundYAt(x) {
+    return GROUND_Y - hillRise(x);
+  }
   /* Waiting spot ahead of the boy. +42 world ≈ 19px more gap on a 390-wide phone (halfway back from al). */
   var DOG_HOME_X = 292;
 
@@ -3752,14 +3782,15 @@
 
   function predictPath(x, y, vx, vy) {
     var points = [];
-    var t = 0, dt = 0.016, i, park = currentPark(), gx = GROUND_Y - BALL_R;
-    for (i = 0; i < 360; i++) {
+    var t = 0, dt = 0.016, i, park = currentPark(), gx;
+    for (i = 0; i < 480; i++) {
       vy += GRAVITY * dt;
       x += vx * dt;
       y += vy * dt;
       t += dt;
       if (x > WORLD_W - 30) { x = WORLD_W - 30; vx *= -0.35; }
       if (x < 40) { x = 40; vx *= -0.35; }
+      gx = groundYAt(x) - BALL_R;
       points.push({ t: t, x: x, y: y });
       if (y >= gx) {
         return { t: t, x: x, y: gx, points: points, water: inPond(x, GROUND_Y, park), bush: !!inBush(x, y, park) };
@@ -3879,7 +3910,7 @@
       py = b.y + Math.sin(state.time * 3.2 + b.bob) * 7;
       hit = false;
       if (!state.ball.held && hypot(state.ball.x - b.x, state.ball.y - py) < BONE_PICK) hit = true;
-      if (hypot(state.dog.x - b.x, (GROUND_Y - state.dog.jumpY) - 30 - py) < DOG_PICK) hit = true;
+      if (hypot(state.dog.x - b.x, (state.dog.y - state.dog.jumpY) - 30 - py) < DOG_PICK) hit = true;
       if (hit) {
         b.got = true;
         if (b.type === "star") {
@@ -3978,6 +4009,7 @@
       d.x = d.targetX;
     }
     d.x = clamp(d.x, 80, WORLD_W - 40);
+    d.y = groundYAt(d.x);
   }
 
   function updateBall(dt) {
@@ -3988,7 +4020,7 @@
       if (state.dog.hasBall) {
         var holdDef = getDog(state.dogId);
         b.x = state.dog.x + state.dog.facing * dogCarryFwd(holdDef);
-        b.y = GROUND_Y - state.dog.jumpY - dogCarryUp(holdDef, state.dog.swim);
+        b.y = state.dog.y - state.dog.jumpY - dogCarryUp(holdDef, state.dog.swim);
       } else {
         b.x = 168;
         b.y = 452;
@@ -4002,12 +4034,13 @@
     b.x += b.vx * dt;
     b.y += b.vy * dt;
     b.spin += b.vx * dt * 0.08;
-    if (b.x > WORLD_W - 24) { b.x = WORLD_W - 24; b.vx = -Math.abs(b.vx) * 0.4; }
+    if (b.x > WORLD_W - 24) { b.x = WORLD_W - 24; b.vx = -Math.abs(b.vx) * 0.55; }
     if (b.x < 50) { b.x = 50; b.vx = Math.abs(b.vx) * 0.4; }
 
+    gx = groundYAt(b.x) - BALL_R;
     if (b.y >= gx) {
       b.y = gx;
-      if (inPond(b.x, GROUND_Y, park)) {
+      if (inPond(b.x, GROUND_Y, park) && hillRise(b.x) < 1) {
         b.y = gx + 8;
         b.vx *= 0.4;
         if (Math.abs(b.vx) < 18) b.vx = 0;
@@ -4022,13 +4055,28 @@
             showToast("Splash!", "Your pup will get it!", 0.9);
           }
         }
-      } else if (inBush(b.x, b.y, park)) {
+      } else if (inBush(b.x, b.y, park) && hillRise(b.x) < 1) {
         b.vy = 0;
         b.vx *= 0.2;
         if (state.phase === "flying") {
           state.phase = "retrieve";
           sfx("bounce");
         }
+      } else if (hillRise(b.x) > 0.6) {
+        var sl = hillSlope(b.x);
+        var nlen = Math.sqrt(sl * sl + 1);
+        var nx = -sl / nlen, ny = 1 / nlen;
+        var vn = b.vx * nx + b.vy * ny;
+        if (vn > 0) {
+          b.vx -= vn * nx * 1.08;
+          b.vy -= vn * ny * 1.08;
+        }
+        b.vx *= 0.86;
+        b.vy *= 0.55;
+        b.y = groundYAt(b.x) - BALL_R;
+        if (Math.abs(b.vx) < 14 && Math.abs(sl) < 0.05) b.vx = 0;
+        if (state.phase === "flying") state.phase = "bounce";
+        if ((state.phase === "bounce" || state.phase === "retrieve") && Math.abs(b.vx) < 14) state.phase = "retrieve";
       } else {
         var bouncy = b.special === "bouncy" && (b.bounces || 0) < (b.maxBounces || 0);
         if (bouncy && Math.abs(b.vy) > 40) {
@@ -4060,7 +4108,7 @@
     if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return;
     var ms = dogScale();
     var mouthX = state.dog.x + state.dog.facing * dogMouthFwd();
-    var mouthY = GROUND_Y - state.dog.jumpY - dogMouthUp();
+    var mouthY = state.dog.y - state.dog.jumpY - dogMouthUp();
     var dist = hypot(state.ball.x - mouthX, state.ball.y - mouthY);
     var inter = state.dog.intercept;
     var park = currentPark();
@@ -4078,14 +4126,14 @@
       }
     }
 
-    if ((state.phase === "bounce" || state.phase === "flying") && dist < 38 && state.ball.y > GROUND_Y - 90) {
+    if ((state.phase === "bounce" || state.phase === "flying") && dist < 38 && state.ball.y > groundYAt(state.ball.x) - 90) {
       if (inter && inter.type === "great" && state.flightT < inter.t + 0.35) doCatch("great");
-      else if (state.ball.y < GROUND_Y - 50) doCatch("midair");
+      else if (state.ball.y < groundYAt(state.ball.x) - 50) doCatch("midair");
       else doCatch("great");
       return;
     }
 
-    var nearGround = state.ball.y > GROUND_Y - 90;
+    var nearGround = state.ball.y > groundYAt(state.ball.x) - 90;
     // Jasper's mouth sits high and far forward, so a standing 3D distance
     // never reaches a ground or water ball. Use horizontal reach instead,
     // as if the pup ducks to grab it.
@@ -4176,6 +4224,7 @@
     if (Math.abs(state.dog.x - state.ball.x) > 80) {
       state.dog.x = state.ball.x - (state.dog.facing || 1) * Math.min(dogMouthFwd(), 40);
       state.dog.x = clamp(state.dog.x, 80, WORLD_W - 40);
+      state.dog.y = groundYAt(state.dog.x);
       state.dog.jumpY = 0;
     }
     if (inPond(state.ball.x, GROUND_Y, park)) kind = "splash";
@@ -4196,7 +4245,7 @@
       resetRetrieveWatch();
       return;
     }
-    nearGround = state.ball.y > GROUND_Y - 90;
+    nearGround = state.ball.y > groundYAt(state.ball.x) - 90;
     settled = nearGround && Math.abs(state.ball.vy || 0) < 80 && Math.abs(state.ball.vx || 0) < 50;
     if ((state.phase === "retrieve" || state.phase === "bounce") && settled) {
       state.groundWait = (state.groundWait || 0) + dt;
@@ -4229,7 +4278,7 @@
       state.aim.mode = "none";
       if (isInvalidPos()) {
         state.dog.x = dogHomeX();
-        state.dog.y = GROUND_Y;
+        state.dog.y = groundYAt(state.dog.x);
         state.dog.jumpY = 0;
         state.ball.x = 168;
         state.ball.y = 452;
@@ -4682,6 +4731,51 @@
     ], "#6E8EAE", "#FFFFFF");
   }
 
+  function drawFarHillDetail(c, park) {
+    var x, x0 = HILL_START - 20, x1 = WORLD_W + 60, step = 16, top, i;
+    if (!parkHasHill(park)) return;
+    c.fillStyle = "rgba(44,58,74,0.10)";
+    c.beginPath();
+    c.moveTo(x0, groundYAt(x0));
+    for (x = x0 + step; x <= x1; x += step) c.lineTo(x, groundYAt(x) + 4);
+    c.lineTo(x1, groundYAt(x1) + 28);
+    for (x = x1; x >= x0; x -= step) c.lineTo(x, groundYAt(x) + 22);
+    c.closePath();
+    c.fill();
+    if (park.snow) {
+      c.fillStyle = "rgba(255,255,255,0.92)";
+      c.beginPath();
+      c.moveTo(HILL_START + 20, groundYAt(HILL_START + 20) - 2);
+      for (x = HILL_START + 20; x <= x1; x += step) {
+        top = groundYAt(x);
+        c.lineTo(x, top - 2);
+      }
+      for (x = x1; x >= HILL_START + 20; x -= step) c.lineTo(x, groundYAt(x) + 18);
+      c.closePath();
+      c.fill();
+    }
+    if (park.sunset) {
+      c.fillStyle = "rgba(80, 40, 20, 0.12)";
+      c.beginPath();
+      c.moveTo(HILL_START, groundYAt(HILL_START));
+      for (x = HILL_START; x <= x1; x += step) c.lineTo(x, groundYAt(x));
+      c.lineTo(x1, groundYAt(x1) + 16);
+      c.lineTo(HILL_START, groundYAt(HILL_START) + 16);
+      c.closePath();
+      c.fill();
+    }
+    if (park.lotsOfFlowers || park.flower) {
+      for (i = 0; i < 8; i++) {
+        x = HILL_START + 90 + i * 52;
+        top = groundYAt(x) + 8;
+        c.fillStyle = ["#FF6B8A", "#FFC83D", "#FFFFFF", "#E87BE0"][i % 4];
+        fillEllipse(c, x, top, 3.2, 3.2);
+        c.fillStyle = "#FFC83D";
+        fillEllipse(c, x, top, 1.2, 1.2);
+      }
+    }
+  }
+
   function drawPark(c, park, t) {
     var g = c.createLinearGradient(0, 0, 0, GROUND_Y);
     g.addColorStop(0, park.skyTop);
@@ -4720,7 +4814,7 @@
     c.beginPath();
     c.moveTo(-80, GROUND_Y - 70);
     c.quadraticCurveTo(300, GROUND_Y - 110, 640, GROUND_Y - 64);
-    c.quadraticCurveTo(940, GROUND_Y - 40, WORLD_W + 80, GROUND_Y - 80);
+    c.quadraticCurveTo(940, GROUND_Y - 40, WORLD_W + 80, GROUND_Y - 80 - (parkHasHill(park) ? HILL_HEIGHT : 0));
     c.lineTo(WORLD_W + 80, GROUND_Y + 20);
     c.lineTo(-80, GROUND_Y + 20);
     c.closePath();
@@ -4731,7 +4825,16 @@
     }
 
     c.fillStyle = park.grassMid;
-    c.fillRect(-80, GROUND_Y - 18, WORLD_W + 160, 40);
+    (function () {
+      var x, x0 = -80, x1 = WORLD_W + 80, step = 18;
+      c.beginPath();
+      c.moveTo(x0, groundYAt(x0) - 18);
+      for (x = x0 + step; x <= x1; x += step) c.lineTo(x, groundYAt(x) - 18);
+      c.lineTo(x1, groundYAt(x1) + 24);
+      for (x = x1; x >= x0; x -= step) c.lineTo(x, groundYAt(x) + 24);
+      c.closePath();
+      c.fill();
+    })();
 
     c.fillStyle = park.dirt;
     c.beginPath();
@@ -4748,7 +4851,17 @@
     for (i = 0; i < park.bushes.length; i++) drawBush(c, park.bushes[i], park);
 
     c.fillStyle = park.grassNear;
-    c.fillRect(-800, GROUND_Y + 16, WORLD_W + 1600, 5000);
+    (function () {
+      var x, x0 = -800, x1 = WORLD_W + 800, step = 20;
+      c.beginPath();
+      c.moveTo(x0, groundYAt(x0) + 16);
+      for (x = x0 + step; x <= x1; x += step) c.lineTo(x, groundYAt(x) + 16);
+      c.lineTo(x1, GROUND_Y + 5000);
+      c.lineTo(x0, GROUND_Y + 5000);
+      c.closePath();
+      c.fill();
+    })();
+    if (parkHasHill(park)) drawFarHillDetail(c, park);
 
     c.fillStyle = "rgba(255,255,255,0.08)";
     for (i = 0; i < 28; i++) {
@@ -6922,6 +7035,9 @@
           lastThrowPower: state.lastThrowPower,
           lastThrowSpeed: state.lastThrowSpeed,
           lastMeterPower: state.lastMeterPower,
+          worldW: WORLD_W,
+          hillStart: HILL_START,
+          hillRise: hillRise(state.ball ? state.ball.x : 0),
           phaseAge: state.phaseAge,
           park: currentPark().name,
           parkId: state.parkId,
