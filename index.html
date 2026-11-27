@@ -730,6 +730,13 @@
       margin: 0;
       box-shadow: inset 0 -6px 0 rgba(0,0,0,0.12);
     }
+    canvas.park-thumb {
+      width: 44px;
+      height: 32px;
+      border-radius: 8px;
+      display: block;
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.10);
+    }
 
     .best-row {
       display: flex;
@@ -1554,7 +1561,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261127bf";
+  var BUILD = "20261127bg";
   var WORLD_W = 2000; // room for a full-power throw to roll up the far hill and back
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -1718,14 +1725,14 @@
       trees: [{ x: 260, h: 200, kind: "palm" }, { x: 420, h: 160, kind: "palm" }]
     },
     { id: "garden", name: "Flower Garden", short: "Garden", unlock: 480, swatch: "#E07AB5",
-      skyTop: "#8EC9FF", skyMid: "#FFE4F0", skyBot: "#FFF6EA",
+      skyTop: "#7EC4F8", skyMid: "#F8D5EA", skyBot: "#FFF4E2",
       sun: "#FFD36A", sunX: 200, sunY: 100, sunR: 44,
       grassFar: "#8ED98E", grassMid: "#62C46A", grassNear: "#45B352",
       dirt: "#D4B48A", treeA: "#3CB371", treeB: "#2E8B57",
-      flower: true, leaves: false, snow: false, beach: false, sunset: false, lotsOfFlowers: true,
+      flower: true, leaves: false, snow: false, beach: false, sunset: false, lotsOfFlowers: true, garden: true,
       pond: { x: 980, y: GROUND_Y + 8, rx: 90, ry: 22 },
       bushes: [{ x: 580, y: GROUND_Y, s: 0.9 }, { x: 720, y: GROUND_Y, s: 1.05 }],
-      trees: [{ x: 380, h: 170, kind: "round" }, { x: 1120, h: 160, kind: "round" }]
+      trees: [{ x: 380, h: 170, kind: "blossom" }, { x: 1120, h: 160, kind: "blossom" }]
     },
     { id: "sunset", name: "Sunset Hill", short: "Sunset", unlock: 825, swatch: "#E85D4C",
       skyTop: "#E85D4C", skyMid: "#F7A072", skyBot: "#FFD6A0",
@@ -4730,6 +4737,20 @@
     c.fillStyle = park.treeB;
     fillEllipse(c, x - 22, ground - h * 0.5, 30, 32);
     fillEllipse(c, x + 24, ground - h * 0.55, 28, 30);
+    if (kind === "blossom") {
+      c.fillStyle = "rgba(255, 160, 196, 0.95)";
+      fillEllipse(c, x - 18, ground - h * 0.72, 22, 18);
+      fillEllipse(c, x + 20, ground - h * 0.68, 20, 16);
+      fillEllipse(c, x + 2, ground - h * 0.8, 18, 16);
+      c.fillStyle = "rgba(255, 210, 225, 0.95)";
+      fillEllipse(c, x - 6, ground - h * 0.62, 16, 14);
+      fillEllipse(c, x + 16, ground - h * 0.54, 14, 12);
+      c.fillStyle = "#FFFFFF";
+      fillEllipse(c, x - 12, ground - h * 0.74, 3.2, 3.2);
+      fillEllipse(c, x + 10, ground - h * 0.7, 2.8, 2.8);
+      fillEllipse(c, x + 22, ground - h * 0.6, 2.6, 2.6);
+      return;
+    }
     if (kind === "autumn") {
       c.fillStyle = "#E07A3D";
       fillEllipse(c, x + 8, ground - h * 0.7, 22, 18);
@@ -4760,6 +4781,7 @@
       c.fillStyle = "rgba(255,255,255,0.15)";
       fillEllipse(c, x - 10 * s, y - 28 * s, 10 * s, 6 * s);
     }
+    if (park.garden) drawFloweringBushBlooms(c, x, y, s);
   }
 
   function drawPond(c, p, park) {
@@ -5008,6 +5030,329 @@
     }
   }
 
+
+  var GARDEN_PALETTE = ["#FF6B9A", "#E23B4A", "#FF8C42", "#FFC83D", "#FFFFFF", "#C86BE0", "#7EC8FF", "#E07AB5", "#FF8AB5"];
+  var gardenFrontCache = null;
+
+  function gardenUnit(n) {
+    var x = ((n * 1103515245) + 12345) | 0;
+    return ((x >>> 0) % 1000) / 1000;
+  }
+
+  function drawTulip(c, x, y, s, color) {
+    s = s || 1;
+    c.strokeStyle = "#2C7A38";
+    c.lineWidth = Math.max(1.5, 2.1 * s);
+    c.lineCap = "round";
+    c.beginPath();
+    c.moveTo(x, y);
+    c.lineTo(x, y - 17 * s);
+    c.stroke();
+    c.fillStyle = "#3FA84A";
+    c.beginPath();
+    c.moveTo(x, y - 5 * s);
+    c.quadraticCurveTo(x + 9 * s, y - 11 * s, x + 1.5 * s, y - 3 * s);
+    c.closePath();
+    c.fill();
+    c.fillStyle = color || "#FF6B9A";
+    c.beginPath();
+    c.moveTo(x - 7.2 * s, y - 16 * s);
+    c.quadraticCurveTo(x - 8 * s, y - 27 * s, x, y - 22 * s);
+    c.quadraticCurveTo(x + 8 * s, y - 27 * s, x + 7.2 * s, y - 16 * s);
+    c.quadraticCurveTo(x, y - 12 * s, x - 7.2 * s, y - 16 * s);
+    c.closePath();
+    c.fill();
+    c.fillStyle = "rgba(255,255,255,0.28)";
+    fillEllipse(c, x - 2 * s, y - 20 * s, 2 * s, 3 * s);
+  }
+
+  function drawDaisy(c, x, y, s, color) {
+    var i, a, n = 8;
+    s = s || 1;
+    c.strokeStyle = "#2C7A38";
+    c.lineWidth = Math.max(1.3, 1.8 * s);
+    c.lineCap = "round";
+    c.beginPath();
+    c.moveTo(x, y + 8 * s);
+    c.lineTo(x, y);
+    c.stroke();
+    c.fillStyle = color || "#FFFFFF";
+    for (i = 0; i < n; i++) {
+      a = (i / n) * Math.PI * 2;
+      fillEllipse(c, x + Math.cos(a) * 5.6 * s, y + Math.sin(a) * 5.6 * s, 3.5 * s, 3.5 * s);
+    }
+    c.fillStyle = "#FFC83D";
+    fillEllipse(c, x, y, 3.5 * s, 3.5 * s);
+  }
+
+  function drawSunflower(c, x, y, s) {
+    var i, a;
+    s = s || 1;
+    c.strokeStyle = "#2C7A38";
+    c.lineWidth = Math.max(2, 2.8 * s);
+    c.lineCap = "round";
+    c.beginPath();
+    c.moveTo(x, y);
+    c.lineTo(x, y - 22 * s);
+    c.stroke();
+    c.fillStyle = "#3FA84A";
+    c.beginPath();
+    c.moveTo(x, y - 8 * s);
+    c.quadraticCurveTo(x + 12 * s, y - 14 * s, x + 2 * s, y - 5 * s);
+    c.closePath();
+    c.fill();
+    c.fillStyle = "#FFC83D";
+    for (i = 0; i < 12; i++) {
+      a = (i / 12) * Math.PI * 2;
+      fillEllipse(c, x + Math.cos(a) * 8.5 * s, y - 22 * s + Math.sin(a) * 8.5 * s, 4.2 * s, 3.2 * s);
+    }
+    c.fillStyle = "#8A5A2B";
+    fillEllipse(c, x, y - 22 * s, 6.2 * s, 6.2 * s);
+    c.fillStyle = "#C4893A";
+    fillEllipse(c, x - 1 * s, y - 23 * s, 2.4 * s, 2.4 * s);
+  }
+
+  function drawRose(c, x, y, s, color) {
+    s = s || 1;
+    c.strokeStyle = "#2C7A38";
+    c.lineWidth = Math.max(1.4, 2 * s);
+    c.lineCap = "round";
+    c.beginPath();
+    c.moveTo(x, y);
+    c.lineTo(x, y - 12 * s);
+    c.stroke();
+    c.fillStyle = "#2F9E4F";
+    fillEllipse(c, x + 5 * s, y - 5 * s, 5 * s, 2.4 * s);
+    fillEllipse(c, x - 5 * s, y - 4 * s, 4.4 * s, 2.2 * s);
+    c.fillStyle = color || "#E23B4A";
+    fillEllipse(c, x, y - 14 * s, 7 * s, 6.2 * s);
+    c.fillStyle = "rgba(255,255,255,0.22)";
+    fillEllipse(c, x - 2 * s, y - 16 * s, 2.6 * s, 2.2 * s);
+    c.fillStyle = color || "#E23B4A";
+    fillEllipse(c, x + 0.5 * s, y - 14 * s, 3.8 * s, 3.4 * s);
+    c.fillStyle = "#7A1020";
+    fillEllipse(c, x + 0.6 * s, y - 13.5 * s, 1.6 * s, 1.6 * s);
+  }
+
+  function drawGardenBloom(c, kind, x, y, s, color) {
+    if (kind === 1) drawDaisy(c, x, y, s, color);
+    else if (kind === 2) drawSunflower(c, x, y, s);
+    else if (kind === 3) drawRose(c, x, y, s, color);
+    else drawTulip(c, x, y, s, color);
+  }
+
+  function drawFloweringBushBlooms(c, x, y, s) {
+    var i, px, py, col, pal = ["#FF6B9A", "#E23B4A", "#FFC83D", "#FFFFFF", "#C86BE0", "#FF8C42"];
+    for (i = 0; i < 8; i++) {
+      px = x + ((i % 4) - 1.5) * 12 * s + (i > 3 ? 4 * s : 0);
+      py = y - (20 + (i % 3) * 7 + (i > 4 ? 4 : 0)) * s;
+      col = pal[i % pal.length];
+      c.fillStyle = col;
+      fillEllipse(c, px, py, 5.2 * s, 5.2 * s);
+      c.fillStyle = (col === "#FFC83D" || col === "#FFFFFF") ? "#E07A3D" : "#FFC83D";
+      fillEllipse(c, px, py, 2 * s, 2 * s);
+    }
+  }
+
+  function drawGardenFence(c) {
+    var x, y, x0 = -40, x1 = WORLD_W + 40, step = 18;
+    c.fillStyle = "#FFFDF7";
+    c.strokeStyle = "rgba(44,58,74,0.18)";
+    c.lineWidth = 1.2;
+    for (x = x0; x <= x1; x += step) {
+      y = groundYAt(x) - 58;
+      c.beginPath();
+      c.moveTo(x - 3.4, y + 38);
+      c.lineTo(x - 3.4, y + 7);
+      c.lineTo(x, y);
+      c.lineTo(x + 3.4, y + 7);
+      c.lineTo(x + 3.4, y + 38);
+      c.closePath();
+      c.fill();
+      c.stroke();
+    }
+    c.fillStyle = "#FFFDF7";
+    c.strokeStyle = "rgba(44,58,74,0.16)";
+    c.lineWidth = 1.4;
+    c.beginPath();
+    c.moveTo(x0, groundYAt(x0) - 40);
+    for (x = x0; x <= x1; x += 24) c.lineTo(x, groundYAt(x) - 40);
+    c.lineTo(x1, groundYAt(x1) - 34);
+    for (x = x1; x >= x0; x -= 24) c.lineTo(x, groundYAt(x) - 34);
+    c.closePath();
+    c.fill();
+    c.stroke();
+    c.beginPath();
+    c.moveTo(x0, groundYAt(x0) - 26);
+    for (x = x0; x <= x1; x += 24) c.lineTo(x, groundYAt(x) - 26);
+    c.lineTo(x1, groundYAt(x1) - 21);
+    for (x = x1; x >= x0; x -= 24) c.lineTo(x, groundYAt(x) - 21);
+    c.closePath();
+    c.fill();
+    c.stroke();
+  }
+
+  function drawGardenArbor(c, x, ground) {
+    var i, px, py, pal = ["#E23B4A", "#FF6B9A", "#FFFFFF", "#C86BE0"];
+    c.fillStyle = "#F4EFE4";
+    c.strokeStyle = "rgba(90,70,50,0.25)";
+    c.lineWidth = 1.5;
+    c.fillRect(x - 36, ground - 100, 8, 100);
+    c.fillRect(x + 28, ground - 100, 8, 100);
+    c.beginPath();
+    c.moveTo(x - 40, ground - 96);
+    c.quadraticCurveTo(x, ground - 148, x + 40, ground - 96);
+    c.lineTo(x + 32, ground - 96);
+    c.quadraticCurveTo(x, ground - 136, x - 32, ground - 96);
+    c.closePath();
+    c.fill();
+    c.stroke();
+    c.fillStyle = "#2F9E4F";
+    for (i = 0; i < 8; i++) {
+      px = x - 34 + (i % 2) * 62 + (i - 3) * 1.5;
+      py = ground - 30 - i * 12;
+      fillEllipse(c, px, py, 8, 5);
+    }
+    fillEllipse(c, x, ground - 128, 16, 8);
+    fillEllipse(c, x - 16, ground - 118, 10, 6);
+    fillEllipse(c, x + 16, ground - 118, 10, 6);
+    for (i = 0; i < 10; i++) {
+      px = x + Math.sin(i * 1.2) * 34;
+      py = ground - 44 - (i * 10);
+      if (i > 6) py = ground - 118 - (i - 7) * 8;
+      c.fillStyle = pal[i % pal.length];
+      fillEllipse(c, px, py, 5.5, 5.5);
+      c.fillStyle = "#FFC83D";
+      fillEllipse(c, px, py, 2, 2);
+    }
+  }
+
+  function drawGardenMid(c) {
+    var i, x, y, kind, col, u;
+    drawGardenArbor(c, 860, GROUND_Y);
+    c.fillStyle = "#CDB58A";
+    for (i = 0; i < 14; i++) {
+      x = 220 + i * 78;
+      if (x > 1180) break;
+      y = GROUND_Y + 8 + ((i % 3) - 1) * 3;
+      c.fillStyle = i % 2 ? "#D8C19A" : "#C4AA78";
+      fillEllipse(c, x, y, 16, 7);
+      c.fillStyle = "rgba(90,70,40,0.18)";
+      strokeEllipse(c, x, y, 16, 7);
+    }
+    for (i = 0; i < 42; i++) {
+      u = gardenUnit(i + 17);
+      x = 30 + i * 47 + (u - 0.5) * 16;
+      y = GROUND_Y - 8;
+      if (x > WORLD_W - 20) continue;
+      kind = i % 4;
+      col = GARDEN_PALETTE[(i * 3) % GARDEN_PALETTE.length];
+      drawGardenBloom(c, kind, x, y, 0.85 + u * 0.25, col);
+    }
+  }
+
+  function drawGardenHillFlowers(c) {
+    var i, x, y, kind, col, u, top;
+    for (i = 0; i < 48; i++) {
+      u = gardenUnit(i + 90);
+      x = HILL_START + 24 + (i * 41) % (WORLD_W - HILL_START + 80);
+      top = groundYAt(x);
+      y = top + 10 + (i * 11) % 24;
+      kind = i % 4;
+      col = GARDEN_PALETTE[(i * 5 + 2) % GARDEN_PALETTE.length];
+      drawGardenBloom(c, kind, x, y, 0.9 + u * 0.3, col);
+    }
+  }
+
+  function drawGardenForeground(c, y0, y1) {
+    var row, i, x, y, kind, col, u, gap, beds = [
+      GROUND_Y + 52, GROUND_Y + 96, GROUND_Y + 148, GROUND_Y + 210,
+      GROUND_Y + 282, GROUND_Y + 370, GROUND_Y + 480, GROUND_Y + 620,
+      GROUND_Y + 790, GROUND_Y + 980
+    ];
+    for (row = 0; row < beds.length; row++) {
+      y = beds[row];
+      if (y < y0 - 20 || y > y1 + 20) continue;
+      gap = 38 + (row % 3) * 4;
+      if (row % 2) {
+        c.fillStyle = "rgba(150, 108, 58, 0.22)";
+        for (i = 0; i < 8; i++) {
+          fillEllipse(c, 80 + i * 250 + (row * 40) % 80, y + 6, 70, 14);
+        }
+      }
+      for (i = 0; i < 56; i++) {
+        u = gardenUnit(row * 61 + i + 3);
+        x = -20 + i * gap + (u - 0.5) * 18 + (row % 2) * 16;
+        if (x < -40 || x > WORLD_W + 40) continue;
+        kind = (i + row) % 4;
+        col = GARDEN_PALETTE[(i + row * 2) % GARDEN_PALETTE.length];
+        drawGardenBloom(c, kind, x, y + (u - 0.5) * 8, 1.05 + u * 0.35 + row * 0.04, col);
+      }
+    }
+  }
+
+  function ensureGardenFrontCache() {
+    var y0 = GROUND_Y + 24, y1 = GROUND_Y + 1120, pad = 80, w, h, canv, ctx;
+    if (gardenFrontCache && gardenFrontCache.canv) return gardenFrontCache;
+    w = WORLD_W + pad * 2;
+    h = y1 - y0;
+    canv = document.createElement("canvas");
+    canv.width = Math.max(1, Math.floor(w));
+    canv.height = Math.max(1, Math.floor(h));
+    ctx = canv.getContext("2d");
+    ctx.translate(pad, -y0);
+    drawGardenForeground(ctx, y0, y1);
+    gardenFrontCache = { canv: canv, pad: pad, y0: y0, w: w, h: h };
+    return gardenFrontCache;
+  }
+
+  function drawGardenScenery(c, t) {
+    var g, i, x, y, flap, colors;
+    g = ensureGardenFrontCache();
+    if (g && g.canv) c.drawImage(g.canv, -g.pad, g.y0, g.w, g.h);
+    else drawGardenForeground(c, GROUND_Y + 24, GROUND_Y + 1120);
+    colors = ["#E86AD0", "#7EC8FF", "#FFC83D", "#FF8AB5", "#FFFFFF"];
+    for (i = 0; i < 6; i++) {
+      x = (i * 330 + (t || 0) * (20 + i * 7)) % (WORLD_W + 80) - 40;
+      y = 250 + (i * 51) % 190 + Math.sin((t || 0) * 1.3 + i) * 18;
+      flap = 0.55 + Math.sin((t || 0) * 11 + i) * 0.35;
+      c.fillStyle = colors[i % colors.length];
+      c.save();
+      c.translate(x, y);
+      c.rotate(Math.sin((t || 0) + i) * 0.2);
+      fillEllipse(c, -6 * flap, 0, 6 * flap, 3.5);
+      fillEllipse(c, 6 * flap, 0, 6 * flap, 3.5);
+      c.fillStyle = "#5A3A18";
+      fillEllipse(c, 0, 0, 1.6, 2.4);
+      c.restore();
+    }
+  }
+
+  function paintGardenThumb(cv) {
+    var c = cv.getContext("2d"), w = cv.width, h = cv.height, g, i;
+    g = c.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, "#7EC4F8");
+    g.addColorStop(0.55, "#F8D5EA");
+    g.addColorStop(1, "#62C46A");
+    c.fillStyle = g;
+    c.fillRect(0, 0, w, h);
+    c.fillStyle = "#45B352";
+    c.fillRect(0, h * 0.62, w, h);
+    c.fillStyle = "#FFFDF7";
+    for (i = 0; i < 8; i++) {
+      c.fillRect(4 + i * 11, h * 0.42, 5, h * 0.28);
+      c.beginPath();
+      c.moveTo(4 + i * 11, h * 0.42);
+      c.lineTo(6.5 + i * 11, h * 0.36);
+      c.lineTo(9 + i * 11, h * 0.42);
+      c.fill();
+    }
+    drawTulip(c, 16, h * 0.92, 1.15, "#FF6B9A");
+    drawDaisy(c, 40, h * 0.78, 1.05, "#FFFFFF");
+    drawSunflower(c, 64, h * 0.96, 0.9);
+    drawRose(c, 28, h * 0.98, 0.9, "#E23B4A");
+  }
+
   function drawFarHillDetail(c, park) {
     var x, x0 = HILL_START - 20, x1 = WORLD_W + 60, step = 16, top, i;
     if (!parkHasHill(park)) return;
@@ -5041,7 +5386,9 @@
       c.closePath();
       c.fill();
     }
-    if (park.lotsOfFlowers || park.flower) {
+    if (park.garden) {
+      drawGardenHillFlowers(c);
+    } else if (park.lotsOfFlowers || park.flower) {
       for (i = 0; i < 8; i++) {
         x = HILL_START + 90 + i * 52;
         top = groundYAt(x) + 8;
@@ -5103,6 +5450,8 @@
     c.closePath();
     c.fill();
 
+    if (park.garden) drawGardenFence(c);
+
     for (i = 0; i < park.trees.length; i++) {
       drawTree(c, park.trees[i].x, GROUND_Y, park.trees[i].h, park.trees[i].kind, park);
     }
@@ -5135,6 +5484,7 @@
     c.fill();
 
     if (park.pond) drawPond(c, park.pond, park);
+    if (park.garden) drawGardenMid(c);
 
     for (i = 0; i < park.bushes.length; i++) drawBush(c, park.bushes[i], park);
 
@@ -5159,7 +5509,9 @@
       c.fillRect((i * 53) % WORLD_W, GROUND_Y + 20 + (i * 17) % 80, 18, 3);
     }
 
-    if (park.flower || park.lotsOfFlowers) {
+    if (park.garden) {
+      drawGardenScenery(c, t);
+    } else if (park.flower || park.lotsOfFlowers) {
       for (i = 0; i < state.flowers.length; i++) {
         var f = state.flowers[i];
         if (!park.lotsOfFlowers && i > 16) continue;
@@ -6889,6 +7241,20 @@
         "<span class='lock-badge' aria-hidden='true'><span class='lock-shackle'></span><span class='lock-body'></span></span></span>" +
         "<span class='name'>" + (unlocked ? park.short : "???") + "</span>" +
         "<span class='meta" + (unlocked ? "" : " pts-needed") + "'>" + meta + "</span>";
+      if (park.garden) {
+        (function (art) {
+          var cv, sw;
+          sw = art && art.querySelector(".park-swatch");
+          if (!sw) return;
+          cv = document.createElement("canvas");
+          cv.className = "park-thumb";
+          cv.width = 88;
+          cv.height = 64;
+          cv.setAttribute("aria-hidden", "true");
+          paintGardenThumb(cv);
+          sw.parentNode.replaceChild(cv, sw);
+        })(card.querySelector(".card-art"));
+      }
       if (!unlocked && park.unlock > 0) {
         appendUnlockControls(card, "park", park, have);
       }
