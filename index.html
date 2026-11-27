@@ -1554,7 +1554,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261127bd";
+  var BUILD = "20261127be";
   var WORLD_W = 2000; // room for a full-power throw to roll up the far hill and back
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -1626,6 +1626,30 @@
   function throwSpeed(power) {
     var mul = (state && state.dogId === "jasper") ? JASPER_THROW_MUL : 1;
     return lerp(THROW_MIN * mul, THROW_MAX * mul, power);
+  }
+  var THROW_ORIGIN_X = 168;
+  /* ~25% of a typical full-power first landing (~1120px of travel). */
+  var SHORT_THROW_TRAVEL = 280;
+
+  function throwTravel() {
+    var landX = (typeof state.throwLandX === "number") ? state.throwLandX : (state.ball ? state.ball.x : THROW_ORIGIN_X);
+    return Math.max(0, landX - THROW_ORIGIN_X);
+  }
+
+  function isShortThrow() {
+    var travel = throwTravel();
+    var power = 1;
+    if (typeof state.lastThrowPower === "number") power = state.lastThrowPower;
+    else if (typeof state.lastMeterPower === "number") power = state.lastMeterPower;
+    return power <= 0.25 || travel <= SHORT_THROW_TRAVEL;
+  }
+
+  function distancePoints() {
+    var travel = throwTravel();
+    if (travel <= SHORT_THROW_TRAVEL) return 1;
+    if (travel <= SHORT_THROW_TRAVEL * 2) return 2;
+    if (travel <= SHORT_THROW_TRAVEL * 3) return 3;
+    return 4;
   }
   var BONUS_SCALE = 1.75;
   var STAR_R = 16 * BONUS_SCALE;
@@ -2409,8 +2433,8 @@
     { id: "bandana-picnic", slot: "bandana", name: "Picnic Bandana", price: 117 },
     { id: "collar-sky", slot: "collar", name: "Sky Collar", price: 27 },
     { id: "collar-gold", slot: "collar", name: "Gold Collar", price: 72 },
-    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 162 },
-    { id: "collar-gem", slot: "collar", name: "Gem Collar", price: 144 }
+    { id: "collar-gem", slot: "collar", name: "Gem Collar", price: 144 },
+    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 162 }
   ];
   var shopSelected = null;
   var shopPreviewAnim = 0;
@@ -3799,6 +3823,7 @@
     resetRetrieveWatch();
     var dog = getDog(state.dogId);
     var pred = predictPath(state.ball.x, state.ball.y, state.ball.vx, state.ball.vy);
+    state.throwLandX = pred.x;
     state.dog.intercept = pickIntercept(pred, state.dog.x, dog.speed, dog.jump);
     state.dog.facing = 1;
     state.dog.pose = "run";
@@ -3863,10 +3888,25 @@
     state.ball.vx = 0;
     state.ball.vy = 0;
     state.phase = "return";
+    var shortThrow = isShortThrow();
     pts = 1;
     msg = "Nice fetch!";
     sub = "+1";
-    if (kind === "midair") {
+    if (shortThrow) {
+      pts = 1; msg = "Nice fetch!"; sub = "+1";
+      state.streak = 0;
+      state.combo = 0;
+      if (kind === "midair") {
+        sfx("midair"); sfx("bark");
+        addBurst(state.ball.x, state.ball.y, "#FFC83D", 16);
+        addBurst(state.ball.x, state.ball.y, "#FFFFFF", 8);
+      } else if (kind === "splash") {
+        sfx("splash"); sfx("catch");
+      } else {
+        sfx("catch");
+        if (kind === "great" || kind === "bush") sfx("bark");
+      }
+    } else if (kind === "midair") {
       pts = 5; msg = "Mid-air catch!"; sub = "+5";
       state.streak += 1;
       sfx("midair"); sfx("bark");
@@ -3895,19 +3935,27 @@
       sfx("catch");
     }
     streakBonus = 0;
-    if (state.streak >= 2 && (kind === "midair" || kind === "great")) streakBonus = 1;
     comboBonus = 0;
-    if (kind === "midair") {
-      state.combo = (state.combo || 0) + 1;
-      if (state.combo === 2) comboBonus = 1;
-      else if (state.combo === 3) comboBonus = 2;
-      else if (state.combo >= 4) comboBonus = 3;
+    gold = false;
+    if (!shortThrow) {
+      pts = Math.max(pts, distancePoints());
+      if (state.streak >= 2 && (kind === "midair" || kind === "great")) streakBonus = 1;
+      if (kind === "midair") {
+        state.combo = (state.combo || 0) + 1;
+        if (state.combo === 2) comboBonus = 1;
+        else if (state.combo === 3) comboBonus = 2;
+        else if (state.combo >= 4) comboBonus = 3;
+      }
+      gold = state.ball.special === "gold";
     }
-    gold = state.ball.special === "gold";
     total = (gold ? pts * 2 : pts) + streakBonus + comboBonus;
     cap = gold ? 10 : 8;
     if (total > cap) total = cap;
-    if (gold) {
+    if (shortThrow) {
+      total = 1;
+      msg = "Nice fetch!";
+      sub = "+1";
+    } else if (gold) {
       msg = "Golden catch!";
       sub = "+" + total;
     } else {
@@ -3915,8 +3963,10 @@
     }
     if (streakBonus) sub += "  Streak +" + streakBonus;
     if (comboBonus) sub += "  Combo +" + comboBonus;
+    state.lastCatchPoints = total;
+    state.lastCatchShort = !!shortThrow;
     addScore(total);
-    addPopup(sub, state.ball.x, state.ball.y - 40, gold ? "#FFE566" : "#FFF36A");
+    addPopup(shortThrow ? "+1" : sub, state.ball.x, state.ball.y - 40, gold ? "#FFE566" : "#FFF36A");
     if (kind === "midair" && state.combo >= 3) {
       state.flipT = 0.55;
       state.dog.pose = "flip";
@@ -7273,6 +7323,21 @@
           lastThrowPower: state.lastThrowPower,
           lastThrowSpeed: state.lastThrowSpeed,
           lastMeterPower: state.lastMeterPower,
+          throwLandX: state.throwLandX,
+          throwTravel: throwTravel(),
+          distancePoints: distancePoints(),
+          shortThrow: isShortThrow(),
+          lastCatchPoints: state.lastCatchPoints,
+          lastCatchShort: !!state.lastCatchShort,
+          toast: state.toast ? { text: state.toast.text, sub: state.toast.sub, t: state.toast.t } : null,
+          popups: (function () {
+            var out = [], i, p;
+            for (i = 0; i < (state.popups || []).length; i++) {
+              p = state.popups[i];
+              out.push({ text: p.text, x: p.x, y: p.y, t: p.t });
+            }
+            return out;
+          })(),
           worldW: WORLD_W,
           hillStart: HILL_START,
           hillRise: hillRise(state.ball ? state.ball.x : 0),
