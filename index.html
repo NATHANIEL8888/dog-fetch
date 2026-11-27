@@ -1554,7 +1554,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261127bb";
+  var BUILD = "20261127bc";
   var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -1565,8 +1565,8 @@
   function dogHomeX() {
     return DOG_HOME_X;
   }
-  var THROW_MIN = 330;
-  var THROW_MAX = 1078;
+  var THROW_MIN = 396;
+  var THROW_MAX = 1294;
   var JASPER_THROW_MUL = 1.10;
 
   function throwSpeed(power) {
@@ -2351,7 +2351,7 @@
     { id: "bandana-picnic", slot: "bandana", name: "Picnic Bandana", price: 117 },
     { id: "collar-sky", slot: "collar", name: "Sky Collar", price: 27 },
     { id: "collar-gold", slot: "collar", name: "Gold Collar", price: 72 },
-    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 108 },
+    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 162 },
     { id: "collar-gem", slot: "collar", name: "Gem Collar", price: 144 }
   ];
   var shopSelected = null;
@@ -4319,7 +4319,7 @@
     if (state.phase === "flying") state.flightT += dt;
 
     if (state.kidArm < 0.25 && (state.phase === "ready" || state.phase === "aiming" || state.phase === "celebrate")) {
-      state.kidArm = lerp(state.kidArm, 0.25, clamp(dt * 6, 0, 1));
+      state.kidArm = lerp(state.kidArm, 0.25, clamp(dt * 7.2, 0, 1));
     }
 
     updateBall(dt);
