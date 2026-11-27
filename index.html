@@ -1413,7 +1413,7 @@
       <div class="hero-wrap"><canvas id="heroCanvas" width="560" height="380" aria-hidden="true"></canvas></div>
       <p class="kicker">A park adventure</p>
       <h1><span class="coral">Fetch,</span> <span class="sky">Pup!</span></h1>
-      <p class="lede">You have 45 seconds. Throw, catch, and spend Points to unlock new pups and parks!</p>
+      <p class="lede">You have 60 seconds. Throw, catch, and spend Points to unlock new pups and parks!</p>
 
       <p class="total-points">Total points: <strong id="totalNear">0</strong></p>
       <p class="treat-count"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> Treats: <strong id="treatsNear">0</strong></p>
@@ -1554,7 +1554,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261123ba";
+  var BUILD = "20261127bb";
   var WORLD_W = 1320; // a little extra room so Jasper's longer throws land in-park
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -1580,7 +1580,7 @@
   var BALL_R = 14;
   var GRAVITY = 1550;
   var SAVE_KEY = "fetchPupSave_v2";
-  var ROUND_TIME = 45;
+  var ROUND_TIME = 60;
   var UNLOCK_GEN = 3;
   var PREV_DOG_UNLOCK = { sunny: 0, cocoa: 80, speckles: 220, blue: 420, jasper: 1000 };
   var PREV_PARK_UNLOCK = { meadow: 0, autumn: 70, beach: 180, garden: 320, sunset: 550 };
@@ -2341,18 +2341,18 @@
   }
 
   var SHOP_ITEMS = [
-    { id: "hat-party", slot: "hat", name: "Party Hat", price: 24 },
-    { id: "hat-beanie", slot: "hat", name: "Cozy Beanie", price: 36 },
-    { id: "hat-cowboy", slot: "hat", name: "Cowboy Hat", price: 60 },
-    { id: "hat-shades", slot: "hat", name: "Cool Shades", price: 87 },
-    { id: "bandana-red", slot: "bandana", name: "Red Bandana", price: 18 },
-    { id: "bandana-blue", slot: "bandana", name: "Blue Bandana", price: 30 },
-    { id: "bandana-star", slot: "bandana", name: "Starry Bandana", price: 54 },
-    { id: "bandana-picnic", slot: "bandana", name: "Picnic Bandana", price: 78 },
-    { id: "collar-sky", slot: "collar", name: "Sky Collar", price: 18 },
-    { id: "collar-gold", slot: "collar", name: "Gold Collar", price: 48 },
-    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 72 },
-    { id: "collar-gem", slot: "collar", name: "Gem Collar", price: 96 }
+    { id: "hat-party", slot: "hat", name: "Party Hat", price: 36 },
+    { id: "hat-beanie", slot: "hat", name: "Cozy Beanie", price: 54 },
+    { id: "hat-cowboy", slot: "hat", name: "Cowboy Hat", price: 90 },
+    { id: "hat-shades", slot: "hat", name: "Cool Shades", price: 131 },
+    { id: "bandana-red", slot: "bandana", name: "Red Bandana", price: 27 },
+    { id: "bandana-blue", slot: "bandana", name: "Blue Bandana", price: 45 },
+    { id: "bandana-star", slot: "bandana", name: "Starry Bandana", price: 81 },
+    { id: "bandana-picnic", slot: "bandana", name: "Picnic Bandana", price: 117 },
+    { id: "collar-sky", slot: "collar", name: "Sky Collar", price: 27 },
+    { id: "collar-gold", slot: "collar", name: "Gold Collar", price: 72 },
+    { id: "collar-rainbow", slot: "collar", name: "Rainbow Collar", price: 108 },
+    { id: "collar-gem", slot: "collar", name: "Gem Collar", price: 144 }
   ];
   var shopSelected = null;
   var shopPreviewAnim = 0;
@@ -3230,6 +3230,7 @@
       unlockGen: (typeof save.unlockGen === "number" ? save.unlockGen : UNLOCK_GEN),
       muted: !!save.muted,
       timeLeft: ROUND_TIME,
+      timerStarted: false,
       timedUp: false,
       pendingResults: false,
       sessionUnlocks: [],
@@ -3566,9 +3567,38 @@
     return null;
   }
 
+  function allParksUnlocked() {
+    var i;
+    for (i = 0; i < PARKS.length; i++) {
+      if (!isUnlockedId(state.unlockedParks, PARKS[i].id)) return false;
+    }
+    return true;
+  }
+
+  function jasperWaitNote() {
+    if (!isUnlockedId(state.unlocked, "blue")) return "Unlock Blue first";
+    if (!allParksUnlocked()) return "Unlock all parks first";
+    return "";
+  }
+
   function isNextUnlockable(kind, id) {
     var next = nextUnlockableItem(kind);
-    return !!(next && next.id === id);
+    if (!(next && next.id === id)) return false;
+    if (kind === "dog" && id === "jasper" && !allParksUnlocked()) return false;
+    return true;
+  }
+
+  function unlockWaitNote(kind, item) {
+    var gate, note;
+    if (!item || !(item.unlock > 0)) return "";
+    if (isNextUnlockable(kind, item.id)) return "";
+    if (kind === "dog" && item.id === "jasper") {
+      note = jasperWaitNote();
+      if (note) return note;
+    }
+    gate = unlockGateItem(kind, item.id);
+    if (gate) return "Unlock " + unlockItemLabel(gate, kind) + " first";
+    return "Locked";
   }
 
   // Nearest still-locked predecessor in price order. Used for "Unlock X first".
@@ -3621,8 +3651,8 @@
     list = kind === "park" ? state.unlockedParks : state.unlocked;
     if (isUnlockedId(list, item.id)) return false;
     if (!isNextUnlockable(kind, item.id)) {
-      gate = unlockGateItem(kind, item.id);
-      if (gate) setPickerNote("Unlock " + unlockItemLabel(gate, kind) + " first.");
+      gate = unlockWaitNote(kind, item);
+      if (gate) setPickerNote(gate + (gate.charAt(gate.length - 1) === "." ? "" : "."));
       return false;
     }
     have = walletPoints();
@@ -3686,6 +3716,7 @@
   /* ---------- Throw / physics ---------- */
   function beginThrow(angle, power) {
     if (state.timedUp || state.pendingResults || state.screen !== "play") return;
+    if (!state.timerStarted) state.timerStarted = true;
     power = clamp(power, 0.12, 1);
     angle = clamp(angle, 0.12, Math.PI - 0.12);
     var speed = throwSpeed(power);
@@ -4223,6 +4254,11 @@
 
   function tickTimer(dt) {
     if (state.timedUp) return;
+    if (!state.timerStarted) {
+      if (state.timeLeft !== ROUND_TIME) state.timeLeft = ROUND_TIME;
+      updateTimerHud();
+      return;
+    }
     state.timeLeft -= dt;
     if (state.timeLeft <= 0) {
       state.timeLeft = 0;
@@ -6338,8 +6374,7 @@
       card.appendChild(unlockBtn);
       return;
     }
-    gate = unlockGateItem(kind, item.id);
-    label = gate ? ("Unlock " + unlockItemLabel(gate, kind) + " first") : "Locked";
+    label = unlockWaitNote(kind, item) || "Locked";
     wait = document.createElement("span");
     wait.className = "unlock-wait";
     wait.setAttribute("data-unlock-wait", item.id);
@@ -6363,8 +6398,8 @@
       card.setAttribute("data-dog", dog.id);
       if (unlocked) card.setAttribute("aria-label", isGoal ? "Choose " + dog.name + ", the goal prize" : "Choose " + dog.name);
       else {
-        var dogGate = isNextUnlockable("dog", dog.id) ? null : unlockGateItem("dog", dog.id);
-        if (dogGate) card.setAttribute("aria-label", (isGoal ? "Mystery Pup is the goal. Locked. Unlock " : "Mystery pup locked. Unlock ") + unlockItemLabel(dogGate, "dog") + " first.");
+        var dogWait = isNextUnlockable("dog", dog.id) ? "" : unlockWaitNote("dog", dog);
+        if (dogWait) card.setAttribute("aria-label", (isGoal ? "Mystery Pup is the goal. Locked. " : "Mystery pup locked. ") + dogWait + ".");
         else card.setAttribute("aria-label", isGoal ? "Mystery Pup is the goal. Locked. " + dog.unlock + " Points to unlock." : "Mystery pup locked. " + dog.unlock + " Points to unlock.");
       }
       earCls = dog.ears === "prick" ? "face-ear prick" : (dog.ears === "semi" ? "face-ear semi" : "face-ear");
@@ -6502,7 +6537,7 @@
     }
     var lede = $("resultLede");
     if (lede) {
-      if (state.score <= 0) lede.innerHTML = "Ready to try another 45 seconds of fetch?";
+      if (state.score <= 0) lede.innerHTML = "Ready to try another 60 seconds of fetch?";
       else if (state.score >= state.best) lede.innerHTML = "Wow, that's your best game yet!";
       else lede.innerHTML = "You and your pup had a great round.";
     }
@@ -6561,6 +6596,7 @@
       state.streak = 0;
       state.fetchesInPark = 0;
       state.timeLeft = ROUND_TIME;
+      state.timerStarted = false;
       state.timedUp = false;
       state.pendingResults = false;
       state.sessionUnlocks = [];
@@ -6580,7 +6616,7 @@
       snapCameraToTarget();
       updateHud();
       showScreen("play");
-      showToast("Go fetch!", "You have 45 seconds!", 1.4);
+      showToast("Go fetch!", "You have 60 seconds!", 1.4);
     } catch (err) {}
     try {
       resumeAudio();
@@ -6835,6 +6871,7 @@
           best: state.best,
           totalPoints: state.totalPoints,
           timeLeft: state.timeLeft,
+          timerStarted: !!state.timerStarted,
           timedUp: state.timedUp,
           phaseAge: state.phaseAge,
           park: currentPark().name,
