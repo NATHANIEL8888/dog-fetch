@@ -1442,8 +1442,8 @@
       <div class="panel">
         <h2>How to play</h2>
         <ul class="how-list">
-          <li>Drag or flick the ball to aim and throw.</li>
-          <li>Or press and hold to power up, then let go.</li>
+          <li>Hold to fill the power bar, then let go to throw at that power.</li>
+          <li>Drag while you hold to aim. A quick tap or flick with no charge is a weak throw.</li>
           <li>Grab <span class="howto-bonus" aria-hidden="true"><svg viewBox="0 0 24 16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> bones and <span class="howto-bonus" aria-hidden="true"><svg viewBox="0 0 18 18"><path d="M9 1.2l2.15 5.15L16.8 7.1l-4.2 3.72L13.8 16.8 9 13.95 4.2 16.8l1.2-5.98L1.2 7.1l5.65-.75z" fill="#FFD24A" stroke="#E07000" stroke-width="1.6" stroke-linejoin="round"/></svg></span> stars. Earn Points to unlock new parks and pups, and Treats for Dress Up!</li>
           <li>Sometimes the next ball is special: a golden ball doubles the catch, and a bouncy ball keeps hopping.</li>
           <li>String mid-air catches for combos. A big combo makes your pup flip!</li>
@@ -1524,9 +1524,9 @@
         </div>
       </div>
       <div class="canvas-wrap">
-        <canvas id="game" aria-label="Fetch game. Drag or flick to throw the ball."></canvas>
+        <canvas id="game" aria-label="Fetch game. Hold to power up, drag to aim, then release to throw."></canvas>
         <div class="toast" id="toast" hidden><div class="big" id="toastBig"></div><div class="sub" id="toastSub"></div></div>
-        <div class="hint" id="hint">Drag or hold to throw</div>
+        <div class="hint" id="hint">Hold to power, drag to aim</div>
       </div>
     </section>
 
@@ -3717,7 +3717,9 @@
   function beginThrow(angle, power) {
     if (state.timedUp || state.pendingResults || state.screen !== "play") return;
     if (!state.timerStarted) state.timerStarted = true;
-    power = clamp(power, 0.12, 1);
+    power = clamp(typeof power === "number" ? power : 0, 0, 1);
+    state.lastThrowPower = power;
+    state.lastThrowSpeed = throwSpeed(power);
     angle = clamp(angle, 0.12, Math.PI - 0.12);
     var speed = throwSpeed(power);
     state.ball.x = 168;
@@ -4299,13 +4301,12 @@
     trackPhaseAndFailsafe(dt);
     if (state.screen !== "play") return;
     state.time += dt;
-    if (state.aim.active && state.aim.mode === "hold") {
+    if (state.aim.active) {
       state.aim.holdT += dt;
       state.aim.pulse += dt;
       var wave = (Math.sin(state.aim.holdT * 2.4 - Math.PI / 2) + 1) / 2;
       if (state.aim.holdT < 0.9) state.aim.power = clamp(state.aim.holdT / 0.9, 0, 1);
       else state.aim.power = 0.2 + 0.8 * wave;
-      state.aim.angle = 0.72 + state.aim.power * 0.35;
     }
 
     var i, c;
@@ -5651,20 +5652,40 @@
     c.closePath();
     c.fill();
 
-    if (state.aim.mode === "hold") {
-      var mx = 86, my = 300, mw = 18, mh = 120;
-      roundRect(c, mx, my, mw, mh, 9);
-      c.fillStyle = "rgba(255,255,255,0.85)";
-      c.fill();
-      var fillH = mh * pow;
-      c.fillStyle = pow > 0.85 ? "#FF6B4A" : "#3B9AED";
-      roundRect(c, mx + 3, my + mh - fillH + 3, mw - 6, fillH - 6, 6);
-      c.fill();
-      c.fillStyle = "#2C3A4A";
-      c.font = "800 13px Trebuchet MS, sans-serif";
-      c.textAlign = "center";
-      c.fillText("POWER", mx + mw / 2, my + mh + 16);
+    var mx = 72, my = 268, mw = 28, mh = 156;
+    c.fillStyle = "rgba(44,58,74,0.35)";
+    roundRect(c, mx - 6, my - 8, mw + 12, mh + 36, 14);
+    c.fill();
+    roundRect(c, mx, my, mw, mh, 10);
+    c.fillStyle = "rgba(255,255,255,0.95)";
+    c.fill();
+    c.strokeStyle = "#2C3A4A";
+    c.lineWidth = 2.5;
+    c.stroke();
+    var ticks = [0.25, 0.5, 0.75];
+    var ti, ty;
+    c.strokeStyle = "rgba(44,58,74,0.45)";
+    c.lineWidth = 1.5;
+    for (ti = 0; ti < ticks.length; ti++) {
+      ty = my + mh - mh * ticks[ti];
+      c.beginPath();
+      c.moveTo(mx + 2, ty);
+      c.lineTo(mx + mw - 2, ty);
+      c.stroke();
     }
+    var fillH = Math.max(0, Math.min(mh, mh * pow));
+    if (fillH > 4) {
+      c.fillStyle = pow > 0.85 ? "#FF6B4A" : "#3B9AED";
+      roundRect(c, mx + 3, my + mh - fillH + 3, mw - 6, fillH - 6, 7);
+      c.fill();
+    }
+    c.fillStyle = "#2C3A4A";
+    c.font = "800 15px Trebuchet MS, sans-serif";
+    c.textAlign = "center";
+    c.fillText("POWER", mx + mw / 2, my + mh + 20);
+    c.font = "800 16px Trebuchet MS, sans-serif";
+    c.fillText(String(Math.round(pow * 100)) + "%", mx + mw / 2, my - 14);
+
   }
 
   function drawBonuses(c) {
@@ -6201,7 +6222,7 @@
     state.aim.active = true;
     state.aim.mode = "hold";
     state.aim.holdT = 0;
-    state.aim.power = 0.08;
+    state.aim.power = 0;
     state.aim.angle = 0.85;
     resumeAudio();
   }
@@ -6212,15 +6233,13 @@
     var dx = wx - pointer.sx;
     var dy = wy - pointer.sy;
     var dist = hypot(dx, dy);
-    if (dist > 22) {
+    if (dist > 16) {
       pointer.moved = true;
-      state.aim.mode = "flick";
       var adx = dx, ady = -dy;
       if (adx < 8) adx = 8;
       state.aim.angle = Math.atan2(ady, adx);
       if (state.aim.angle < 0.15) state.aim.angle = 0.15;
       if (state.aim.angle > 1.45) state.aim.angle = 1.45;
-      state.aim.power = clamp(dist / 220, 0.12, 1);
     }
   }
 
@@ -6237,9 +6256,9 @@
       return;
     }
     if (state.phase !== "aiming" || !state.aim.active) return;
-    var power = state.aim.power;
+    var power = clamp(state.aim.power, 0, 1);
     var angle = state.aim.angle;
-    if (state.aim.mode === "hold" && power < 0.12) power = 0.35;
+    state.lastMeterPower = power;
     beginThrow(angle, power);
   }
 
@@ -6844,6 +6863,30 @@
       start: startGame,
       goHome: goHome,
       simulateThrow: simulateThrow,
+      startAim: function () {
+        if (state.screen !== "play") startGame();
+        if (state.phase !== "ready" && state.phase !== "aiming" && state.phase !== "celebrate") placeReady();
+        playIgnoreUntil = 0;
+        onDown(200, 480, "pointerdown");
+        return !!(state.aim && state.aim.active);
+      },
+      setAimPower: function (p) {
+        p = clamp(typeof p === "number" ? p : 0, 0, 1);
+        if (!state.aim || !state.aim.active) {
+          if (state.screen !== "play") startGame();
+          if (state.phase !== "ready" && state.phase !== "aiming" && state.phase !== "celebrate") placeReady();
+          playIgnoreUntil = 0;
+          onDown(200, 480, "pointerdown");
+        }
+        state.aim.power = p;
+        return state.aim.power;
+      },
+      releaseAim: function () {
+        var meter = state.aim ? state.aim.power : 0;
+        onUp();
+        return { meter: meter, power: state.lastThrowPower, speed: state.lastThrowSpeed, meterAtRelease: state.lastMeterPower };
+      },
+      throwSpeedOf: function (power) { return throwSpeed(clamp(power, 0, 1)); },
       throwRange: function () {
         var mul = (state && state.dogId === "jasper") ? JASPER_THROW_MUL : 1;
         return { min: THROW_MIN * mul, max: THROW_MAX * mul, mul: mul, dog: state && state.dogId };
@@ -6873,6 +6916,12 @@
           timeLeft: state.timeLeft,
           timerStarted: !!state.timerStarted,
           timedUp: state.timedUp,
+          aimPower: state.aim ? state.aim.power : 0,
+          aimAngle: state.aim ? state.aim.angle : 0,
+          aimActive: !!(state.aim && state.aim.active),
+          lastThrowPower: state.lastThrowPower,
+          lastThrowSpeed: state.lastThrowSpeed,
+          lastMeterPower: state.lastMeterPower,
           phaseAge: state.phaseAge,
           park: currentPark().name,
           parkId: state.parkId,
