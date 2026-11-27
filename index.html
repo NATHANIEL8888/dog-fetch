@@ -1589,6 +1589,24 @@
   function groundYAt(x) {
     return GROUND_Y - hillRise(x);
   }
+
+  var OCEAN_START = 1280;
+
+  function parkHasOcean(park) {
+    park = park || (typeof currentPark === "function" ? currentPark() : null);
+    return !!(park && park.oceanEnd);
+  }
+
+  function inOcean(x, y, park) {
+    if (!parkHasOcean(park)) return false;
+    return x >= OCEAN_START - 12;
+  }
+
+  function beachShoreX(y) {
+    var dy = y - (GROUND_Y + 8);
+    if (!(dy > 0)) return OCEAN_START;
+    return OCEAN_START - Math.min(240, dy * 0.28 + dy * dy * 0.00025);
+  }
   /* Waiting spot ahead of the boy. +42 world ≈ 19px more gap on a 390-wide phone (halfway back from al). */
   var DOG_HOME_X = 292;
 
@@ -1664,8 +1682,8 @@
       sun: "#FFE566", sunX: 1040, sunY: 90, sunR: 58,
       grassFar: "#F3D39A", grassMid: "#EBC07A", grassNear: "#E0B266",
       dirt: "#E8C48A", treeA: "#3CB371", treeB: "#2E8B57",
-      flower: false, leaves: false, snow: false, beach: true, sunset: false,
-      pond: { x: 1020, y: GROUND_Y + 22, rx: 220, ry: 48, ocean: true },
+      flower: false, leaves: false, snow: false, beach: true, sunset: false, oceanEnd: true,
+      pond: { x: 780, y: GROUND_Y + 16, rx: 70, ry: 20, ocean: true },
       bushes: [{ x: 600, y: GROUND_Y, s: 0.85, palm: true }],
       trees: [{ x: 260, h: 200, kind: "palm" }, { x: 420, h: 160, kind: "palm" }]
     },
@@ -2339,6 +2357,10 @@
     }
     else if (kind === "bonus") { tone(880, 0.12, "sine", 0.05); tone(1320, 0.18, "triangle", 0.04, null, 0.09); }
     else if (kind === "splash") { noiseBurst(0.28, 0.06, 600); }
+    else if (kind === "whine") {
+      tone(420, 0.22, "sine", 0.05, 220);
+      tone(280, 0.36, "triangle", 0.045, 150, 0.16);
+    }
     else if (kind === "bounce") { tone(200, 0.1, "sine", 0.03, 90); }
     else if (kind === "button") { tone(660, 0.08, "sine", 0.035); }
     else if (kind === "park") {
@@ -3942,9 +3964,34 @@
         d.targetX = dogHomeX();
         if (Math.abs(d.x - dogHomeX()) > 0.4) d.x = lerp(d.x, dogHomeX(), clamp(dt * 8, 0, 1));
         else d.x = dogHomeX();
+      } else if (Math.abs(d.x - dogHomeX()) > 8) {
+        d.pose = "run";
+        d.targetX = dogHomeX();
+        d.facing = d.x > dogHomeX() ? -1 : 1;
+        var homeStep = dogDef.speed * dt * (d.facing);
+        if (Math.abs(homeStep) > Math.abs(dogHomeX() - d.x)) d.x = dogHomeX();
+        else d.x += homeStep;
+      } else if (state.phase === "ready" || state.phase === "aiming") {
+        d.x = dogHomeX();
+        d.pose = "idle";
       }
+      d.y = groundYAt(d.x);
       d.jumpY = lerp(d.jumpY, 0, clamp(dt * 8, 0, 1));
       return;
+    }
+
+    if (state.phase === "swept") {
+      d.targetX = OCEAN_START - 44;
+      if (d.x < OCEAN_START - 50) {
+        d.pose = "run";
+        d.facing = 1;
+      } else {
+        d.x = OCEAN_START - 44;
+        d.targetX = d.x;
+        d.pose = "idle";
+        d.facing = 1;
+      }
+      d.jumpY = lerp(d.jumpY, 0, clamp(dt * 10, 0, 1));
     }
 
     inter = d.intercept;
@@ -4037,6 +4084,12 @@
     if (b.x > WORLD_W - 24) { b.x = WORLD_W - 24; b.vx = -Math.abs(b.vx) * 0.55; }
     if (b.x < 50) { b.x = 50; b.vx = Math.abs(b.vx) * 0.4; }
 
+    if (state.sweeping || state.phase === "swept") return;
+    if (inOcean(b.x, b.y, park) && b.y > GROUND_Y - 80) {
+      startOceanSweep();
+      return;
+    }
+
     gx = groundYAt(b.x) - BALL_R;
     if (b.y >= gx) {
       b.y = gx;
@@ -4105,6 +4158,8 @@
 
   function tryCatch() {
     if (state.dog.hasBall) return;
+    if (state.sweeping || state.phase === "swept") return;
+    if (inOcean(state.ball.x, state.ball.y, currentPark())) return;
     if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return;
     var ms = dogScale();
     var mouthX = state.dog.x + state.dog.facing * dogMouthFwd();
@@ -4209,6 +4264,67 @@
     state.popups = next;
   }
 
+
+  function startOceanSweep() {
+    if (!state || state.sweeping) return;
+    state.sweeping = true;
+    state.phase = "swept";
+    state.sweepT = 0;
+    state.dog.hasBall = false;
+    state.dog.intercept = null;
+    state.ball.held = false;
+    state.ball.visible = true;
+    if (state.ball.x < OCEAN_START) state.ball.x = OCEAN_START + 6;
+    try { sfx("splash"); sfx("whine"); } catch (err) {}
+    addBurst(state.ball.x, GROUND_Y - 4, "#A0E4FF", 18);
+    addBurst(state.ball.x, GROUND_Y - 2, "#FFFFFF", 10);
+    showToast("Swept away!", "The wave took the ball!", 1.25);
+  }
+
+  function updateOceanSweep(dt) {
+    var b, t;
+    if (!state || !state.sweeping) return;
+    state.sweepT = (state.sweepT || 0) + dt;
+    t = state.sweepT;
+    b = state.ball;
+    b.held = false;
+    b.visible = true;
+    b.x += (78 + 46 * Math.sin(t * 5.2)) * dt;
+    b.y = GROUND_Y + 10 + Math.sin(t * 7.2) * 10;
+    b.spin += dt * 8;
+    if (t > 0.18 && t < 0.22) addBurst(b.x, GROUND_Y + 4, "#E8F7FF", 6);
+    if (t >= 1.15) finishOceanSweep();
+  }
+
+  function finishOceanSweep() {
+    var dogX, hint;
+    if (!state) return;
+    dogX = state.dog ? state.dog.x : dogHomeX();
+    state.sweeping = false;
+    state.sweepT = 0;
+    state.dog.hasBall = false;
+    state.dog.intercept = null;
+    state.dog.x = Math.min(dogX, OCEAN_START - 44);
+    state.dog.y = groundYAt(state.dog.x);
+    state.dog.facing = -1;
+    state.dog.pose = "run";
+    state.dog.jumpY = 0;
+    state.dog.swim = false;
+    state.ball.held = true;
+    state.ball.visible = true;
+    state.ball.x = 168;
+    state.ball.y = 452;
+    state.ball.vx = 0;
+    state.ball.vy = 0;
+    state.phase = "ready";
+    state.aim.active = false;
+    state.aim.mode = "none";
+    resetRetrieveWatch();
+    pickHeldSpecial();
+    hint = $("hint");
+    if (hint) hint.style.display = "block";
+  }
+
   function resetRetrieveWatch() {
     if (!state) return;
     state.groundWait = 0;
@@ -4219,8 +4335,13 @@
   function forcePickup() {
     var park, kind;
     if (!state || !state.ball || state.ball.held || state.dog.hasBall) return false;
+    if (state.sweeping || state.phase === "swept") return false;
     if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return false;
     park = currentPark();
+    if (inOcean(state.ball.x, state.ball.y, park)) {
+      startOceanSweep();
+      return false;
+    }
     if (Math.abs(state.dog.x - state.ball.x) > 80) {
       state.dog.x = state.ball.x - (state.dog.facing || 1) * Math.min(dogMouthFwd(), 40);
       state.dog.x = clamp(state.dog.x, 80, WORLD_W - 40);
@@ -4241,8 +4362,16 @@
       resetRetrieveWatch();
       return;
     }
+    if (state.sweeping || state.phase === "swept") {
+      resetRetrieveWatch();
+      return;
+    }
     if (state.phase !== "retrieve" && state.phase !== "bounce" && state.phase !== "flying") {
       resetRetrieveWatch();
+      return;
+    }
+    if (inOcean(state.ball.x, state.ball.y, currentPark())) {
+      startOceanSweep();
       return;
     }
     nearGround = state.ball.y > groundYAt(state.ball.x) - 90;
@@ -4372,6 +4501,7 @@
     }
 
     updateBall(dt);
+    updateOceanSweep(dt);
     updateDog(dt);
     updateSurprise(dt);
     updateSkyBirds(dt);
@@ -4731,6 +4861,53 @@
     ], "#6E8EAE", "#FFFFFF");
   }
 
+
+  function drawBeachOcean(c, park, t) {
+    var x, i, y, foam, wx, shore = OCEAN_START, x1 = WORLD_W + 500, step = 14;
+    t = t || 0;
+    c.fillStyle = "rgba(196, 150, 96, 0.55)";
+    c.beginPath();
+    c.moveTo(shore - 90, GROUND_Y + 2);
+    c.quadraticCurveTo(shore - 10, GROUND_Y + 10, shore + 4, GROUND_Y + 16);
+    for (y = GROUND_Y + 16; y <= GROUND_Y + 900; y += 20) c.lineTo(beachShoreX(y) + 16, y);
+    for (y = GROUND_Y + 900; y >= GROUND_Y + 16; y -= 20) c.lineTo(beachShoreX(y) - 10, y);
+    c.closePath();
+    c.fill();
+    var wg = c.createLinearGradient(0, GROUND_Y - 6, 0, GROUND_Y + 260);
+    wg.addColorStop(0, "rgba(160, 230, 245, 0.88)");
+    wg.addColorStop(0.18, "rgba(70, 170, 210, 0.94)");
+    wg.addColorStop(0.55, "rgba(30, 110, 170, 0.97)");
+    wg.addColorStop(1, "rgba(16, 70, 130, 1)");
+    c.fillStyle = wg;
+    c.beginPath();
+    c.moveTo(shore, GROUND_Y + 8 + Math.sin(t * 2.2 + shore * 0.03) * 5);
+    for (x = shore; x <= x1; x += step) {
+      y = GROUND_Y + 8 + Math.sin(t * 2.2 + x * 0.03) * 5;
+      c.lineTo(x, y);
+    }
+    c.lineTo(x1, GROUND_Y + 2400);
+    for (y = GROUND_Y + 2400; y >= GROUND_Y + 16; y -= 24) c.lineTo(beachShoreX(y), y);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = "rgba(255,255,255,0.55)";
+    c.lineWidth = 3;
+    for (i = 0; i < 4; i++) {
+      c.beginPath();
+      foam = t * (1.4 + i * 0.25) + i * 1.3;
+      for (x = shore - 6; x <= shore + 420 + i * 80; x += 10) {
+        y = GROUND_Y + 10 + i * 11 + Math.sin(foam + x * 0.045) * (5.5 - i * 0.7);
+        if (x === shore - 6) c.moveTo(x, y);
+        else c.lineTo(x, y);
+      }
+      c.stroke();
+    }
+    c.fillStyle = "rgba(255,255,255,0.62)";
+    for (i = 0; i < 7; i++) {
+      wx = shore + 8 + i * 22 + Math.sin(t * 3 + i) * 6;
+      fillEllipse(c, wx, GROUND_Y + 9 + Math.sin(t * 4 + i * 0.8) * 2, 10, 4);
+    }
+  }
+
   function drawFarHillDetail(c, park) {
     var x, x0 = HILL_START - 20, x1 = WORLD_W + 60, step = 16, top, i;
     if (!parkHasHill(park)) return;
@@ -4814,8 +4991,8 @@
     c.beginPath();
     c.moveTo(-80, GROUND_Y - 70);
     c.quadraticCurveTo(300, GROUND_Y - 110, 640, GROUND_Y - 64);
-    c.quadraticCurveTo(940, GROUND_Y - 40, WORLD_W + 80, GROUND_Y - 80 - (parkHasHill(park) ? HILL_HEIGHT : 0));
-    c.lineTo(WORLD_W + 80, GROUND_Y + 20);
+    c.quadraticCurveTo(940, GROUND_Y - 40, (park.oceanEnd ? OCEAN_START : WORLD_W + 80), GROUND_Y - 80 - (parkHasHill(park) ? HILL_HEIGHT : 0));
+    c.lineTo((park.oceanEnd ? OCEAN_START : WORLD_W + 80), GROUND_Y + 20);
     c.lineTo(-80, GROUND_Y + 20);
     c.closePath();
     c.fill();
@@ -4826,7 +5003,7 @@
 
     c.fillStyle = park.grassMid;
     (function () {
-      var x, x0 = -80, x1 = WORLD_W + 80, step = 18;
+      var x, x0 = -80, x1 = park.oceanEnd ? OCEAN_START + 6 : WORLD_W + 80, step = 18;
       c.beginPath();
       c.moveTo(x0, groundYAt(x0) - 18);
       for (x = x0 + step; x <= x1; x += step) c.lineTo(x, groundYAt(x) - 18);
@@ -4852,16 +5029,28 @@
 
     c.fillStyle = park.grassNear;
     (function () {
-      var x, x0 = -800, x1 = WORLD_W + 800, step = 20;
-      c.beginPath();
-      c.moveTo(x0, groundYAt(x0) + 16);
-      for (x = x0 + step; x <= x1; x += step) c.lineTo(x, groundYAt(x) + 16);
-      c.lineTo(x1, GROUND_Y + 5000);
-      c.lineTo(x0, GROUND_Y + 5000);
-      c.closePath();
-      c.fill();
+      var x, y, x0 = -800, x1, step = 20;
+      if (park.oceanEnd) {
+        c.beginPath();
+        c.moveTo(x0, GROUND_Y + 16);
+        c.lineTo(OCEAN_START, GROUND_Y + 16);
+        for (y = GROUND_Y + 16; y <= GROUND_Y + 1800; y += 24) c.lineTo(beachShoreX(y), y);
+        c.lineTo(x0, GROUND_Y + 1800);
+        c.closePath();
+        c.fill();
+      } else {
+        x1 = WORLD_W + 800;
+        c.beginPath();
+        c.moveTo(x0, groundYAt(x0) + 16);
+        for (x = x0 + step; x <= x1; x += step) c.lineTo(x, groundYAt(x) + 16);
+        c.lineTo(x1, GROUND_Y + 5000);
+        c.lineTo(x0, GROUND_Y + 5000);
+        c.closePath();
+        c.fill();
+      }
     })();
     if (parkHasHill(park)) drawFarHillDetail(c, park);
+    if (park.oceanEnd) drawBeachOcean(c, park, t);
 
     c.fillStyle = "rgba(255,255,255,0.08)";
     for (i = 0; i < 28; i++) {
@@ -7038,6 +7227,10 @@
           worldW: WORLD_W,
           hillStart: HILL_START,
           hillRise: hillRise(state.ball ? state.ball.x : 0),
+          oceanStart: OCEAN_START,
+          sweeping: !!state.sweeping,
+          sweepT: state.sweepT || 0,
+          inOcean: inOcean(state.ball ? state.ball.x : 0, state.ball ? state.ball.y : 0, currentPark()),
           phaseAge: state.phaseAge,
           park: currentPark().name,
           parkId: state.parkId,
