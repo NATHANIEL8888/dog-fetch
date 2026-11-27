@@ -1554,7 +1554,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261127be";
+  var BUILD = "20261127bf";
   var WORLD_W = 2000; // room for a full-power throw to roll up the far hill and back
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -3315,6 +3315,7 @@
       timerStarted: false,
       timedUp: false,
       pendingResults: false,
+      timeZeroAge: 0,
       sessionUnlocks: [],
       phaseAge: 0,
       phaseSeen: "ready",
@@ -3360,7 +3361,7 @@
   function placeReady(opts) {
     opts = opts || {};
     if (state.timedUp || state.pendingResults) {
-      if (state.screen === "play") showResults();
+      if (state.screen === "play") showResultsSafe();
       return;
     }
     state.phase = "ready";
@@ -4280,7 +4281,7 @@
     state.fetchesInPark += 1;
     if (state.timedUp || state.pendingResults) {
       state.phase = "done";
-      if (state.screen === "play") showResults();
+      if (state.screen === "play") showResultsSafe();
       return;
     }
     placeReady({ skipBonuses: true, keepSpecial: true });
@@ -4372,10 +4373,17 @@
     state.ball.y = 452;
     state.ball.vx = 0;
     state.ball.vy = 0;
-    state.phase = "ready";
     state.aim.active = false;
     state.aim.mode = "none";
     resetRetrieveWatch();
+    if (state.timedUp || state.pendingResults) {
+      state.phase = "done";
+      hint = $("hint");
+      if (hint) hint.style.display = "none";
+      if (state.screen === "play") showResultsSafe();
+      return;
+    }
+    state.phase = "ready";
     pickHeldSpecial();
     hint = $("hint");
     if (hint) hint.style.display = "block";
@@ -4473,7 +4481,7 @@
       }
       if (state.timedUp || state.pendingResults) {
         state.phase = "done";
-        if (state.screen === "play") showResults();
+        if (state.screen === "play") showResultsSafe();
         return;
       }
       if (state.screen === "play") {
@@ -4489,7 +4497,16 @@
   }
 
   function tickTimer(dt) {
+    if (state.screen === "play" && state.timerStarted && (state.timeLeft <= 0 || state.timedUp)) {
+      state.timeLeft = 0;
+      updateTimerHud();
+      state.timeZeroAge = (state.timeZeroAge || 0) + dt;
+      if (!state.timedUp) onTimeUp();
+      else if (state.timeZeroAge > 1.5 && state.screen === "play") showResultsSafe();
+      return;
+    }
     if (state.timedUp) return;
+    state.timeZeroAge = 0;
     if (!state.timerStarted) {
       if (state.timeLeft !== ROUND_TIME) state.timeLeft = ROUND_TIME;
       updateTimerHud();
@@ -6894,23 +6911,37 @@
     if (state.screen === "results") return;
     state.timedUp = true;
     state.timeLeft = 0;
+    state.pendingResults = false;
     updateTimerHud();
     pointer.down = false;
-    state.aim.active = false;
-    state.aim.mode = "none";
+    if (state.aim) {
+      state.aim.active = false;
+      state.aim.mode = "none";
+      state.aim.power = 0;
+      state.aim.holdT = 0;
+    }
+    if (state.phase === "aiming") state.phase = "ready";
     var hint = $("hint");
     if (hint) hint.style.display = "none";
-    if (state.phase === "aiming") {
-      state.phase = "ready";
-      state.ball.held = true;
-      state.ball.x = 168;
-      state.ball.y = 452;
-    }
-    if (state.phase === "ready" || state.phase === "celebrate") {
+    showResultsSafe();
+  }
+
+  function showResultsSafe() {
+    try {
       showResults();
-    } else if (state.screen === "play") {
-      state.pendingResults = true;
-      showToast("Time's up!", "Nice catching!", 1.2);
+    } catch (err) {
+      logGameError("showResults", err);
+      try {
+        state.pendingResults = false;
+        state.timedUp = true;
+        state.timeLeft = 0;
+        state.phase = "done";
+        pointer.down = false;
+        showScreen("results");
+        stopLoop();
+      } catch (err2) {
+        logGameError("showResults-fallback", err2);
+      }
     }
   }
 
@@ -7011,6 +7042,7 @@
       state.timerStarted = false;
       state.timedUp = false;
       state.pendingResults = false;
+      state.timeZeroAge = 0;
       state.sessionUnlocks = [];
       state.treatsAtStart = state.treats || 0;
       state.totalAtStart = state.totalPoints || 0;
@@ -7317,6 +7349,8 @@
           timeLeft: state.timeLeft,
           timerStarted: !!state.timerStarted,
           timedUp: state.timedUp,
+          timeZeroAge: state.timeZeroAge || 0,
+          pendingResults: !!state.pendingResults,
           aimPower: state.aim ? state.aim.power : 0,
           aimAngle: state.aim ? state.aim.angle : 0,
           aimActive: !!(state.aim && state.aim.active),
