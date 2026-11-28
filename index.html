@@ -918,6 +918,59 @@
     }
     .reset-progress:hover { background: #E8F4FC; }
 
+    .race-row { margin: 0 auto 8px; max-width: 360px; }
+    .race-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 56px;
+      padding: 6px 10px 6px 12px;
+      border: 2px solid #B8C4D0;
+      background: #fff;
+      color: #2C3A4A;
+      border-radius: 18px;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 3px 0 rgba(44, 58, 74, 0.14);
+    }
+    .race-toggle .race-flag { flex: 0 0 auto; display: flex; width: 30px; height: 30px; align-items: center; justify-content: center; }
+    .race-toggle .race-text { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+    .race-toggle .race-text strong { font-size: 17px; font-weight: 900; }
+    .race-toggle .race-text small { font-size: 13px; font-weight: 700; color: #5B6B7C; }
+    .race-toggle .race-pill {
+      flex: 0 0 auto;
+      position: relative;
+      width: 78px;
+      height: 38px;
+      border-radius: 999px;
+      background: #C9D1DA;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      transition: background 0.15s;
+    }
+    .race-toggle .race-pill .race-pill-text { position: absolute; top: 0; bottom: 0; right: 12px; display: flex; align-items: center; }
+    .race-toggle .race-pill .race-knob {
+      position: absolute; top: 4px; left: 4px; width: 30px; height: 30px; border-radius: 50%;
+      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: left 0.15s;
+    }
+    .race-toggle.is-on { border-color: #D9532F; background: #FFF1E8; }
+    .race-toggle.is-on .race-text small { color: #9A3A1E; }
+    .race-toggle.is-on .race-pill { background: #E5603A; }
+    .race-toggle.is-on .race-pill .race-pill-text { right: auto; left: 13px; }
+    .race-toggle.is-on .race-pill .race-knob { left: 44px; }
+    .result-race {
+      margin: -6px 0 12px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: #9A3A1E;
+    }
     .start-actions {
       display: flex;
       flex-wrap: wrap;
@@ -1459,6 +1512,13 @@
       </div>
       </div>
       <div class="start-bottom">
+      <div class="race-row">
+        <button class="race-toggle" id="raceToggle" type="button" role="switch" aria-checked="false" aria-label="Race Mode, off">
+          <span class="race-flag" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28" focusable="false"><path d="M5 3v18" stroke="#6A3A08" stroke-width="2.4" stroke-linecap="round" fill="none"/><path d="M6 4h13l-3 4.2L19 12.4H6z" fill="#FFFFFF" stroke="#6A3A08" stroke-width="1.6" stroke-linejoin="round"/><path d="M6 4h4.3v4.2H6zM14.6 8.2H19l-1.5 2.1 1.5 2.1h-4.4z" fill="#2C3A4A"/></svg></span>
+          <span class="race-text"><strong>Race Mode</strong><small id="raceSub">Race Rex to the ball!</small></span>
+          <span class="race-pill" aria-hidden="true"><span class="race-pill-text" id="racePillText">OFF</span><span class="race-knob"></span></span>
+        </button>
+      </div>
       <div class="best-row">
         <div class="score-chip score-chip-best"><span class="trophy-icon" aria-hidden="true"><svg viewBox="0 0 20 20" width="16" height="16" focusable="false"><path fill="#8A4B08" d="M5 2.4h10v1.5h1.55A1.85 1.85 0 0 1 18.4 5.75v1.05a3.85 3.85 0 0 1-3.15 3.8A4.9 4.9 0 0 1 11.3 12.7v1.1h2.35v2.55H6.35V13.8H8.7v-1.1A4.9 4.9 0 0 1 4.75 10.6 3.85 3.85 0 0 1 1.6 6.8V5.75A1.85 1.85 0 0 1 3.45 3.9H5V2.4z"/><path fill="#FFE08A" d="M6.35 3.7h7.3v5c0 1.8-1.6 3.05-3.65 3.05s-3.65-1.25-3.65-3.05v-5z"/><path fill="#FFF6D0" d="M7.2 4.45h2.15v1.9H7.2z"/></svg></span>Best <strong id="bestChip">0</strong></div>
         <div class="score-chip">Total <strong id="totalChip">0</strong></div>
@@ -1547,6 +1607,7 @@
           <div>This game <strong id="resultScore">0</strong></div>
           <div id="resultBestWrap" class="result-best"><span class="result-best-label"><span class="trophy-icon" aria-hidden="true"><svg viewBox="0 0 20 20" width="16" height="16" focusable="false"><path fill="#8A4B08" d="M5 2.4h10v1.5h1.55A1.85 1.85 0 0 1 18.4 5.75v1.05a3.85 3.85 0 0 1-3.15 3.8A4.9 4.9 0 0 1 11.3 12.7v1.1h2.35v2.55H6.35V13.8H8.7v-1.1A4.9 4.9 0 0 1 4.75 10.6 3.85 3.85 0 0 1 1.6 6.8V5.75A1.85 1.85 0 0 1 3.45 3.9H5V2.4z"/><path fill="#FFE08A" d="M6.35 3.7h7.3v5c0 1.8-1.6 3.05-3.65 3.05s-3.65-1.25-3.65-3.05v-5z"/><path fill="#FFF6D0" d="M7.2 4.45h2.15v1.9H7.2z"/></svg></span><span>Best</span></span> <strong id="resultBest">0</strong><span class="new-best-badge" id="newBestBadge" hidden>New best!</span></div>
         </div>
+        <p class="result-race" id="resultRaceLine" hidden>Races won: <strong id="resultRaces">0 / 0</strong></p>
         <p class="result-treats" id="resultTreatsLine"><span class="treat-icon" aria-hidden="true"><svg viewBox="0 0 24 16" width="22" height="16"><g transform="rotate(-20 12 8)" fill="#FFFFFF" stroke="#5A3418" stroke-width="1.8" stroke-linejoin="round"><circle cx="5" cy="4.2" r="3"/><circle cx="5" cy="11.8" r="3"/><circle cx="19" cy="4.2" r="3"/><circle cx="19" cy="11.8" r="3"/><rect x="5" y="5.2" width="14" height="5.6" rx="1"/></g></svg></span> <span id="resultTreats">Treats +0</span></p>
         <div class="unlock-box" id="resultUnlocks" hidden>
           <h2>You can afford these!</h2>
@@ -1561,7 +1622,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261127bg";
+  var BUILD = "20261127bh";
   var WORLD_W = 2000; // room for a full-power throw to roll up the far hill and back
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -1776,7 +1837,7 @@
 
   function loadSave() {
     var raw = storageGet(SAVE_KEY);
-    var data = { best: 0, totalPoints: 0, unlocked: ["sunny"], unlockedParks: ["meadow"], dog: "sunny", park: "meadow", muted: false, unlockGen: UNLOCK_GEN, treats: 0, treatsGranted: false, ownedItems: [], equipped: { hat: null, bandana: null, collar: null } };
+    var data = { best: 0, totalPoints: 0, unlocked: ["sunny"], unlockedParks: ["meadow"], dog: "sunny", park: "meadow", muted: false, unlockGen: UNLOCK_GEN, treats: 0, treatsGranted: false, ownedItems: [], equipped: { hat: null, bandana: null, collar: null }, raceMode: false };
     var migrated = false;
     if (raw) {
       try {
@@ -1789,6 +1850,7 @@
           if (typeof parsed.dog === "string") data.dog = parsed.dog;
           if (typeof parsed.park === "string") data.park = parsed.park;
           if (typeof parsed.muted === "boolean") data.muted = parsed.muted;
+          if (typeof parsed.raceMode === "boolean") data.raceMode = parsed.raceMode;
           if (typeof parsed.unlockGen === "number" && parsed.unlockGen >= 0) data.unlockGen = Math.floor(parsed.unlockGen);
           else data.unlockGen = 0;
           if (parsed.ownedItems && parsed.ownedItems.length) data.ownedItems = parsed.ownedItems.slice(0);
@@ -1856,7 +1918,8 @@
         treats: data.treats,
         treatsGranted: data.treatsGranted,
         ownedItems: data.ownedItems,
-        equipped: data.equipped
+        equipped: data.equipped,
+        raceMode: !!data.raceMode
       });
     }
     return data;
@@ -1885,7 +1948,8 @@
       treats: state.treats || 0,
       treatsGranted: true,
       ownedItems: state.ownedItems ? state.ownedItems.slice(0) : [],
-      equipped: state.equipped ? { hat: state.equipped.hat || null, bandana: state.equipped.bandana || null, collar: state.equipped.collar || null } : { hat: null, bandana: null, collar: null }
+      equipped: state.equipped ? { hat: state.equipped.hat || null, bandana: state.equipped.bandana || null, collar: state.equipped.collar || null } : { hat: null, bandana: null, collar: null },
+      raceMode: !!state.raceMode
     });
   }
 
@@ -1948,6 +2012,228 @@
       return swimming ? Math.max(14, up - 10) : up;
     }
     return (swimming ? 18 : 36) * s;
+  }
+
+  /* ---------- Race Mode: Rex the rival pup ---------- */
+  var RIVAL_DEF = {
+    id: "rex", name: "Rex", title: "Rival pup", speed: 455, jump: 170,
+    body: "#C4472B", bodyDark: "#8F2F1B", belly: "#F2D3B5", ear: "#6E2415",
+    eye: "#1F140E", collar: "#19B8A6", tag: "#FFE066", ears: "prick", muzzle: "#F2D3B5",
+    mask: "#6E2415"
+  };
+  var RIVAL_EMPTY_GEAR = { hat: null, bandana: null, collar: null };
+  var RIVAL_BASE_SPEED = 455;
+  var RIVAL_PARK_MUL = { meadow: 0.85, autumn: 0.88, beach: 0.90, garden: 1.0, sunset: 0.97, mountains: 1.0 };
+  var RIVAL_DELAY_MIN = 0.25;
+  var RIVAL_DELAY_MAX = 0.35;
+  var RIVAL_WAIT_DX = 100;
+  var RIVAL_JITTER = 0.12;
+  var RIVAL_AIM_ERR = 40;
+  var RIVAL_BONUS = 2;
+  var RIVAL_DEPTH = 12;
+  var RIVAL_TROT = 560;
+  var RIVAL_JUMP = 180;
+  var RIVAL_GRAB_X = 44;
+  var RIVAL_LEAP_REACH = 62;
+
+  function rivalWaitX() { return dogHomeX() + RIVAL_WAIT_DX; }
+  function rivalCarryHomeX() { return dogHomeX() - 58; }
+  function rivalSpeedFor(parkId) {
+    var m = RIVAL_PARK_MUL[parkId];
+    if (!m) m = 0.9;
+    return RIVAL_BASE_SPEED * m;
+  }
+  function makeRival() {
+    return { x: rivalWaitX(), y: GROUND_Y, jumpY: 0, facing: 1, pose: "idle", swim: false, hasBall: false, mode: "wait", delayT: 0, speed: rivalSpeedFor("meadow"), landX: 0 };
+  }
+  function resetRival(snap) {
+    var r = state.rival;
+    if (!r) { state.rival = r = makeRival(); }
+    r.hasBall = false;
+    r.mode = "wait";
+    r.delayT = 0;
+    r.jumpY = 0;
+    r.pose = "idle";
+    state.rivalCarry = false;
+    state.raceLive = false;
+    if (snap || !isFinite(r.x)) {
+      r.x = rivalWaitX();
+      r.facing = 1;
+    }
+    r.y = groundYAt(r.x);
+  }
+  function rivalMove(r, tx, spd, dt) {
+    var dist = tx - r.x;
+    if (Math.abs(dist) <= 3) { r.x = tx; return false; }
+    r.facing = dist > 0 ? 1 : -1;
+    if (spd * dt >= Math.abs(dist)) r.x = tx;
+    else r.x += (dist > 0 ? 1 : -1) * spd * dt;
+    return true;
+  }
+  function rivalLimitX(x, park) {
+    var hi = WORLD_W - 48;
+    if (parkHasOcean(park)) hi = OCEAN_START - 84;
+    return clamp(x, 90, hi);
+  }
+  function rivalBegin(pred) {
+    var r, park;
+    if (!state.raceMode) return;
+    if (!state.rival) state.rival = makeRival();
+    r = state.rival;
+    park = currentPark();
+    r.hasBall = false;
+    state.rivalCarry = false;
+    state.raceLive = true;
+    r.mode = "chase";
+    r.delayT = rand(RIVAL_DELAY_MIN, RIVAL_DELAY_MAX);
+    r.speed = rivalSpeedFor(park.id) * rand(1 - RIVAL_JITTER, 1 + RIVAL_JITTER);
+    r.landX = rivalLimitX(pred.x + rand(-RIVAL_AIM_ERR, RIVAL_AIM_ERR), park);
+  }
+  function rivalWins() {
+    var r = state.rival, b = state.ball;
+    r.hasBall = true;
+    r.mode = "carry";
+    r.jumpY = 0;
+    state.rivalCarry = true;
+    state.raceLive = false;
+    b.held = true;
+    b.vx = 0;
+    b.vy = 0;
+    state.dog.hasBall = false;
+    state.dog.intercept = null;
+    state.dog.pose = "run";
+    state.phase = "return";
+    state.streak = 0;
+    state.combo = 0;
+    state.flipT = 0;
+    state.lastCatchPoints = 0;
+    state.lastCatchShort = false;
+    state.raceStats.decided += 1;
+    resetRetrieveWatch();
+    addPopup("Rex got it!", r.x, r.y - 126, "#FFC9B0", "race");
+    addBurst(r.x + r.facing * 26, r.y - 36, "#FFB08A", 8);
+    showToast("Rex got it!", "No points. Beat him next time!", 1.5);
+    try { sfx("bark"); } catch (err) {}
+    updateHud();
+  }
+  function awardRaceWin(shortThrow) {
+    var note;
+    if (!state.raceMode || !state.raceLive) return "";
+    state.raceLive = false;
+    state.raceStats.decided += 1;
+    state.raceStats.won += 1;
+    if (shortThrow) {
+      note = "Beat Rex!";
+    } else {
+      addScore(RIVAL_BONUS);
+      note = "Beat Rex! +" + RIVAL_BONUS;
+    }
+    addPopup(note, state.ball.x, state.ball.y - 96, "#B8F5C0", "race");
+    return note;
+  }
+  function rivalTryCatch() {
+    var r = state.rival, b = state.ball, park = currentPark(), mx, gy;
+    if (!state.raceLive || !r || r.hasBall || r.delayT > 0) return;
+    if (state.dog.hasBall || b.held || state.sweeping) return;
+    if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return;
+    if (inOcean(b.x, b.y, park)) return;
+    gy = groundYAt(b.x);
+    mx = r.x + r.facing * 26;
+    if (state.phase !== "flying" && b.y >= gy - 62) {
+      if (Math.abs(b.x - mx) < RIVAL_GRAB_X || Math.abs(b.x - r.x) < RIVAL_GRAB_X + 8) { rivalWins(); return; }
+    }
+    if (r.jumpY > 8 && hypot(b.x - mx, b.y - (r.y - 34 - r.jumpY)) < rivalReach()) rivalWins();
+  }
+  function rivalReach() {
+    var sp = getDog(state.dogId).speed || RIVAL_BASE_SPEED;
+    return RIVAL_LEAP_REACH * clamp(Math.pow(RIVAL_BASE_SPEED / sp, 1.5), 0.55, 1);
+  }
+  function rivalLeap(dt) {
+    var r = state.rival, b = state.ball, gy, h, mx, want = 0;
+    if (state.raceLive && !r.hasBall && r.delayT <= 0 && !r.swim && state.phase !== "swept" && !b.held) {
+      gy = groundYAt(b.x);
+      h = gy - b.y;
+      mx = r.x + r.facing * 26;
+      if (h > 30 && h < RIVAL_JUMP + 40 && Math.abs(b.x - mx) < 62) want = clamp(h - 26, 0, RIVAL_JUMP);
+    }
+    if (want > 0) r.jumpY = lerp(r.jumpY, want, clamp(dt * 16, 0, 1));
+    else r.jumpY = lerp(r.jumpY, 0, clamp(dt * 10, 0, 1));
+  }
+  function rivalUpdate(dt) {
+    var r = state.rival, park, ph, b, tgt, spd, moving, racing, swimMul;
+    if (!state.raceMode) return;
+    if (!r) { state.rival = r = makeRival(); }
+    if (!isFinite(r.x) || !isFinite(r.y)) resetRival(true);
+    park = currentPark();
+    ph = state.phase;
+    b = state.ball;
+    r.swim = inPond(r.x, GROUND_Y, park);
+    swimMul = r.swim ? 0.55 : 1;
+    racing = state.raceLive && !r.hasBall && (ph === "flying" || ph === "bounce" || ph === "retrieve");
+    if (ph === "swept") {
+      state.raceLive = false;
+      r.mode = "stop";
+      tgt = OCEAN_START - 84;
+      moving = rivalMove(r, tgt, Math.max(r.speed, 360) * swimMul, dt);
+      r.pose = moving ? (r.swim ? "swim" : "run") : "idle";
+      if (!moving) r.facing = 1;
+    } else if (r.hasBall) {
+      r.mode = "carry";
+      spd = Math.max(430, r.speed * 1.05) * swimMul;
+      moving = rivalMove(r, rivalCarryHomeX(), spd, dt);
+      r.pose = moving ? (r.swim ? "swim" : "run") : "idle";
+      if (!moving) r.facing = 1;
+    } else if (racing) {
+      r.mode = "chase";
+      if (r.delayT > 0) {
+        r.delayT -= dt;
+        r.pose = "idle";
+        r.facing = 1;
+      } else {
+        if (ph === "flying") {
+          tgt = r.landX + (r.x <= r.landX ? -26 : 26);
+        } else {
+          tgt = b.x + (r.x <= b.x ? -26 : 26);
+        }
+        tgt = rivalLimitX(tgt, park);
+        moving = rivalMove(r, tgt, r.speed * swimMul, dt);
+        r.pose = moving ? (r.swim ? "swim" : "run") : "idle";
+      }
+      rivalLeap(dt);
+      if (r.jumpY > 10) r.pose = "jump";
+    } else {
+      r.mode = "wait";
+      moving = rivalMove(r, rivalWaitX(), RIVAL_TROT * swimMul, dt);
+      r.pose = moving ? (r.swim ? "swim" : "run") : "idle";
+      if (!moving) r.facing = 1;
+    }
+    if (!racing) r.jumpY = lerp(r.jumpY, 0, clamp(dt * 10, 0, 1));
+    r.x = clamp(r.x, 80, WORLD_W - 40);
+    r.y = groundYAt(r.x);
+    rivalTryCatch();
+  }
+  function drawRival(c) {
+    var r = state.rival, ly, w;
+    if (!state.raceMode || !r) return;
+    drawDog(c, r.x, r.y + RIVAL_DEPTH, RIVAL_DEF, {
+      facing: r.facing,
+      pose: r.pose,
+      t: state.time + 1.3,
+      jumpY: r.jumpY || 0,
+      hasBall: r.hasBall,
+      gear: RIVAL_EMPTY_GEAR
+    });
+    ly = r.y + RIVAL_DEPTH - 96 - (r.jumpY || 0);
+    c.save();
+    c.font = "900 25px Trebuchet MS, sans-serif";
+    c.textAlign = "center";
+    w = 68;
+    c.fillStyle = "rgba(143,47,27,0.92)";
+    roundRect(c, r.x - w / 2, ly - 25, w, 34, 14);
+    c.fill();
+    c.fillStyle = "#FFF1E4";
+    c.fillText("Rex", r.x, ly);
+    c.restore();
   }
 
   function getPark(id) {
@@ -3318,6 +3604,11 @@
       totalPoints: save.totalPoints || 0,
       unlockGen: (typeof save.unlockGen === "number" ? save.unlockGen : UNLOCK_GEN),
       muted: !!save.muted,
+      raceMode: !!save.raceMode,
+      rival: makeRival(),
+      rivalCarry: false,
+      raceLive: false,
+      raceStats: { won: 0, decided: 0 },
       timeLeft: ROUND_TIME,
       timerStarted: false,
       timedUp: false,
@@ -3388,6 +3679,7 @@
     state.dog.swim = false;
     state.dog.targetX = dogHomeX();
     state.dog.intercept = null;
+    resetRival(false);
     resetRetrieveWatch();
     state.kidArm = 0.25;
     state.aim.active = false;
@@ -3832,6 +4124,7 @@
     var dog = getDog(state.dogId);
     var pred = predictPath(state.ball.x, state.ball.y, state.ball.vx, state.ball.vy);
     state.throwLandX = pred.x;
+    rivalBegin(pred);
     state.dog.intercept = pickIntercept(pred, state.dog.x, dog.speed, dog.jump);
     state.dog.facing = 1;
     state.dog.pose = "run";
@@ -3897,6 +4190,7 @@
     state.ball.vy = 0;
     state.phase = "return";
     var shortThrow = isShortThrow();
+    var raceNote = "";
     pts = 1;
     msg = "Nice fetch!";
     sub = "+1";
@@ -3975,6 +4269,8 @@
     state.lastCatchShort = !!shortThrow;
     addScore(total);
     addPopup(shortThrow ? "+1" : sub, state.ball.x, state.ball.y - 40, gold ? "#FFE566" : "#FFF36A");
+    raceNote = awardRaceWin(shortThrow);
+    if (raceNote) sub += "  " + raceNote;
     if (kind === "midair" && state.combo >= 3) {
       state.flipT = 0.55;
       state.dog.pose = "flip";
@@ -4104,6 +4400,7 @@
         d.pose = d.swim ? "swim" : "return";
         d.jumpY = lerp(d.jumpY, 0, clamp(dt * 8, 0, 1));
       }
+      if (state.rivalCarry && d.pose === "return") d.pose = "run";
     }
 
     var spd = dogDef.speed;
@@ -4132,6 +4429,9 @@
         var holdDef = getDog(state.dogId);
         b.x = state.dog.x + state.dog.facing * dogCarryFwd(holdDef);
         b.y = state.dog.y - state.dog.jumpY - dogCarryUp(holdDef, state.dog.swim);
+      } else if (state.rivalCarry && state.rival && state.rival.hasBall) {
+        b.x = state.rival.x + state.rival.facing * dogCarryFwd(RIVAL_DEF);
+        b.y = state.rival.y + RIVAL_DEPTH - (state.rival.jumpY || 0) - dogCarryUp(RIVAL_DEF, state.rival.swim);
       } else {
         b.x = 168;
         b.y = 452;
@@ -4270,7 +4570,14 @@
 
   function finishReturn(dt) {
     if (state.phase !== "return") return;
-    if (Math.abs(state.dog.x - dogHomeX()) < 8 && state.dog.jumpY < 8) {
+    if (state.rivalCarry) {
+      if (!state.rival || !state.rival.hasBall || Math.abs(state.rival.x - rivalCarryHomeX()) >= 6) return;
+    } else if (!(Math.abs(state.dog.x - dogHomeX()) < 8 && state.dog.jumpY < 8)) {
+      return;
+    }
+    {
+      state.rivalCarry = false;
+      if (state.rival) { state.rival.hasBall = false; state.rival.mode = "wait"; }
       state.phase = "celebrate";
       state.celebrateT = 0.7;
       state.dog.pose = "wag";
@@ -4323,7 +4630,7 @@
       p = state.popups[i];
       p.t += dt;
       p.y -= 40 * dt;
-      if (p.t < 0.9) next.push(p);
+      if (p.t < (p.kind === "race" ? 1.5 : 0.9)) next.push(p);
     }
     state.popups = next;
   }
@@ -4539,6 +4846,7 @@
     var idle = state.phase === "ready" || state.phase === "aiming";
     var limit = 4;
     if ((state.ball && state.ball.special === "bouncy") || (state.surprise && state.surprise.active)) limit = 7;
+    if (state.rivalCarry) limit = 8;
     if (isInvalidPos() || (!idle && state.phaseAge > limit)) {
       recoverFetch();
     }
@@ -4589,6 +4897,7 @@
     if (!state.ball.held) collectBonuses();
     else collectBonuses();
     tryCatch();
+    rivalUpdate(dt);
     watchRetrieve(dt);
     finishReturn(dt);
     updateParticles(dt);
@@ -6487,6 +6796,21 @@
     c.textAlign = "center";
     for (i = 0; i < state.popups.length; i++) {
       p = state.popups[i];
+      if (p.kind === "race") {
+        a = p.t < 0.15 ? p.t / 0.15 : (p.t > 1.2 ? (1.5 - p.t) / 0.3 : 1);
+        if (a < 0) a = 0;
+        c.globalAlpha = a;
+        c.font = "900 34px Trebuchet MS, sans-serif";
+        c.lineJoin = "round";
+        c.strokeStyle = "rgba(30,40,56,0.92)";
+        c.lineWidth = 7;
+        c.fillStyle = p.color;
+        c.strokeText(p.text, p.x, p.y);
+        c.fillText(p.text, p.x, p.y);
+        c.font = "800 22px Trebuchet MS, sans-serif";
+        c.globalAlpha = 1;
+        continue;
+      }
       a = p.t < 0.15 ? p.t / 0.15 : (p.t > 0.65 ? (0.9 - p.t) / 0.25 : 1);
       if (a < 0) a = 0;
       c.globalAlpha = a;
@@ -6671,7 +6995,8 @@
       pose: state.dog.pose,
       jumpY: (state.dog.jumpY || 0) + barkHop
     });
-    if (state.ball.visible && !state.dog.hasBall) {
+    drawRival(c);
+    if (state.ball.visible && !state.dog.hasBall && !(state.rivalCarry && state.rival && state.rival.hasBall)) {
       drawBall(c, state.ball.x, state.ball.y, state.ball.spin);
     }
     drawHeldBallLabel(c);
@@ -6790,6 +7115,7 @@
     x = 0;
     if (state.ball && state.ball.held !== true) x = Math.max(x, state.ball.x);
     if (state.dog) x = Math.max(x, state.dog.x);
+    if (state.raceMode && state.rival && (state.raceLive || state.rivalCarry)) x = Math.max(x, state.rival.x);
     return x;
   }
 
@@ -7325,6 +7651,20 @@
     if (sc) sc.innerHTML = String(state.score);
     var rtl = $("resultTreats");
     if (rtl) rtl.innerHTML = "Treats +" + String(state.roundTreats || 0);
+    try {
+      var rrl = $("resultRaceLine");
+      var rrv = $("resultRaces");
+      if (rrl) {
+        if (state.raceMode) {
+          if (rrv) rrv.innerHTML = String(state.raceStats.won) + " / " + String(state.raceStats.decided);
+          rrl.hidden = false;
+          if (rrl.removeAttribute) rrl.removeAttribute("hidden");
+        } else {
+          rrl.hidden = true;
+          if (rrl.setAttribute) rrl.setAttribute("hidden", "hidden");
+        }
+      }
+    } catch (errRace) {}
     var wrap = $("resultBestWrap");
     var rb = $("resultBest");
     var badge = $("newBestBadge");
@@ -7409,6 +7749,8 @@
       state.timedUp = false;
       state.pendingResults = false;
       state.timeZeroAge = 0;
+      state.raceStats = { won: 0, decided: 0 };
+      resetRival(true);
       state.sessionUnlocks = [];
       state.treatsAtStart = state.treats || 0;
       state.totalAtStart = state.totalPoints || 0;
@@ -7475,6 +7817,24 @@
     closeResetDialog();
   }
 
+  function syncRaceUi() {
+    var b = $("raceToggle"), t = $("racePillText"), sub = $("raceSub"), on = !!(state && state.raceMode);
+    if (!b) return;
+    b.className = on ? "race-toggle is-on" : "race-toggle";
+    b.setAttribute("aria-checked", on ? "true" : "false");
+    b.setAttribute("aria-label", on ? "Race Mode, on. Tap to turn off." : "Race Mode, off. Tap to turn on.");
+    if (t) t.innerHTML = on ? "ON" : "OFF";
+    if (sub) sub.innerHTML = on ? "Beat Rex to the ball for +2!" : "Race Rex to the ball!";
+  }
+
+  function setRaceMode(on) {
+    state.raceMode = !!on;
+    if (state.rival) resetRival(true);
+    state.raceLive = false;
+    saveNow();
+    syncRaceUi();
+  }
+
   function goHome() {
     try {
       if (state.score > state.best) state.best = state.score;
@@ -7489,6 +7849,7 @@
       showScreen("start");
       renderDogPicker();
       renderParkPicker();
+      syncRaceUi();
     } catch (err) {}
     try {
       resumeAudio();
@@ -7566,6 +7927,11 @@
       }
     })();
     bindActivate($("dressUpBtn"), function () { openShop(); });
+    bindActivate($("raceToggle"), function () {
+      try { resumeAudio(); sfx("button"); } catch (err) {}
+      setRaceMode(!state.raceMode);
+    });
+    syncRaceUi();
     bindActivate($("shopClose"), function () { closeShop(); });
     if (heroCanvas) {
       heroCanvas.setAttribute("title", "Tap the pup to bark");
@@ -7728,6 +8094,12 @@
           distancePoints: distancePoints(),
           shortThrow: isShortThrow(),
           lastCatchPoints: state.lastCatchPoints,
+          raceMode: !!state.raceMode,
+          raceWon: state.raceStats ? state.raceStats.won : 0,
+          raceDecided: state.raceStats ? state.raceStats.decided : 0,
+          raceLive: !!state.raceLive,
+          rivalCarry: !!state.rivalCarry,
+          rival: state.rival ? { x: state.rival.x, y: state.rival.y, mode: state.rival.mode, pose: state.rival.pose, hasBall: !!state.rival.hasBall, delayT: state.rival.delayT, speed: state.rival.speed } : null,
           lastCatchShort: !!state.lastCatchShort,
           toast: state.toast ? { text: state.toast.text, sub: state.toast.sub, t: state.toast.t } : null,
           popups: (function () {
@@ -7837,6 +8209,40 @@
       closeShop: closeShop,
       setMuted: setMuted,
       toggleMute: toggleMute,
+      setRaceMode: setRaceMode,
+      raceSim: function (angle, power, trace) {
+        var steps = 0, w0, d0, s0, out;
+        if (state.screen !== "play") startGame();
+        state.timeLeft = ROUND_TIME;
+        state.timedUp = false;
+        state.pendingResults = false;
+        if (state.phase !== "ready") placeReady();
+        state.ball.special = null;
+        state.surprise = null;
+        w0 = state.raceStats.won;
+        d0 = state.raceStats.decided;
+        s0 = state.score;
+        beginThrow(angle, power);
+        while (steps < 1500 && state.phase !== "celebrate" && state.phase !== "ready" && state.screen === "play") {
+          update(0.016);
+          steps += 1;
+          if (trace && steps % 6 === 0) trace.push([(steps * 0.016).toFixed(2), state.phase, Math.round(state.ball.x), Math.round(state.ball.y), Math.round(state.dog.x), Math.round(state.rival.x), state.rival.mode, Math.round(state.rival.jumpY)].join(" "));
+        }
+        while (steps < 1700 && state.phase !== "ready" && state.screen === "play") {
+          update(0.016);
+          steps += 1;
+        }
+        state.timeLeft = ROUND_TIME;
+        out = {
+          won: state.raceStats.won - w0,
+          lost: (state.raceStats.decided - d0) - (state.raceStats.won - w0),
+          points: state.score - s0,
+          steps: steps,
+          landX: state.throwLandX,
+          phase: state.phase
+        };
+        return out;
+      },
       setParkId: function (id) {
         var i;
         for (i = 0; i < PARKS.length; i++) {
