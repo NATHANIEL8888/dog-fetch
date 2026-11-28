@@ -2026,7 +2026,7 @@
   var RIVAL_PARK_MUL = { meadow: 0.85, autumn: 0.88, beach: 0.90, garden: 1.0, sunset: 0.97, mountains: 1.0 };
   var RIVAL_DELAY_MIN = 0.25;
   var RIVAL_DELAY_MAX = 0.35;
-  var RIVAL_WAIT_DX = 100;
+  var RIVAL_WAIT_DX = 112;
   var RIVAL_JITTER = 0.12;
   var RIVAL_AIM_ERR = 40;
   var RIVAL_BONUS = 2;
@@ -2110,7 +2110,7 @@
     state.lastCatchShort = false;
     state.raceStats.decided += 1;
     resetRetrieveWatch();
-    addPopup("Rex got it!", r.x, r.y - 126, "#FFC9B0", "race");
+    addPopup("Rex got it!", r.x, r.y - 142, "#FFC9B0", "race");
     addBurst(r.x + r.facing * 26, r.y - 36, "#FFB08A", 8);
     showToast("Rex got it!", "No points. Beat him next time!", 1.5);
     try { sfx("bark"); } catch (err) {}
@@ -2223,7 +2223,7 @@
       hasBall: r.hasBall,
       gear: RIVAL_EMPTY_GEAR
     });
-    ly = r.y + RIVAL_DEPTH - 96 - (r.jumpY || 0);
+    ly = r.y + RIVAL_DEPTH - 108 - (r.jumpY || 0);
     c.save();
     c.font = "900 25px Trebuchet MS, sans-serif";
     c.textAlign = "center";
