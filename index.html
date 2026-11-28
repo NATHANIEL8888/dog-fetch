@@ -1622,7 +1622,7 @@
 (function () {
   "use strict";
 
-  var BUILD = "20261127bh";
+  var BUILD = "20261127bi";
   var WORLD_W = 2000; // room for a full-power throw to roll up the far hill and back
   var VIEW_W = 1200; // desktop rest framing stays the original park width
   var WORLD_H = 680;
@@ -2023,18 +2023,18 @@
   };
   var RIVAL_EMPTY_GEAR = { hat: null, bandana: null, collar: null };
   var RIVAL_BASE_SPEED = 455;
-  var RIVAL_PARK_MUL = { meadow: 0.85, autumn: 0.88, beach: 0.90, garden: 1.0, sunset: 0.97, mountains: 1.0 };
-  var RIVAL_DELAY_MIN = 0.25;
-  var RIVAL_DELAY_MAX = 0.35;
-  var RIVAL_WAIT_DX = 112;
-  var RIVAL_JITTER = 0.12;
-  var RIVAL_AIM_ERR = 40;
+  var RIVAL_PARK_MUL = { meadow: 1.18, autumn: 1.28, beach: 1.32, garden: 1.36, sunset: 1.50, mountains: 1.54 };
+  var RIVAL_DELAY_MIN = 0.15;
+  var RIVAL_DELAY_MAX = 0.25;
+  var RIVAL_WAIT_DX = 100;
+  var RIVAL_JITTER = 0.08;
+  var RIVAL_AIM_ERR = 18;
   var RIVAL_BONUS = 2;
   var RIVAL_DEPTH = 12;
   var RIVAL_TROT = 560;
-  var RIVAL_JUMP = 180;
-  var RIVAL_GRAB_X = 44;
-  var RIVAL_LEAP_REACH = 62;
+  var RIVAL_JUMP = 200;
+  var RIVAL_GRAB_X = 36;
+  var RIVAL_LEAP_REACH = 64;
 
   function rivalWaitX() { return dogHomeX() + RIVAL_WAIT_DX; }
   function rivalCarryHomeX() { return dogHomeX() - 58; }
@@ -2087,7 +2087,9 @@
     r.mode = "chase";
     r.delayT = rand(RIVAL_DELAY_MIN, RIVAL_DELAY_MAX);
     r.speed = rivalSpeedFor(park.id) * rand(1 - RIVAL_JITTER, 1 + RIVAL_JITTER);
-    r.landX = rivalLimitX(pred.x + rand(-RIVAL_AIM_ERR, RIVAL_AIM_ERR), park);
+    r.landX = rivalLimitX((pred && pred.x ? pred.x : 600) + rand(-RIVAL_AIM_ERR, RIVAL_AIM_ERR), park);
+    r.minCatchX = 400;
+    r.minLeapX = 320;
   }
   function rivalWins() {
     var r = state.rival, b = state.ball;
@@ -2131,32 +2133,35 @@
     addPopup(note, state.ball.x, state.ball.y - 96, "#B8F5C0", "race");
     return note;
   }
+  function rivalMinCatchX() {
+    return (state.rival && state.rival.minCatchX) ? state.rival.minCatchX : 400;
+  }
+  function rivalMinLeapX() {
+    return (state.rival && state.rival.minLeapX) ? state.rival.minLeapX : 360;
+  }
   function rivalTryCatch() {
     var r = state.rival, b = state.ball, park = currentPark(), mx, gy;
     if (!state.raceLive || !r || r.hasBall || r.delayT > 0) return;
     if (state.dog.hasBall || b.held || state.sweeping) return;
     if (state.phase !== "flying" && state.phase !== "bounce" && state.phase !== "retrieve") return;
     if (inOcean(b.x, b.y, park)) return;
+    if (isShortThrow()) return;
     gy = groundYAt(b.x);
     mx = r.x + r.facing * 26;
-    if (state.phase !== "flying" && b.y >= gy - 62) {
+    if (state.phase !== "flying" && b.y >= gy - 62 && b.x >= rivalMinCatchX()) {
       if (Math.abs(b.x - mx) < RIVAL_GRAB_X || Math.abs(b.x - r.x) < RIVAL_GRAB_X + 8) { rivalWins(); return; }
     }
-    if (r.jumpY > 8 && hypot(b.x - mx, b.y - (r.y - 34 - r.jumpY)) < rivalReach()) rivalWins();
-  }
-  function rivalReach() {
-    var sp = getDog(state.dogId).speed || RIVAL_BASE_SPEED;
-    return RIVAL_LEAP_REACH * clamp(Math.pow(RIVAL_BASE_SPEED / sp, 1.5), 0.55, 1);
+    if (b.x >= rivalMinLeapX() && r.jumpY > 8 && hypot(b.x - mx, b.y - (r.y - 34 - r.jumpY)) < RIVAL_LEAP_REACH) rivalWins();
   }
   function rivalLeap(dt) {
     var r = state.rival, b = state.ball, gy, h, mx, want = 0;
-    if (state.raceLive && !r.hasBall && r.delayT <= 0 && !r.swim && state.phase !== "swept" && !b.held) {
+    if (state.raceLive && !r.hasBall && r.delayT <= 0 && !r.swim && state.phase !== "swept" && !b.held && b.x >= rivalMinLeapX() && !isShortThrow()) {
       gy = groundYAt(b.x);
       h = gy - b.y;
       mx = r.x + r.facing * 26;
-      if (h > 30 && h < RIVAL_JUMP + 40 && Math.abs(b.x - mx) < 62) want = clamp(h - 26, 0, RIVAL_JUMP);
+      if (h > 24 && h < RIVAL_JUMP + 60 && Math.abs(b.x - mx) < 78) want = clamp(h - 18, 0, RIVAL_JUMP);
     }
-    if (want > 0) r.jumpY = lerp(r.jumpY, want, clamp(dt * 16, 0, 1));
+    if (want > 0) r.jumpY = lerp(r.jumpY, want, clamp(dt * 22, 0, 1));
     else r.jumpY = lerp(r.jumpY, 0, clamp(dt * 10, 0, 1));
   }
   function rivalUpdate(dt) {
@@ -2187,13 +2192,19 @@
       r.mode = "chase";
       if (r.delayT > 0) {
         r.delayT -= dt;
-        r.pose = "idle";
-        r.facing = 1;
+        if (b.x + Math.max(0, b.vx) * 0.2 > r.x + 8) tgt = rivalLimitX(b.x + Math.max(0, b.vx) * 0.2, park);
+        else tgt = r.x;
+        moving = rivalMove(r, tgt, r.speed * 0.40 * swimMul, dt);
+        r.pose = moving ? (r.swim ? "swim" : "run") : "idle";
       } else {
-        if (ph === "flying") {
-          tgt = r.landX + (r.x <= r.landX ? -26 : 26);
+        if (ph === "flying" && b.x < r.x - 8 && b.vx > 0) {
+          // Ball is still coming toward Rex. Hold and leap on mid throws;
+          // run out only when the predicted landing is clearly long.
+          tgt = (r.landX > 820) ? r.landX - 20 : r.x;
+        } else if (ph === "flying") {
+          tgt = b.x + Math.max(0, b.vx) * 0.16 + (r.x <= b.x ? -16 : 16);
         } else {
-          tgt = b.x + (r.x <= b.x ? -26 : 26);
+          tgt = b.x + (r.x <= b.x ? -20 : 20);
         }
         tgt = rivalLimitX(tgt, park);
         moving = rivalMove(r, tgt, r.speed * swimMul, dt);
@@ -4357,6 +4368,10 @@
     inter = d.intercept;
     if (state.phase === "flying") {
       target = inter ? inter.x : (state.ball.x + 20);
+      if (inter && inter.type === "midair") {
+        var mouthAlign = dogMouthFwd(dogDef);
+        target = inter.x - ((d.x <= inter.x) ? mouthAlign : -mouthAlign);
+      }
       d.targetX = target;
       if (inter && inter.type === "midair") {
         jumpWindow = 0.4;
